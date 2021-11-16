@@ -6,6 +6,8 @@ import HomeScreen from './HomeScreen';
 import ViewScreen from './ViewScreen';
 import {getSearchParam} from './lib';
 
+import {HOMEPAGE} from '../env';
+
 export default class App extends Component {
 	state = {};
 	
@@ -13,9 +15,9 @@ export default class App extends Component {
 		return (
 			<Router>
 				<Switch>
-					<Route<{args: string}> path='/login' component={() => <Login redirect={getSearchParam("redirect")} />} />
-					<Route<{args: string}> path='/view' component={() => <ViewScreen url={getSearchParam("url")} />} />
-					<Route<{args: string}> path='/' component={() => <HomeScreen globalState={this} />} />
+					<Route<{args: string}> path={`${HOMEPAGE}/login`} component={() => <Login redirect={getSearchParam("redirect")} />} />
+					<Route<{args: string}> path={`${HOMEPAGE}/view`} component={() => <ViewScreen url={getSearchParam("url")} />} />
+					<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen globalState={this} />} />
 				</Switch>
 			</Router>
 		);

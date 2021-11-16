@@ -8,6 +8,8 @@ import {getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerRe
 import {DCTERMS, RDF, SCHEMA_INRUPT} from '@inrupt/vocab-common-rdf';
 import {shuffle} from '../lib';
 
+import {HOMEPAGE} from '../env';
+
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 	year: 'numeric',
 	month: 'long',
@@ -57,7 +59,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 	};
 	
 	public render({globalState}: Props<{globalState: {state: State, setState: (state: Partial<State>) => void}}>): VNode {
-		const session = useAuthentication()!;
+		const session = useAuthentication();
+		if (!session) return <div />;
 		
 		const webID = session.info.webId!;
 		const parts = webID.split('/');
@@ -355,7 +358,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							title={title}
 							subtitle={released.toLocaleDateString('en-GB', DATE_FORMAT)}
 							image={image}
-							redirect={`/view?url=${movie}`}
+							redirect={`${HOMEPAGE}/view?url=${movie}`}
 							buttons={[
 								...(watched ? [
 									{text: '👎', cssClass: 'carousel-dislike', selected: liked === false, click: async () => {
@@ -461,7 +464,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							title={title}
 							subtitle={released.toLocaleDateString('en-GB', DATE_FORMAT)}
 							image={image}
-							redirect={`/view?url=${movie}`}
+							redirect={`${HOMEPAGE}/view?url=${movie}`}
 							buttons={[
 								{text: '➕', cssClass: 'carousel-save', click: async () => {
 									if (![...globalState.state.myWatched!, ...globalState.state.myUnwatched!].some(x => x === movie)) {

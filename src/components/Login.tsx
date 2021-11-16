@@ -5,6 +5,8 @@ import {session} from './authentication';
 import Loading from './Loading';
 import Form from './Form';
 
+import {HOMEPAGE} from '../env';
+
 const providers = [
 	{title: "Inrupt Pod Spaces", url: 'https://broker.pod.inrupt.com/'},
 	{title: "inrupt.net", url: 'https://inrupt.net/'},
@@ -20,7 +22,7 @@ export default class Login extends Component<{redirect: string | null}> {
 	
 	public render({redirect}: Props<{redirect: string | null}>): VNode {
 		if (session.info.isLoggedIn) {
-			return <Redirect to={redirect ?? '/'} />;
+			return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
 		} else if (this.state.handleRedirect) {
 			session
 				.handleIncomingRedirect(window.location.href)
