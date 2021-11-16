@@ -1,0 +1,3 @@
+[submodule "solid-idp-list"]
+	path = solid-idp-list
+	url = git@github.com:solid/solid-idp-list.git

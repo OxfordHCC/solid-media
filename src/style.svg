@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<filter id="green">
+<feColorMatrix
+	type="matrix"
+	values="
+		0  0  0  0  0
+		.2 .2 .2 0  .4
+		0  0  0  0  0
+		0  0  0  1  0
+	"/>
+</filter>
+<filter id="red">
+<feColorMatrix
+	type="matrix"
+	values="
+		.2 .2 .2 0  .4
+		0  0  0  0  0
+		0  0  0  0  0
+		0  0  0  1  0
+	"/>
+</filter>
+<filter id="cyan">
+<feColorMatrix
+	type="matrix"
+	values="
+		0  0  0  0  0
+		.2 .2 .2 0  .4
+		.1 .1 .1 0  .7
+		0  0  0  1  0
+	"/>
+</filter>
+<filter id="grey">
+<feColorMatrix
+	type="matrix"
+	values="
+		.2 .2 .2 0  .4
+		.2 .2 .2 0  .4
+		.2 .2 .2 0  .4
+		0  0  0  1  0
+	"/>
+</filter>
+</svg>

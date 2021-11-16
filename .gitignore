@@ -1,0 +1,5 @@
+# Build outputs
+**/dist/
+
+# node / npm files
+**/node_modules/
