@@ -1,6 +1,6 @@
 {
   "name": "solid-media",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A media profile app build on Solid",
   "homepage": "https://OxfordHCC.github.io/solid-media",
   "repository": {
@@ -9,11 +9,12 @@
   },
   "main": "index.js",
   "scripts": {
+    "preinstall": "npm-force-resolutions",
     "start": "snowpack dev --polyfill-node",
     "build": "snowpack build --polyfill-node && mkdirp ./build/login/ && ncp ./build/index.html ./build/login/index.html && mkdirp ./build/view/ && ncp ./build/index.html ./build/view/index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "predeploy": "npm run build && ncp ./src/.nojekyll ./build/.nojekyll",
+    "deploy": "gh-pages -d build -t true"
   },
   "author": "Luke Miles",
   "dependencies": {
@@ -28,8 +29,12 @@
     "gh-pages": "^3.2.3",
     "mkdirp": "^1.0.4",
     "ncp": "^2.0.0",
+    "npm-force-resolutions": "^0.0.10",
     "snowpack": "^3.8.6",
     "typescript": "^4.3.5"
+  },
+  "resolutions": {
+    "rollup-plugin-polyfill-node": "0.7.0"
   },
   "browserslist": [
     "last 2 Chrome versions",
