@@ -1,5 +1,5 @@
 import {h, Component, VNode} from 'preact';
-import {Router, Switch, Route} from 'wouter-preact';
+import {Router, Switch, Route, Redirect, useLocation} from 'wouter-preact';
 import {Props} from './types';
 import Login from './Login';
 import HomeScreen from './HomeScreen';
@@ -12,6 +12,10 @@ export default class App extends Component {
 	state = {};
 	
 	public render({}: Props): VNode {
+		const [location, setLocation] = useLocation();
+		const spaUrl = getSearchParam("spaurl");
+		if (spaUrl !== null) setLocation(spaUrl);
+		
 		return (
 			<Router>
 				<Switch>

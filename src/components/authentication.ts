@@ -11,7 +11,7 @@ export function useAuthentication(redirect: boolean = true): Session | null {
 	if (session.info.isLoggedIn) return session;
 	else {
 		let [location, setLocation] = useLocation();
-		if (redirect) setLocation(`${HOMEPAGE}/login?redirect=${location}`);
+		if (redirect) setLocation(`${HOMEPAGE}/login?redirect=${encodeURIComponent(location)}`);
 		return null;
 	}
 }
