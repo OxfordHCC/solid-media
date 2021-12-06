@@ -18,6 +18,7 @@ If you are unfamiliar with them, then you will need to have you `npm` set up. Pl
 1. Make a directory.
 
 2. Clone on GitHub here:
+
 `git clone git@github.com:OxfordHCC/solid-media.git`
 
 3. `CD` into the directory.
@@ -27,9 +28,8 @@ If you are unfamiliar with them, then you will need to have you `npm` set up. Pl
 `npm install --save-dev snowpack`
 
 Run
-```
-npm run start
-```
+
+`npm run start`
 
 The application will be opened on your local web browser [http://localhost:8080](http://localhost:8080).
 
