@@ -41,7 +41,7 @@ You will need a webID to log into the system. For now, we recommend you register
 
 Once you have set up a Solid/WebID then you can log in and start to add movies to solid-media.
 
-![my moviews page](/img/my-movie.png)
+![my moviews page](/img/my-movies.png)
 
 
 ### Upcoming feature
