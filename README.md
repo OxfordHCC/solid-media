@@ -46,7 +46,7 @@ The application will be opened on your local web browser [http://localhost:8080]
 
 ### Access public solid-media
 
-A public version is yet to be launched. Look out this space!
+A public version can be accessed [https://oxfordhcc.github.io/solid-media/ https://oxfordhcc.github.io/solid-media/]. It's still experimental, for example, the `import` function is still not working. If you notice any bugs please feel free to raise an issue and we will most value your feedback!
 
 ## Getting started with a Solid ID
 
