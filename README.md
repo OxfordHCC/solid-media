@@ -5,7 +5,7 @@
   - [Getting started with a Solid ID](#getting-started-with-a-solid-id)
   - [Sharing with friends](#sharing-with-friends)
   - [Development note](#development-note)
-  
+
 
 # Welcome to Solid Media
 
@@ -58,6 +58,9 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 
 
 ## Sharing with friends
+
+*Note that this implementation is experimental as group authentication on Solid CSS is still under active development.*
+
 
 At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile, and this must be set up in two steps
 
