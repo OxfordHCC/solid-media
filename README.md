@@ -74,13 +74,13 @@ async function login() {
 
 Here we used `getSolidDataset` from `@inrupt/solid-client` to retrieve `movies` data from a pod. 
 
-The code `getSolidDataset(`${pod}/movies`, {fetch: session.fetch})` shows that we are expecting to retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod. 
-
 ```
 const movieList = (await Promise.all(people.map(async x => {
 	try {
 		const parts = x.id.split('/');
 		const pod = parts.slice(0, parts.length - 2).join('/');
+
+		# retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod. 
 		
 		const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
 		
