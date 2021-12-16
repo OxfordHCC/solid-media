@@ -1,3 +1,12 @@
+# Table of contents
+
+- [Welcome to Solid Media](#welcome-to-solid-media)
+  - [Set up locally](#set-up-locally)
+  - [Getting started with a Solid ID](#getting-started-with-a-solid-id)
+  - [Sharing with friends](#sharing-with-friends)
+  - [Development note](#development-note)
+  
+
 # Welcome to Solid Media
 
 A demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app.
@@ -5,7 +14,7 @@ A demonstration of the use of [Solid](https://solidproject.org/) in a small medi
 
 The application can be downloaded and deployed locally or accessed at [solid-media](https://oxfordhcc.github.io/solid-media/).
 
-## Getting started locally
+## Set up locally
 
 
 Solid-media is developed using [Node.js](https://nodejs.org/en/) and [snowpack](https://www.snowpack.dev/tutorials/getting-started). 
@@ -35,7 +44,11 @@ The application will be opened on your local web browser [http://localhost:8080]
 
 ![login page](/img/login.png)
 
-### Log in with a Solid ID
+### Access public solid-media
+
+A public version is yet to be launched. Look out this space!
+
+## Getting started with a Solid ID
 
 You will need a webID to log into the system. For now, we recommend you register with [solidcommunity.net](https://solidcommunity.net).
 
@@ -44,12 +57,11 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 ![my moviews page](/img/my-movies.png)
 
 
-### Upcoming feature
-### Friends and authentication
+## Sharing with friends
 
 At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile, and this must be set up in two steps
 
-#### Step 1: Add friends to the Solid profile
+### Step 1: Add friends to the Solid profile
 
 Go to `https://WEBID.solidcommunity.net/profile/card/me#`, and click on the `RDF` button (third one to the left), which will then show you the following RDF triples, describing you.
 
@@ -91,7 +103,7 @@ pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
     foaf:knows <https://WEBID.solidcommunity.net/> ;
 ```
 
-#### Step 2: Add friends to the Solid pod
+### Step 2: Add friends to the Solid pod
 
 Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list, which is equivalent for you to go to `https://WEBID.solidcommunity.net/friends#group`. Click on the pencil icon on the button right corner in order to edit your friend list.
 
