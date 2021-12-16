@@ -10,7 +10,7 @@ The application can be downloaded and deployed locally or accessed at [solid-med
 
 Solid-media is developed using [Node.js](https://nodejs.org/en/) and [snowpack](https://www.snowpack.dev/tutorials/getting-started). 
 
-If you are unfamiliar with them, then you will need to have you `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
+If you are unfamiliar with them, then you will need to have your `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
 
 
 ### Clone project and installations
@@ -107,5 +107,64 @@ const {title, released, icon} = await loadData(tmdbUrl);
 
 ### Friends and authentication
 
-At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile.
+At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile, and this must be set up in two steps
 
+#### Step 1: Add friends to the Solid profile
+
+Go to `https://WEBID.solidcommunity.net/profile/card/me#`, and click on the `RDF` button (third one to the left), which will then show you the following RDF triples, describing you.
+
+![RDF button](/img/RDF_profile.png)
+
+Add another friend's WebID with the triple of `foaf:knows <webId>`, shown in the highlights below
+
+``` 
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix ldp: <http://www.w3.org/ns/ldp#>.
+@prefix schema: <http://schema.org/>.
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
+@prefix space: <http://www.w3.org/ns/pim/space#>.
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+@prefix pro: <./>.
+@prefix inbox: </inbox/>.
+@prefix the: </>.
+
+pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
+
+:me
+    a schema:Person, foaf:Person;
+    vcard:fn "JunChiltern";
+    vcard:hasPhoto <just-the-koala.png>;
+    vcard:role "Housewife";
+    acl:trustedApp
+            [
+                acl:mode acl:Append, acl:Read, acl:Write;
+                acl:origin <http://localhost:8080>
+            ];
+    ldp:inbox inbox:;
+    space:preferencesFile </settings/prefs.ttl>;
+    space:storage the:;
+    solid:account the:;
+    solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
+    solid:publicTypeIndex </settings/publicTypeIndex.ttl>;
+    ## add your friends with a triple below
+    foaf:knows <https://WEBID.solidcommunity.net/> ;
+```
+
+#### Step 2: Add friends to the Solid pod
+
+Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list, which is equivalent for you to go to `https://WEBID.solidcommunity.net/friends#group`. Click on the pencil icon on the button right corner in order to edit your friend list.
+
+
+
+Here you should use the RDF triple `foaf:member` to express the friend relationship.
+```
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+:group a foaf:Group; 
+			foaf:member <https://thechilterns.solidcommunity.net/profile/card#>.
+```
+
+
+Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `solid-media` application.
+
+![Friends' movies](/img/friends.png)
