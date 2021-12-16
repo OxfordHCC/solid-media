@@ -45,66 +45,6 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 
 
 ### Upcoming feature
-
-The next feature we are planning to develop for solid-media is to share the movies you have watched or would like to watch with your friends, which are currently shown as blank at the top of the application:
-
-![friends page](/img/future.png)
-
-
-## Development note
-
-### Authentication
-
-The authentication is handled by `Login.tsx` and uses `@inrupt/solid-client-authn-browser`.
-
-The basic structure can be supported using these lines. 
-```
-async function login() {
-  if (!session.info.isLoggedIn && !new URL(window.location.href).searchParams.get("code")) {
-    await session.login({
-      oidcIssuer: provider,
-      clientName: "Playlist example app",
-      redirectUrl: window.location.href
-    });
-  }
-} 
-```
-
-### Fetch movie data from a pod
-
-Here we used `getSolidDataset` from `@inrupt/solid-client` to retrieve `movies` data from a pod. 
-
-```
-const movieList = (await Promise.all(people.map(async x => {
-	try {
-		const parts = x.id.split('/');
-		const pod = parts.slice(0, parts.length - 2).join('/');
-
-		# retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod. 
-		
-		const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
-		
-		const movies = getContainedResourceUrlAll(moviesDataset);
-		
-		return movies.map(m => ({...x, url: m}));
-	} catch {
-		return [];
-	}
-}
-
-```
-
-The metadata about a movie, including its title, a short description and an icon, is retrieved from tbmd:
-
-```
-const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
-						
-const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
-
-const {title, released, icon} = await loadData(tmdbUrl);
-						
-```
-
 ### Friends and authentication
 
 At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile, and this must be set up in two steps
@@ -168,3 +108,59 @@ Here you should use the RDF triple `foaf:member` to express the friend relations
 Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `solid-media` application.
 
 ![Friends' movies](/img/friends.png)
+
+
+## Development note
+
+### Authentication
+
+The authentication is handled by `Login.tsx` and uses `@inrupt/solid-client-authn-browser`.
+
+The basic structure can be supported using these lines. 
+```
+async function login() {
+  if (!session.info.isLoggedIn && !new URL(window.location.href).searchParams.get("code")) {
+    await session.login({
+      oidcIssuer: provider,
+      clientName: "Playlist example app",
+      redirectUrl: window.location.href
+    });
+  }
+} 
+```
+
+### Fetch movie data from a pod
+
+Here we used `getSolidDataset` from `@inrupt/solid-client` to retrieve `movies` data from a pod. 
+
+```
+const movieList = (await Promise.all(people.map(async x => {
+	try {
+		const parts = x.id.split('/');
+		const pod = parts.slice(0, parts.length - 2).join('/');
+
+		# retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod. 
+		
+		const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
+		
+		const movies = getContainedResourceUrlAll(moviesDataset);
+		
+		return movies.map(m => ({...x, url: m}));
+	} catch {
+		return [];
+	}
+}
+
+```
+
+The metadata about a movie, including its title, a short description and an icon, is retrieved from tbmd:
+
+```
+const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+						
+const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+
+const {title, released, icon} = await loadData(tmdbUrl);
+						
+```
+
