@@ -194,6 +194,7 @@ const {title, released, icon} = await loadData(tmdbUrl);
 
 The diagram below shows that the sharing of resources on solid pods currently relies on the authentication to be set up at both the `profile` level and the `pod` level. We welcome suggestions on any alternative approaches to this current solution, either for the Solid community server or any other Solid server.
 
-![Group authentication](/img/group.png)
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/group.png" width="800" />
 
 
