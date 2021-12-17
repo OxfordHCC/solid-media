@@ -50,7 +50,7 @@ Run
 
 The application will be opened on your local web browser [http://localhost:8080](http://localhost:8080).
 
-<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/login.png" width="250" height="250" />
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/login.png" width="400" />
 
 
 ## Getting started with Solid Media
@@ -64,7 +64,7 @@ To get started with sharing your movies, you will need a webID to log into the s
 Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
 
 
-<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/my-movies.png" width="400" />
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/my-movies.png" width="800" />
 
 ### Add movies
 
@@ -86,7 +86,8 @@ At the moment, to enable the sharing of movies between friends, one must have se
 
 Go to `https://WEBID.solidcommunity.net/profile/card/me#`, and click on the `RDF` button (third one to the left), so that you can edit friends of yours. 
 
-![RDF button](/img/RDF_profile.png)
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/RDF_profile.png" width="300" />
 
 To add a friend's WebID you should use the triple of `foaf:knows <webId>`, as shown in the code snippet below:
 
@@ -129,7 +130,8 @@ Here you should use the RDF triple `foaf:member` to express the friend relations
 
 Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `Solid Media` application.
 
-![Friends' movies](/img/friends.png)
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/friends.png" width="800" />
 
 
 ## Development note
