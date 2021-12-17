@@ -53,11 +53,9 @@ The application will be opened on your local web browser [http://localhost:8080]
 ![login page](/img/login.png)
 
 
-<<<<<<< HEAD
 ## Getting started with Solid Media
-=======
+
 A public version can be accessed [https://oxfordhcc.github.io/solid-media/ https://oxfordhcc.github.io/solid-media/]. It's still experimental, for example, the `import` function is still not working. If you notice any bugs please feel free to raise an issue and we will most value your feedback!
->>>>>>> 501bcf3c6d5e459e2e9e214f7e66533354ec6e1b
 
 ### Log in with a WebID
 
@@ -71,7 +69,7 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 
 Currently, the netflix import function doesn't work very well. But if you input a keyword of your favorite movie, you should see a list of results. You can choose the `tick` button if you have already watched the movie, or the `plus` button to the movie to a list to be watch. And the movie should appear below in the according section.
 
-![my movies](/img/add-movies.png)
+![my movies](/img/add-movies.png|width=100)
 
 Furthermore, you can express your favorite of a movie by selecting `thumb up` or `thumb down` button, and the movies will show up as your favorites.
 
