@@ -9,17 +9,18 @@
 
 # Welcome to Solid Media
 
-A demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app.
-
+Solid Media is a demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app.
 
 The application can be downloaded and deployed locally or accessed at [solid-media](https://oxfordhcc.github.io/solid-media/).
+
+**To play with the application you will need a Solid pod provided by [solidcommunity.net](https://solidcommunity.net).**
 
 ## Set up locally
 
 
-Solid-media is developed using [Node.js](https://nodejs.org/en/) and [snowpack](https://www.snowpack.dev/tutorials/getting-started). 
+If you wish to deploy Solid-media locally, then please follow the instructions below to build the project.
 
-If you are unfamiliar with them, then you will need to have your `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
+Solid Media is developed using [Node.js](https://nodejs.org/en/) and [snowpack](https://www.snowpack.dev/tutorials/getting-started). If you are unfamiliar with them, then you will need to have your `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
 
 
 ### Clone project and installations
@@ -44,33 +45,40 @@ The application will be opened on your local web browser [http://localhost:8080]
 
 ![login page](/img/login.png)
 
-### Access public solid-media
 
-A public version is yet to be launched. Look out this space!
+## Getting started with Solid Media
 
-## Getting started with a Solid ID
+### Log in with a WebID
 
-You will need a webID to log into the system. For now, we recommend you register with [solidcommunity.net](https://solidcommunity.net).
+To get started with sharing your movies, you will need a webID to log into the system, so that you can store movies on your Solid pod and share them with your friends. For now, we recommend you register with [solidcommunity.net](https://solidcommunity.net).
 
-Once you have set up a Solid/WebID then you can log in and start to add movies to solid-media.
+Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
 
 ![my moviews page](/img/my-movies.png)
 
+### Add movies
+
+Currently, the netflix import function doesn't work very well. But if you input a keyword of your favorite movie, you should see a list of results. You can choose the `tick` button if you have already watched the movie, or the `plus` button to the movie to a list to be watch. And the movie should appear below in the according section.
+
+![my movies](/img/add-movies.png)
+
+Furthermore, you can express your favorite of a movie by selecting `thumb up` or `thumb down` button, and the movies will show up as your favorites.
 
 ## Sharing with friends
 
 *Note that this implementation is experimental as group authentication on Solid CSS is still under active development.*
 
+One particular thing that `Solid Media` supports is sharing of movie amongst friends.
 
-At the moment, to enable the sharing of movies between friends, one must have had the friends relationship set up on their Solid/WebID profile, and this must be set up in two steps
+At the moment, to enable the sharing of movies between friends, one must have set up the friends relationship on their Solid/WebID profile, and this must be set up in two steps and may require some writing of RDF.
 
 ### Step 1: Add friends to the Solid profile
 
-Go to `https://WEBID.solidcommunity.net/profile/card/me#`, and click on the `RDF` button (third one to the left), which will then show you the following RDF triples, describing you.
+Go to `https://WEBID.solidcommunity.net/profile/card/me#`, and click on the `RDF` button (third one to the left), so that you can edit friends of yours. 
 
 ![RDF button](/img/RDF_profile.png)
 
-Add another friend's WebID with the triple of `foaf:knows <webId>`, shown in the highlights below
+To add a friend's WebID you should use the triple of `foaf:knows <webId>`, as shown in the code snippet below:
 
 ``` 
 @prefix acl: <http://www.w3.org/ns/auth/acl#>.
@@ -89,27 +97,16 @@ pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
 :me
     a schema:Person, foaf:Person;
     vcard:fn "JunChiltern";
-    vcard:hasPhoto <just-the-koala.png>;
-    vcard:role "Housewife";
-    acl:trustedApp
-            [
-                acl:mode acl:Append, acl:Read, acl:Write;
-                acl:origin <http://localhost:8080>
-            ];
-    ldp:inbox inbox:;
-    space:preferencesFile </settings/prefs.ttl>;
-    space:storage the:;
-    solid:account the:;
-    solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
-    solid:publicTypeIndex </settings/publicTypeIndex.ttl>;
     ## add your friends with a triple below
     foaf:knows <https://WEBID.solidcommunity.net/> ;
 ```
 
 ### Step 2: Add friends to the Solid pod
 
-Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list, which is equivalent for you to go to `https://WEBID.solidcommunity.net/friends#group`. Click on the pencil icon on the button right corner in order to edit your friend list.
 
+In order to let `Solid Media` access your friends' movies, you also need to add our friends to your friends Group in your Solid pod.
+
+Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list, which is equivalent for you to go to `https://WEBID.solidcommunity.net/friends#group`. Click on the pencil icon on the button right corner to edit your friend list.
 
 
 Here you should use the RDF triple `foaf:member` to express the friend relationship.
@@ -120,7 +117,7 @@ Here you should use the RDF triple `foaf:member` to express the friend relations
 ```
 
 
-Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `solid-media` application.
+Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `Solid Media` application.
 
 ![Friends' movies](/img/friends.png)
 
@@ -178,4 +175,13 @@ const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 const {title, released, icon} = await loadData(tmdbUrl);
 						
 ```
+
+### Group authentication
+
+**As noted above, our group authentication is still experimental as the feature is still under active development and may not be universally supported by all solid servers.**
+
+The diagram below shows that the sharing of resources on solid pods currently relies on the authentication to be set up at both the `profile` level and the `pod` level. We welcome suggestions on any alternative approaches to this current solution, either for the Solid community server or any other Solid server.
+
+![Group authentication](/img/group.png)
+
 
