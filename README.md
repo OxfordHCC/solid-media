@@ -69,7 +69,7 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 
 Currently, the netflix import function doesn't work very well. But if you input a keyword of your favorite movie, you should see a list of results. You can choose the `tick` button if you have already watched the movie, or the `plus` button to the movie to a list to be watch. And the movie should appear below in the according section.
 
-![my movies](/img/add-movies.png)
+![my movies](/img/add-movies.png =250x)
 
 Furthermore, you can express your favorite of a movie by selecting `thumb up` or `thumb down` button, and the movies will show up as your favorites.
 
