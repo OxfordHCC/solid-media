@@ -50,7 +50,7 @@ Run
 
 The application will be opened on your local web browser [http://localhost:8080](http://localhost:8080).
 
-![login page](/img/login.png)
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/login.png" width="250" height="250" />
 
 
 ## Getting started with Solid Media
@@ -63,7 +63,8 @@ To get started with sharing your movies, you will need a webID to log into the s
 
 Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
 
-![my moviews page](/img/my-movies.png)
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/my-movies.png" width="400" />
 
 ### Add movies
 
