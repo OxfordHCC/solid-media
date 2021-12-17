@@ -72,7 +72,7 @@ Currently, the netflix import function doesn't work very well. But if you input 
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/add-movies.png" width="200" height="200" />
 
-Furthermore, you can express your favorite of a movie by selecting `thumb up` or `thumb down` button, and the movies will show up as your favorites.
+Once you have added movies in **Solid Media**, you can express your level of interest of a movie by the `thumb up` or `thumb down` button, and the movies will show up as your favorites.
 
 ## Sharing with friends
 
