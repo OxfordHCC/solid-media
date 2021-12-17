@@ -198,3 +198,6 @@ The diagram below shows that the sharing of resources on solid pods currently re
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/group.png" width="800" />
 
 
+#### Future group authentication requirements
+
+- Enabling a friend to control whether they would like to their movies with another friend, instead of having their movies shared by default when they become friends.
