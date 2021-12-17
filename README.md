@@ -1,10 +1,17 @@
-# Table of contents
-
+- [Table of contents](#table-of-contents)
 - [Welcome to Solid Media](#welcome-to-solid-media)
-  - [Set up locally](#set-up-locally)
-  - [Getting started with a Solid ID](#getting-started-with-a-solid-id)
-  - [Sharing with friends](#sharing-with-friends)
-  - [Development note](#development-note)
+  * [Set up locally](#set-up-locally)
+    + [Clone project and installations](#clone-project-and-installations)
+  * [Getting started with Solid Media](#getting-started-with-solid-media)
+    + [Log in with a WebID](#log-in-with-a-webid)
+    + [Add movies](#add-movies)
+  * [Sharing with friends](#sharing-with-friends)
+    + [Step 1: Add friends to the Solid profile](#step-1--add-friends-to-the-solid-profile)
+    + [Step 2: Add friends to the Solid pod](#step-2--add-friends-to-the-solid-pod)
+  * [Development note](#development-note)
+    + [Authentication](#authentication)
+    + [Fetch movie data from a pod](#fetch-movie-data-from-a-pod)
+    + [Group authentication](#group-authentication)
 
 
 # Welcome to Solid Media
@@ -46,7 +53,11 @@ The application will be opened on your local web browser [http://localhost:8080]
 ![login page](/img/login.png)
 
 
+<<<<<<< HEAD
 ## Getting started with Solid Media
+=======
+A public version can be accessed [https://oxfordhcc.github.io/solid-media/ https://oxfordhcc.github.io/solid-media/]. It's still experimental, for example, the `import` function is still not working. If you notice any bugs please feel free to raise an issue and we will most value your feedback!
+>>>>>>> 501bcf3c6d5e459e2e9e214f7e66533354ec6e1b
 
 ### Log in with a WebID
 
