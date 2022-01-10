@@ -83,6 +83,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				let friendsDataset: SolidDataset;
 				
 				try {
+					// retrieve friends list
 					friendsDataset = await getSolidDataset(`${pod}/friends`, {fetch: session.fetch});
 				} catch {
 					friendsDataset = createSolidDataset();
@@ -90,6 +91,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					let groupThing = createThing({url: `${pod}/friends#group`});
 					groupThing = setUrl(groupThing, RDF.type, 'http://xmlns.com/foaf/0.1/Group');
 					
+					// inserts friends into the group
 					friendsDataset = setThing(friendsDataset, groupThing);
 					
 					await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch});
@@ -100,8 +102,11 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const profile = await getSolidDataset(`${pod}/profile/card`, {fetch: session.fetch});
 				const me = getThing(profile, `${pod}/profile/card#me`)!;
 				
+				// get all friends in the pod
 				const groupFriends = new Set(getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member'));
+				// get all friends in the profile
 				const profileFriends = new Set(getUrlAll(me, 'http://xmlns.com/foaf/0.1/knows'));
+				// add new friends to the pod
 				const newFriends = [...profileFriends].filter(x => !groupFriends.has(x));
 				
 				for (const friend of newFriends) {
@@ -146,6 +151,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					try {
 						const parts = x.id.split('/');
 						const pod = parts.slice(0, parts.length - 2).join('/');
+
+						/// getting movies from a pod
 						
 						const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
 						

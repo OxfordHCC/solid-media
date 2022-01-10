@@ -21,6 +21,9 @@ export default class Login extends Component<{redirect: string | null}> {
 	};
 	
 	public render({redirect}: Props<{redirect: string | null}>): VNode {
+
+		// check whether haivng logged in, using 'authentication'
+
 		if (session.info.isLoggedIn) {
 			return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
 		} else if (this.state.handleRedirect) {
@@ -31,6 +34,9 @@ export default class Login extends Component<{redirect: string | null}> {
 			return <Loading />;
 		} else {
 			return (
+
+				// log in and authentication using @inrupt/solid-client-authn-browser
+
 				<Form submit={({provider}) => session.login({
 					oidcIssuer: provider,
 					clientName: "Solid Media",
