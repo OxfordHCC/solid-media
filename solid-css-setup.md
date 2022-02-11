@@ -4,11 +4,12 @@ This file contains the notes and instructions on setting up the CSS on a server.
 
 	The most notable reason why Ubuntu or any Linux distro version matters is the node.js version come with the distro. CSS requires node.js 12.7 (see [ref](https://github.com/solid/community-server#-running-the-server)). This document contains the instructions on upgrading the node.js version (because Ubuntu 20.04 comes with node.js 10.19).
 
-This document contains three major steps:
+This document contains four major steps:
 
 1. Building and Running CSS
 2. Setting up the web server
 3. Pairing web server to CSS (reverse proxy)
+4. Testing CSS with different configurations / default apps
 
 They are introduced below. Better sectioning may be provided later.
 
@@ -176,3 +177,31 @@ npx community-solid-server -b https://DOMAIN.NAME/ -c @css:config/file.json -f ~
 ```
 
 After launching, we can navigate to `https://DOMAIN.NAME/` in the browser, and finish the rest of the initialisation.
+
+### Setting different default apps for CSS
+
+With the steps above, you will notice that Solid is up and running, but you can not do much interesting things on the web page. This is because CSS is meant to be modular and only provides the most basic functionalities. It provides the core functionalities of Solid, and you can use any [Solid Apps](https://solidproject.org/apps) with it.
+
+Instead of the simple CSS, we may also want to provide a *default app* for it, such as the [mashlib data browser](https://github.com/solid/mashlib). This section describes how to do this.
+
+We can find existing *recipes* for doing this in the [CSS recipes repository](https://github.com/solid/community-server-recipes). It contains the instructions of basic usages. We need to follow the installation guide first, and do something slightly different when running the server -- this is to match our parameters above.
+
+We choose to use mashlib, and the command to launch CSS (with mashlib recipe) is:
+
+```
+npx community-solid-server -b https://DOMAIN.NAME/ -c config-mashlib.json -f ~/Documents/
+```
+
+## Troubleshooting
+
+### Invalid request
+
+Sometimes you will encounter an invalid request page when visiting some links (e.g. sign up):
+
+```
+InvalidRequest: invalid_request
+```
+
+This is because the URL does not correctly have `/` at the end. For example, you may be visiting `https://DOMAIN.NAME/idp/register`, but in fact you should visit `https://DOMAIN.NAME/idp/register/`. Manually fixing the URL can overcome the issue (temporarily).
+
+This is fixed by [this pull request](https://github.com/solid/community-server/pull/1107), but is not yet included in the npm version of the CSS.
