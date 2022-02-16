@@ -192,6 +192,53 @@ We choose to use mashlib, and the command to launch CSS (with mashlib recipe) is
 npx community-solid-server -b https://DOMAIN.NAME/ -c config-mashlib.json -f ~/Documents/
 ```
 
+## Other usages
+
+
+### Use different remote CSS code
+
+You can simply switch to a different CSS code repo instead of choosing a version from npm repository.
+
+You need to edit the `packages.json` file in the mashlib recipe, and replace the `@solid/community-server` line. For exmple, if you want to use the master branch from upstream (whose git fetch URL is `git://github.com/solid/community-server.git`), replace that line with (not the comma, which must be compliant with JSON syntax):
+
+```
+"@solid/community-server": "git://github.com/solid/community-server.git",
+```
+
+Then rebuild the server: 
+
+```
+npm install && npm ci
+```
+
+That's everything. You can start your server as usual.
+
+### Use local CSS code
+
+You may want to use a local CSS repo as the source code for starting mashlib recipe. The default configuration no longer works, and you need to modify the dependency.
+
+You need to edit the `packages.json` file in the mashlib recipe, and replace the `@solid/community-server` line. For exmple, if you want to use the local code under `/root/community-server`, replace that line with (not the comma, which must be compliant with JSON syntax):
+
+```
+"@solid/community-server": "file:/root/community-server",
+```
+
+Then rebuild the server:
+
+```
+npm install && npm ci
+```
+
+Finally, when starting server, you also need to add additional arguments, otherwise you will encounter *remote dependency missing* errors from components.js (see troubleshooting section below). The following arguments are needed:
+
+```
+-m .
+```
+
+The `.` denotes the mashlib recipe directory.
+
+	More explanation on why this works is welcome.
+
 ## Troubleshooting
 
 ### Invalid request
@@ -205,3 +252,26 @@ InvalidRequest: invalid_request
 This is because the URL does not correctly have `/` at the end. For example, you may be visiting `https://DOMAIN.NAME/idp/register`, but in fact you should visit `https://DOMAIN.NAME/idp/register/`. Manually fixing the URL can overcome the issue (temporarily).
 
 This is fixed by [this pull request](https://github.com/solid/community-server/pull/1107), but is not yet included in the npm version of the CSS.
+
+You may want to use a different version of CSS for your server (see relevant parts in [Other usages](#Other usages) above).
+
+
+### Remote dependency missing / context lookup failure (from componens.js)
+
+If you encounter something similar to the error below, you are encountering this issue:
+
+```
+Detected remote context lookup for 'https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server-metadata-extender/^1.0.0/components/context.jsonld' in /root/community-server-recipes/mashlib/config-mashlib.json. This may indicate a missing or invalid dependency, or an invalid context URL.
+Error: could not instantiate server from /root/community-server-recipes/mashlib/config-mashlib.json
+Error: Error while parsing file "/root/community-server-recipes/mashlib/config-mashlib.json": Failed to load remote context https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server-metadata-extender/^1.0.0/components/context.jsonld: Not Found
+    at Function.addPathToError (/root/community-server/node_modules/componentsjs/lib/rdf/RdfParser.js:73:16)
+    at PassThrough.<anonymous> (/root/community-server/node_modules/componentsjs/lib/rdf/RdfParser.js:46:38)
+    at PassThrough.emit (node:events:402:35)
+    at JsonLdParser.<anonymous> (/root/community-server/node_modules/rdf-parse/lib/RdfParser.js:71:47)
+    at JsonLdParser.emit (node:events:402:35)
+    at emitErrorNT (node:internal/streams/destroy:157:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:122:3)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+```
+
+We do not yet completely understand why, but by following [this issue](https://github.com/LinkedSoftwareDependencies/Components.js/issues/29), this can be solved by adding additional arguments: `-m .`. Where `.` denotes the directory for mashlib recipe.
