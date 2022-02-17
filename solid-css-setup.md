@@ -284,7 +284,8 @@ Set up [pm2](https://pm2.keymetrics.io/) to run your CSS instance even when you 
    ```
 
 Install [pm2-logrotate](https://github.com/keymetrics/pm2-logrotate) via
-   ```  npx pm2 install pm2-logrotate
+   ```  
+   npx pm2 install pm2-logrotate
    ```
    
 This manages the log files of `pm2`. Once it is installed it automatically is active and you do not need to change the default settings. 
@@ -295,7 +296,7 @@ If you get an error like
    ```
 
 Remove your pm2 folder via
-   ```shell
+   ```
    rm -r ~/.pm2
    ```
    and try again.
@@ -315,10 +316,10 @@ Add the following config file called `ecosystem.config.js`.
     ```
 
 Start pm2 via 
-    ```shell
+    ```
     npx pm2 start ecosystem.config.js
     ```
 Check that your instance works correctly via 
-    ```shell
+    ```
     npx pm2 log 0
     ```
