@@ -304,8 +304,9 @@ Remove your pm2 folder via
    
 
 Add the following config file called `ecosystem.config.js`.
-    Do not forget to update the url with the one of step 1 and the port with the one of step 2.
+    Do not forget to update the url and the port
     ```
+    
     module.exports = {
       apps : [{
         name   : "CSS instance",
@@ -319,6 +320,7 @@ Start pm2 via
     ```
     npx pm2 start ecosystem.config.js
     ```
+
 Check that your instance works correctly via 
     ```
     npx pm2 log 0
