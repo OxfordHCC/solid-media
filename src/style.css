@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Anton");
 
 body {
 	background-color: #EEE;
@@ -177,9 +178,11 @@ body {
 }
 
 .add-button-wrapper {
-	display: flex;
 	justify-content: center;
 	margin-top: 3vw;
+	top:0; 
+	right:0;
+	padding: 2vh;
 }
 
 .add-button {
@@ -190,6 +193,7 @@ body {
 	border: none;
 	box-shadow: 0 0 1vw rgba(0, 0, 0, .4);
 	transition: all 0.1s ease-in-out;
+	margin-left: 1vh;
 }
 
 .add-button:hover {
@@ -291,3 +295,50 @@ body {
 .add-popup-search-result-save:is(.carousel-selected, :hover) {
 	filter: url("./style.svg#green");
 }
+
+.loader__text {
+	margin: 5px auto;
+	color: #3D314A;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	font-family: Anton, sans-serif;
+  }
+  .loader__filmstrip {
+	position: relative;
+	width: 56px;
+	height: 70px;
+	background: #3D314A;
+	z-index: -1;
+  }
+  .loader__filmstrip:before, .loader__filmstrip:after {
+	content: "";
+	position: absolute;
+	height: 120%;
+	border-left: 5px dashed #F5F1ED;
+	-webkit-animation: roll 20ms infinite;
+			animation: roll 20ms infinite;
+  }
+  .loader__filmstrip:before {
+	left: 5px;
+  }
+  .loader__filmstrip:after {
+	right: 5px;
+  }
+  
+  @-webkit-keyframes roll {
+	0% {
+	  top: 0px;
+	}
+	100% {
+	  top: -15px;
+	}
+  }
+  
+  @keyframes roll {
+	0% {
+	  top: 0px;
+	}
+	100% {
+	  top: -15px;
+	}
+  }

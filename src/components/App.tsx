@@ -1,5 +1,5 @@
 import {h, Component, VNode} from 'preact';
-import {Router, Switch, Route, Redirect, useLocation} from 'wouter-preact';
+import {Router, Switch, Route, useLocation} from 'wouter-preact';
 import {Props} from './types';
 import Login from './Login';
 import HomeScreen from './HomeScreen';

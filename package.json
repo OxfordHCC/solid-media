@@ -25,8 +25,8 @@
     "@inrupt/solid-client-authn-browser": "^1.11.0",
     "@inrupt/vocab-common-rdf": "^1.0.0",
     "preact": "^10.5.14",
-    "wouter-preact": "^2.7.4",
-    ""
+    "rdflib": "^2.2.17",
+    "wouter-preact": "^2.7.4"
   },
   "devDependencies": {
     "@snowpack/plugin-typescript": "^1.2.1",

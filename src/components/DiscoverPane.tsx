@@ -2,13 +2,16 @@ import {h, Component, VNode} from 'preact';
 import {Props} from './types';
 import Carousel, {CarouselElement} from './Carousel';
 import AddPopup from './AddPopup';
+import AddFriends from './AddFriends';
 import {useAuthentication} from './authentication';
 import {loadData, MediaData, getIds} from '../media';
-import {getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, getResourceAcl, setStringNoLocale, addStringNoLocale} from '@inrupt/solid-client';
+import {getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale} from '@inrupt/solid-client';
 import {DCTERMS, RDF, SCHEMA_INRUPT} from '@inrupt/vocab-common-rdf';
 import {shuffle} from '../lib';
 
 import {HOMEPAGE} from '../env';
+
+import * as $rdf from "rdflib"
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 	year: 'numeric',
@@ -56,6 +59,7 @@ type State = {
 export default class DiscoverPane extends Component<{globalState: {state: any}}> {
 	state = {
 		addPopup: false,
+		addFriends: false,
 	};
 	
 	public render({globalState}: Props<{globalState: {state: State, setState: (state: Partial<State>) => void}}>): VNode {
@@ -112,7 +116,15 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				for (const friend of newFriends) {
 					groupThing = addUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', friend);
 				}
-				
+
+				// get all deleted friends - uncomment later when add friend works properly
+				const deletedFriends = [...groupFriends].filter(x => !profileFriends.has(x));
+				// remove deleted friends from 'friends' group
+				for (const friend of deletedFriends) {
+					groupThing = removeUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', friend);
+				}
+
+				// if (newFriends.length > 0 || deletedFriends.length > 0) {
 				if (newFriends.length > 0) {
 					friendsDataset = setThing(friendsDataset, groupThing);
 					
@@ -120,7 +132,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				}
 				
 				const friends = getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member');
-				
+				console.log("friends : " + friends);
 				if (!hasResourceAcl(moviesAclDataset)) {
 					// Temporarily allow friends access by default
 					// TODO: Create a UI element to do this
@@ -136,28 +148,38 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 				}
 				
+				// provide movies access to new friends
 				if (newFriends.length > 0) {
 					let moviesAcl = getResourceAcl(moviesAclDataset)!;
 					for (const id of newFriends) {
 						moviesAcl = setAgentDefaultAccess(moviesAcl, id, {...NO_ACCESS, read: true});
 						moviesAcl = setAgentResourceAccess(moviesAcl, id, {...NO_ACCESS, read: true});
 					}
+					// remove the access to movies for friends that have been deleted // uncomment later 
+					if(deletedFriends.length > 0) {
+						for (const id of deletedFriends) {
+							moviesAcl = setAgentDefaultAccess(moviesAcl, id, {...NO_ACCESS, read: false});
+							moviesAcl = setAgentResourceAccess(moviesAcl, id, {...NO_ACCESS, read: false});
+						} 
+					}
 					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 				}
 				
+				// creates an object of {type: {user or friend}, id: {users webID or friends webID}}
 				const people = [{type: 'me', id: webID}, ...friends.map(x => ({type: 'friend', id: x}))] as {type: 'me' | 'friend', id: string}[];
 				
+				// creates a list of movies including users and their friends movies data
 				const movieList = (await Promise.all(people.map(async x => {
 					try {
 						const parts = x.id.split('/');
 						const pod = parts.slice(0, parts.length - 2).join('/');
 
-						/// getting movies from a pod
-						
+						// getting movies from the user and their friends movies pod
 						const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
 						
 						const movies = getContainedResourceUrlAll(moviesDataset);
 						
+						// adds the url to the specfic movie resource to the movies list
 						return movies.map(m => ({...x, url: m}));
 					} catch {
 						return [];
@@ -166,14 +188,18 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				
 				const movies = await Promise.all(
 					movieList.map(async ({type, url}) => {
+						// iterating through all movies (user + their friends)
 						const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
 						
+						// fetching the stored metadata for each movie
 						const movieThing = getThing(movieDataset, `${url}#it`)!;
 						
 						const things = getThingAll(movieDataset);
 						
+						// checking if the user has watched the movie
 						const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
 						
+						// checking if the user has reviewed this movie
 						const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
 						
 						let liked = null;
@@ -195,6 +221,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						
 						const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 						
+						// fetch current movie assets from tmdb API
 						const {title, released, icon} = await loadData(tmdbUrl);
 						
 						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, title, released, image: icon, dataset: movieDataset};
@@ -247,6 +274,48 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			})();
 		}
 		
+		async function addNewFriendData() {
+			// Set up a local data store and associated data fetcher
+			const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
+			// create a local RDF store
+			const store = $rdf.graph();
+			// create a fetcher to read/write 
+			const fetcher = new $rdf.Fetcher(store, {fetch: session.fetch});
+			// create update manager to "patch" the data as the data is updated in real time
+			const updater = new $rdf.UpdateManager(store);
+			
+			const me_f = $rdf.sym(webID); // creates a node
+			const profile_f = me_f.doc();
+			console.log("My WedID: " + webID);
+			
+			// read the value filled up by the user in the text input
+			let newFriend = (document.getElementById("friend") as HTMLInputElement).value;
+			console.log("new friend to be added : " + newFriend);
+
+			let ins = [];
+			ins.push($rdf.st($rdf.sym(webID), FOAF('knows'), $rdf.sym(newFriend), $rdf.sym(webID).doc())); 
+			updater.update([], ins, (uri, ok_f, message_f) => {
+				console.log(uri);
+				if (!ok_f) alert(message_f);
+			});
+			
+			// Add new friend to the friends list
+			let friendsDataset: SolidDataset;
+			friendsDataset = await getSolidDataset(`${pod}/friends`, {fetch: session.fetch});
+			let groupThing = getThing(friendsDataset, `${pod}/friends#group`)!;
+			
+			if(newFriend.length != 0) { // if new friend exists
+				groupThing = addUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', newFriend); // add to group thing
+				friendsDataset = setThing(friendsDataset, groupThing); // update friends dataset
+					
+				await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch}); // save changes back
+				console.log("new friend added");
+
+				const friends = getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member');
+				console.log("friends after adding : " + friends);
+			}
+		}
+
 		async function save(media: MediaData) {
 			const ids = await getIds(media.tmdbUrl);
 			
@@ -509,19 +578,53 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			<div>
 				<div class='add-button-wrapper'>
 					<button class='add-button' onClick={() => this.setState({addPopup: true})}>➕ Add movies</button>
+					<button class='add-button' onClick={() => this.setState({addFriends: true})}>👥 Add friends</button>
 				</div>
-				<h1>Your friends have recently watched:</h1>
-				<Carousel>{(globalState.state.friendWatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
-				<h1>Your friends want to watch:</h1>
-				<Carousel>{(globalState.state.friendUnwatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
-				<h1>Your friends enjoyed:</h1>
-				<Carousel>{(globalState.state.friendLiked ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
-				<h1>You have previously watched:</h1>
-				<Carousel>{(globalState.state.myWatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
-				<h1>You want to watch:</h1>
-				<Carousel>{(globalState.state.myUnwatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
-				<h1>You enjoyed:</h1>
-				<Carousel>{(globalState.state.myLiked ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
+				{!globalState.state.friendWatched && 
+					<div style={{
+							position: 'absolute', left: '50%', top: '50%',
+							transform: 'translate(-50%, -50%)'
+					}}>
+						<div class="loader__filmstrip"></div>
+						<p class="loader__text">loading</p>
+					</div>
+				}
+				{globalState.state.friendWatched && globalState.state.friendWatched.length != 0 &&
+					<div>
+						<h1>Your friends have recently watched:</h1>
+						<Carousel>{(globalState.state.friendWatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
+					</div>
+				}
+				{globalState.state.friendUnwatched && globalState.state.friendUnwatched.length != 0 &&
+					<div>
+						<h1>Your friends want to watch:</h1>
+						<Carousel>{(globalState.state.friendUnwatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
+					</div>
+				}
+				{globalState.state.friendLiked && globalState.state.friendLiked.length != 0 && 
+					<div>
+						<h1>Your friends enjoyed:</h1>
+						<Carousel>{(globalState.state.friendLiked ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
+					</div>
+				}
+				{globalState.state.myWatched && globalState.state.myWatched.length != 0 &&
+					<div>
+						<h1>You have previously watched:</h1>
+						<Carousel>{(globalState.state.myWatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
+					</div>
+				}
+				{globalState.state.myUnwatched && globalState.state.myUnwatched.length != 0 &&
+					<div>
+						<h1>You want to watch:</h1>
+						<Carousel>{(globalState.state.myUnwatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
+					</div>
+				}
+				{globalState.state.myLiked && globalState.state.myLiked.length != 0 &&
+					<div>
+						<h1>You enjoyed:</h1>
+						<Carousel>{(globalState.state.myLiked ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
+					</div>
+				}
 				{this.state.addPopup && <AddPopup
 					close={() => this.setState({addPopup: false})}
 					save={async (media: MediaData) => {
@@ -533,6 +636,13 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						let data = Object.values(globalState.state.movies!).find(x => x.title === media.title);
 						if (!data) data = await save(media);
 						if (!data.watched) await watch(data);
+					}}
+				/>}
+				{this.state.addFriends && <AddFriends
+					close={() => this.setState({addFriends: false})}
+					add={() => {
+						addNewFriendData();
+						this.setState({addFriends: false});
 					}}
 				/>}
 			</div>
