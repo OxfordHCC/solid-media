@@ -311,7 +311,7 @@ Add the following config file called `ecosystem.config.js`.
       apps : [{
         name   : "CSS instance",
         script : "./bin/server.js",
-        args   : "-c config.json -f .data -b https://your-user.pod.url -p PORT"
+        args   : "-c config/file.json -f ~/Documents -b https://your-user.pod.url -p PORT"
       }]
     }
     ```
@@ -321,7 +321,8 @@ Start pm2 via
     npx pm2 start ecosystem.config.js
     ```
 
-Check that your instance works correctly via 
+Check that your instance works correctly via
+
     ```
     npx pm2 log 0
     ```
