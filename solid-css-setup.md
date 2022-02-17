@@ -322,7 +322,6 @@ Start pm2 via
     ```
 
 Check that your instance works correctly via
-
     ```
     npx pm2 log 0
     ```
