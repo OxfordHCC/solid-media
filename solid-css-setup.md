@@ -275,3 +275,50 @@ Error: Error while parsing file "/root/community-server-recipes/mashlib/config-m
 ```
 
 We do not yet completely understand why, but by following [this issue](https://github.com/LinkedSoftwareDependencies/Components.js/issues/29), this can be solved by adding additional arguments: `-m .`. Where `.` denotes the directory for mashlib recipe.
+
+## Run your CSS instance even when you log out
+
+Set up [pm2](https://pm2.keymetrics.io/) to run your CSS instance even when you log out.  Install pm2 via
+   ```
+   npm i pm2
+   ```
+
+Install [pm2-logrotate](https://github.com/keymetrics/pm2-logrotate) via
+   ```  npx pm2 install pm2-logrotate
+   ```
+   
+This manages the log files of `pm2`. Once it is installed it automatically is active and you do not need to change the default settings. 
+
+If you get an error like
+   ```
+   Error: EACCES: permission denied, open '/tmp/pm2-logrotate/node_modules/.package-lock.json'
+   ```
+
+Remove your pm2 folder via
+   ```shell
+   rm -r ~/.pm2
+   ```
+   and try again.
+   
+   
+
+Add the following config file called `ecosystem.config.js`.
+    Do not forget to update the url with the one of step 1 and the port with the one of step 2.
+    ```
+    module.exports = {
+      apps : [{
+        name   : "CSS instance",
+        script : "./bin/server.js",
+        args   : "-c config.json -f .data -b https://your-user.pod.url -p PORT"
+      }]
+    }
+    ```
+
+Start pm2 via 
+    ```shell
+    npx pm2 start ecosystem.config.js
+    ```
+Check that your instance works correctly via 
+    ```shell
+    npx pm2 log 0
+    ```
