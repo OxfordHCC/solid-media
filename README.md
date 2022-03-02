@@ -55,11 +55,11 @@ The application will be opened on your local web browser [http://localhost:8080]
 
 ## Getting started with Solid Media
 
-A public version can be accessed [https://oxfordhcc.github.io/solid-media/](https://oxfordhcc.github.io/solid-media/). It's still experimental, for example, the `import` function is still not working. If you notice any bugs please feel free to raise an issue and we will most value your feedback!
+A public version can be accessed [https://oxfordhcc.github.io/solid-media/](https://oxfordhcc.github.io/solid-media/). It's still experimental, for example, the `import` function is still not working. Instead, movies need to be `added' to your pod through the search function. If you notice any other bugs please feel free to raise an issue and we will most value your feedback!
 
 ### Log in with a WebID
 
-To get started with sharing your movies, you will need a webID to log into the system, so that you can store movies on your Solid pod and share them with your friends. For now, we recommend you register with [solidcommunity.net](https://solidcommunity.net).
+To get started with sharing your movies, you will need a [WebID](https://solidcommunity.net) to log into the system, so that you can store movies on your Solid pod and share them with your friends. For now, we recommend you register with [solidcommunity.net](https://solidcommunity.net).
 
 Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
 
@@ -68,19 +68,19 @@ Once you have set up a Solid/WebID then you can log in and start to add movies t
 
 ### Add movies
 
-Currently, the netflix import function doesn't work very well. But if you input a keyword of your favorite movie, you should see a list of results. You can choose the `tick` button if you have already watched the movie, or the `plus` button to the movie to a list to be watch. And the movie should appear below in the according section.
+Currently, the Netflix import function doesn't work very well. But if you input a keyword of your favorite movie, you should see a list of results. You can choose the `tick` button if you have already watched the movie, or the `plus` button to add the movie to a list to be watched. And the movie should appear in your list.
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/add-movies.png" width="200" height="200" />
 
-Once you have added movies in **Solid Media**, you can express your level of interest of a movie by the `thumb up` or `thumb down` button, and the movies will show up as your favorites.
+Once you have added movies in **Solid-Media**, you can express your level of interest of a movie by the `thumb up` or `thumb down` button, and the movies will show up as your favorites.
 
 ## Sharing with friends
 
 *Note that this implementation is experimental as group authentication on Solid CSS is still under active development.*
 
-One particular thing that `Solid Media` supports is sharing of movie amongst friends.
+One particular thing that `Solid-Media` supports is sharing movies amongst friends.
 
-At the moment, to enable the sharing of movies between friends, one must have set up the friends relationship on their Solid/WebID profile, and this must be set up in two steps and may require some writing of RDF.
+At the moment, to enable the sharing of movies between friends one must first set up the friends relationship on their Solid/WebID profile, and this must be set up in two steps and may require some writing of RDF.
 
 ### Step 1: Add friends to the Solid profile
 
@@ -117,7 +117,7 @@ pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
 
 In order to let `Solid Media` access your friends' movies, you also need to add our friends to your friends Group in your Solid pod.
 
-Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list, which is equivalent for you to go to `https://WEBID.solidcommunity.net/friends#group`. Click on the pencil icon on the button right corner to edit your friend list.
+Go to `https://WEBID.solidcommunity.net/` (after you have logged in), and click on the `Your Storage` tab. From the list of dropdown items, select `friends` and expand the list (which is equivalent to `https://WEBID.solidcommunity.net/friends#group`). Click on the pencil icon on the button at the right corner to edit your friend list.
 
 
 Here you should use the RDF triple `foaf:member` to express the friend relationship.
@@ -128,7 +128,7 @@ Here you should use the RDF triple `foaf:member` to express the friend relations
 ```
 
 
-Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `Solid Media` application.
+Once finishing setting the above two steps, you will be able to see your friends' movies on the top of the `Solid-Media` application.
 
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/friends.png" width="800" />
