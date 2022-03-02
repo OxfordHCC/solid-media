@@ -2,8 +2,9 @@
 @import url("https://fonts.googleapis.com/css?family=Anton");
 
 body {
-	background-color: #EEE;
+	background-color: #000;
 	font-family: 'Open Sans', sans-serif;
+	margin: 0px;
 }
 
 .carousel {
@@ -14,7 +15,7 @@ body {
 	overflow: auto;
 	min-height: 16vw;
 	scroll-behavior: smooth;
-	background-color: #FFF;
+	background-color: #141414;
 	padding: 1vw;
 }
 
@@ -183,6 +184,7 @@ body {
 	top:0; 
 	right:0;
 	padding: 2vh;
+	display: flex;
 }
 
 .add-button {
@@ -215,12 +217,26 @@ body {
 
 .add-popup-menu {
 	position: relative;
-	background-color: #EEE;
+	background-color: rgb(68, 68, 68);
 	padding: 2vw;
 	border-radius: 2vw;
 	width: 40vw;
 	height: 40vw;
 }
+
+.add-logout-menu {
+	position: relative;
+	background-color: rgb(68, 68, 68);
+	padding: 2vw;
+	border-radius: 2vw;
+	width: 40vw;
+	height: 20vw; 
+	justify-content: center; 
+	align-items: center; 
+	display: flex;
+}
+
+
 
 .add-popup-close {
 	position: absolute;
@@ -247,12 +263,23 @@ body {
 	height: 7vw;
 	width: 7vw;
 	bottom: 2vw;
+	color: #000;
 	background-color: #FFF;
 	padding: 1vw;
 	border-radius: 1vw;
 	text-align: center;
 	box-shadow: 0 0 1vw rgba(0, 0, 0, .4);
 	cursor: pointer;
+}
+
+#friend {
+	margin-bottom: 2vh;
+	height: 4vh;
+}
+
+.add-friends-container {
+	justify-content: center;
+	display: inline-grid;
 }
 
 .add-popup-search-results {
@@ -298,7 +325,7 @@ body {
 
 .loader__text {
 	margin: 5px auto;
-	color: #3D314A;
+	color: #fff;
 	text-transform: uppercase;
 	letter-spacing: 1px;
 	font-family: Anton, sans-serif;
@@ -307,7 +334,7 @@ body {
 	position: relative;
 	width: 56px;
 	height: 70px;
-	background: #3D314A;
+	background: #5765FF;
 	z-index: -1;
   }
   .loader__filmstrip:before, .loader__filmstrip:after {
@@ -342,3 +369,118 @@ body {
 	  top: -15px;
 	}
   }
+
+  .showcase {
+	width: 100%;
+	height: 100vh;
+	position: relative;
+	background: url('https://i.ibb.co/vXqDmnh/background.jpg') no-repeat center center/cover;
+}
+
+.showcase::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	background: rgba(0, 0, 0, 0.65);
+	box-shadow: inset 30px 10px 150px #000000;
+}
+
+.logo {
+	position: relative;
+	z-index: 2;
+	height: 90px;
+}
+
+.logo img {
+	width: 170px;
+	position: absolute;
+	top: 20px;
+	left: 40px;
+}
+
+.showcase-content {
+	position: relative;
+	z-index: 2;
+	width: 450px;
+	height: 650px;
+	background: rgb(0, 0, 0, 0.65);
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: flex-start;
+	text-align: left;
+	padding: 60px 65px;
+}
+
+.formm h1 {
+	margin-bottom: 20px;
+  	color: #fff;
+}
+
+.formm {
+	width: 100%;
+	margin-bottom: 40px;
+}
+
+.formm .info {
+	padding: 5px 0;
+}
+
+.formm .info .provider {
+	margin-bottom: 30px;
+	width: 96.5%;
+	height: 40px;
+	border-radius: 5px;
+	border: none;
+	padding: 8px;
+	font-size: inherit;
+}
+
+.formm .btn {
+	margin-bottom: 10px;
+	width: 100%;
+}
+
+.btn-primary {
+	width: 100%;
+	height: 50px;
+	border-radius: 5px;
+	background: #5765FF;
+	color: #fff;
+	font-size: inherit;
+	font-weight: bold;
+	border: none;
+	cursor: pointer;
+	outline: none;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.login-page {
+	font-family: 'Arial', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	background: #000;
+	color: #999;
+	height: fit-content;
+	overflow-x: hidden;
+}
+
+.movies-page {
+	font-family: 'Arial', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	background: #000;
+	color: #fff;
+	height: fit-content;
+	overflow-x: hidden;
+}
+
+.logo-container {
+    display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: 5vh;
+}

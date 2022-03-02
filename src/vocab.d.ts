@@ -17,3 +17,8 @@ declare module '@inrupt/vocab-common-rdf' {
 		endTime: string,
 	}
 }
+
+declare module "*.png" {
+	const content: string;
+	export default content;
+  }

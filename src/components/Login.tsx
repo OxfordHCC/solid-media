@@ -1,61 +1,83 @@
-import {h, Component, Fragment, VNode} from 'preact';
-import {Redirect} from 'wouter-preact';
-import {Props} from './types';
-import {session} from './authentication';
+import { h, Component, Fragment, VNode } from 'preact';
+import { Redirect } from 'wouter-preact';
+import { Props } from './types';
+import { session } from './authentication';
 import Loading from './Loading';
 import Form from './Form';
 
-import {HOMEPAGE} from '../env';
+import { HOMEPAGE } from '../env';
+
+import logo from "./../assets/logo.png";
 
 const providers = [
 	{title: "Inrupt Pod Spaces", url: 'https://broker.pod.inrupt.com/'},
 	{title: "inrupt.net", url: 'https://inrupt.net/'},
 	{title: "solidcommunity.net", url: 'https://solidcommunity.net/'},
 	{title: "Solid Web", url: 'https://solidweb.org/'},
+	{title: "Trinpod", url: 'https://trinpod.us/'},
 ];
 
 export default class Login extends Component<{redirect: string | null}> {
 	state = {
 		handleRedirect: true,
-		provider: 'https://',
+		provider: '',
 	};
 	
 	public render({redirect}: Props<{redirect: string | null}>): VNode {
 
 		// check whether haivng logged in, using 'authentication'
-
+		
 		if (session.info.isLoggedIn) {
 			return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
 		} else if (this.state.handleRedirect) {
 			session
-				.handleIncomingRedirect(window.location.href)
+				.handleIncomingRedirect({ restorePreviousSession : true })
 				.then(() => { this.setState({handleRedirect: false}); });
 			
 			return <Loading />;
 		} else {
 			return (
-
-				// log in and authentication using @inrupt/solid-client-authn-browser
-
-				<Form submit={({provider}) => session.login({
-					oidcIssuer: provider,
-					clientName: "Solid Media",
-					redirectUrl: window.location.href,
-				})}>
-					<input
-						name='provider'
-						type='text'
-						placeholder='Login Provider'
-						value={this.state.provider}
-						onInput={({target}) => this.setState({provider: (target as HTMLInputElement).value})}
-					/>
-					<input type='submit' value='Sign In!' />
-					<br />
-					{providers.map(({url, title}) => <>
-						<input type='button' onClick={() => this.setState({provider: url})} value={title} />
-						<br />
-					</>)}
-				</Form>
+				<div class="login-page">
+					<header class="showcase">
+						<div class="logo">
+							<img src={logo}></img>
+						</div>
+						<div class="showcase-content">
+							<div class="formm">
+								<Form submit={({provider}) => session.login({
+									oidcIssuer: provider,
+									clientName: "Solid Media",
+									redirectUrl: window.location.href,
+								})}>
+									<h3>Sign In</h3>
+									<h3>Select your pod provider</h3>
+									<div class="info">
+										<input
+											class="provider"
+											name='provider'
+											type='text'
+											placeholder='Pod Provider'
+											value={this.state.provider}
+											onInput={({target}) => this.setState({provider: (target as HTMLInputElement).value})}
+										/>
+									</div>
+									
+									{providers.map(({url, title}) => <>
+										<div class="btn">
+											<input 
+												class="btn-primary" 
+												type='submit' 
+												onClick={() => this.setState({provider: url})} 
+												value={title} 
+											/>
+										</div>
+										<br />
+									</>)}
+								</Form>
+							</div>
+						</div>
+					</header>
+				</div>
 			);
 		}
 	}
