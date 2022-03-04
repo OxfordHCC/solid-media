@@ -8,8 +8,6 @@ This file contains the setup guide for the [Solid Calendar Store](https://github
 
 The Solid Calendar Store can be seen as a modified version of CSS. In fact, it is a "plugin" to CSS, and the given configuration lunches both CSS and the Calendar Store plugin.
 
-
-
 The steps to set up it are stated in their [README](https://github.com/KNowledgeOnWebScale/solid-calendar-store#how-to-run). It is correct, but misses some important aspects, which are added here:
 
 1. In step 4, the configuration file has two main fields to modify, which are marked with `**SOMETHING**` in the file:
@@ -24,27 +22,43 @@ The steps to set up it are stated in their [README](https://github.com/KNowledge
    
    2. The `config.json` specifies some other files used to start the server. They are located under `examples` directory.
 
-
-
 ## Using the Calendar Store
 
 ### API endpoint
 
 You can directly perform HTTP request to the API endpoints (e.g. from your browser, or using `curl`). The available API endpoints are configured in the configuration file.
 
-
-
 The example configuration file contains one API endpoint: `availability`. You can access it from `https://SERVER/availability`. Note that there should not be a slash `/` at the end.
 
-
-
 The list of available endpoints can be found [here](https://github.com/KNowledgeOnWebScale/solid-calendar-store#endpoints).
-
-
 
 ### KNoodle
 
 [KNoodle](https://github.com/KNowledgeOnWebScale/knoodle/) is a companion Solid App developed for the Calendar Store.
+
+
+
+Its [README](https://github.com/KNowledgeOnWebScale/knoodle#run-locally-via-http-server) contains the relevant instructions on how to set up the app.
+
+
+
+Before using KNoodle, you will want to add the relevant information to your WebID (profile card):
+
+```turtle
+@prefix knows:  <https://data.knows.idlab.ugent.be/person/office/#> .
+@prefix schema: <http://schema.org/> .
+
+<**your-webid**>
+    knows:hasAvailabilityCalendar [ schema:url "**availability-url**" ] .
+```
+
+where the relevant fields are replaced with your own information. This can be added to any of your WebID as you wish.
+
+You will prefer to have `foaf:name "your-name"@en` in your WebID document, if you want to see your name displayed in KNoodle. Notice the `@en` at the end.
+
+
+
+Note that KNoodle does not read your friend list and display it. It uses a predefined/hard-coded list of people. See [this section in README](https://github.com/KNowledgeOnWebScale/knoodle#suggested-changes-for-your-use-case) for relevant information on how to modify the list of people seen on the app.
 
 
 
@@ -54,12 +68,8 @@ The list of available endpoints can be found [here](https://github.com/KNowledge
 
 If you get HTTP error 500 when using calendar store API endpoint (e.g. `/availability`), you may configured an incorrect URL to your personal calendar.
 
-
-
 ### Error 404 when accessing calendar API endpoint
 
 Check if you have an excessive `/` at the end. Normally, the API endpoints should not have `/` at the end.
 
 Otherwise, there may be a configuration error.
-
-
