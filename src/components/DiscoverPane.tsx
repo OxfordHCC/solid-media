@@ -6,7 +6,7 @@ import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useAuthentication } from './authentication';
 import { loadData, MediaData, getIds } from '../media';
-import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
+import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
 
@@ -35,6 +35,13 @@ const FULL_ACCESS = {
 	write: true,
 	append: true,
 	control: true,
+};
+
+const READ_ACCESS = {
+	read: true,
+	write: false,
+	append: false,
+	control: false,
 };
 
 export type MovieData = {
@@ -87,7 +94,6 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				try {
 					moviesAclDataset = await getSolidDatasetWithAcl(`${pod}/movies`, {fetch: session.fetch}) as any;
 				} catch {
-					console.log('here');
 					moviesAclDataset = await createContainerAt(`${pod}/movies`, {fetch: session.fetch}) as any;
 				}
 				
@@ -148,23 +154,34 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					console.log("friend : " + friend);
 				}
 
-				// console.log(!moviesAclDataset);
-				// console.log(!friendsDataset);
-
 				if (!hasResourceAcl(moviesAclDataset)) {
 					// Temporarily allow friends access by default
 					// TODO: Create a UI element to do this
 					let moviesAcl = createAcl(moviesAclDataset);
-					moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, {...NO_ACCESS, read: true});
-					moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, {...NO_ACCESS, read: true});
+					moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+					moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+					// Temporarily set /movies access to everyone by default
+					moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
+					moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
 					for (const id of friends) {
-						moviesAcl = setAgentDefaultAccess(moviesAcl, id, {...NO_ACCESS, read: true});
-						moviesAcl = setAgentResourceAccess(moviesAcl, id, {...NO_ACCESS, read: true});
+						moviesAcl = setAgentDefaultAccess(moviesAcl, id, READ_ACCESS);
+						moviesAcl = setAgentResourceAccess(moviesAcl, id, READ_ACCESS);
 					}
 					moviesAcl = setAgentDefaultAccess(moviesAcl, webID, FULL_ACCESS);
 					moviesAcl = setAgentResourceAccess(moviesAcl, webID, FULL_ACCESS);
 					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 				}
+
+
+				// Check if Global Access setting for /movies is set to everyone for read access
+				let moviesAcl = createAcl(moviesAclDataset);
+				let currentGlobalAccess = getPublicAccess(moviesAclDataset);
+				if (currentGlobalAccess && currentGlobalAccess['read'] == false) {
+					moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
+					moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
+					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
+				}
+
 
 				// provide movies access to new friends
 				if (newFriends.length > 0) {
