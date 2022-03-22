@@ -85,7 +85,6 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				let moviesAclDataset: SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo;
 				
 				try {
-					console.log('here 1')
 					moviesAclDataset = await getSolidDatasetWithAcl(`${pod}/movies`, {fetch: session.fetch}) as any;
 				} catch {
 					console.log('here');
@@ -149,6 +148,9 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					console.log("friend : " + friend);
 				}
 
+				// console.log(!moviesAclDataset);
+				// console.log(!friendsDataset);
+
 				if (!hasResourceAcl(moviesAclDataset)) {
 					// Temporarily allow friends access by default
 					// TODO: Create a UI element to do this
@@ -163,7 +165,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					moviesAcl = setAgentResourceAccess(moviesAcl, webID, FULL_ACCESS);
 					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 				}
-				
+
 				// provide movies access to new friends
 				if (newFriends.length > 0) {
 					let moviesAcl = getResourceAcl(moviesAclDataset)!;
@@ -655,37 +657,37 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				}
 				{globalState.state.friendWatched && globalState.state.friendWatched.length != 0 &&
 					<div>
-						<h3>Friends Collection</h3>
+						<h3 style="margin-left: 2%;">Friends Collection</h3>
 						<Carousel>{(globalState.state.friendWatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
 					</div>
 				}
 				{globalState.state.friendUnwatched && globalState.state.friendUnwatched.length != 0 &&
 					<div>
-						<h3>Friends Wishlist</h3>
+						<h3 style="margin-left: 2%;">Friends Wishlist</h3>
 						<Carousel>{(globalState.state.friendUnwatched ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
 					</div>
 				}
 				{globalState.state.friendLiked && globalState.state.friendLiked.length != 0 && 
 					<div>
-						<h3>Friends enjoyed</h3>
+						<h3 style="margin-left: 2%;">Friends enjoyed</h3>
 						<Carousel>{(globalState.state.friendLiked ?? []).map(x => createCarouselElement(x, 'friend'))}</Carousel>
 					</div>
 				}
 				{globalState.state.myWatched && globalState.state.myWatched.length != 0 &&
 					<div>
-						<h3>Your Collection</h3>
+						<h3 style="margin-left: 2%;">Your Collection</h3>
 						<Carousel>{(globalState.state.myWatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
 					</div>
 				}
 				{globalState.state.myUnwatched && globalState.state.myUnwatched.length != 0 &&
 					<div>
-						<h3>Your Wishlist</h3>
+						<h3 style="margin-left: 2%;">Your Wishlist</h3>
 						<Carousel>{(globalState.state.myUnwatched ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
 					</div>
 				}
 				{globalState.state.myLiked && globalState.state.myLiked.length != 0 &&
 					<div>
-						<h3>You enjoyed</h3>
+						<h3 style="margin-left: 2%;">You enjoyed</h3>
 						<Carousel>{(globalState.state.myLiked ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
 					</div>
 				}

@@ -188,14 +188,14 @@ body {
 }
 
 .add-button {
-	font-size: 1.5vw;
-	border-radius: 1.5vw;
-	padding: 0.5vw;
+	font-size: 1.2vw;
+	border-radius: 0.8vw;
+	padding: 0.6vw;
 	background-color: #F5F5F5;
 	border: none;
 	box-shadow: 0 0 1vw rgba(0, 0, 0, .4);
 	transition: all 0.1s ease-in-out;
-	margin-left: 1vh;
+	margin-left: 2vh;
 }
 
 .add-button:hover {
@@ -290,11 +290,18 @@ body {
 	overflow: hidden scroll;
 }
 
+.add-popup-search-results-text {
+	color: black;
+}
+
 .add-popup-search-result {
 	margin: 0.5vw;
 	padding: 0.25vw;
 	border-radius: 0.25vw;
 	background-color: #EEE;
+	display: inline-flex;
+	justify-content: space-between;
+	width: 96%;
 }
 
 .add-popup-search-result-buttons {
