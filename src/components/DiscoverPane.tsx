@@ -85,8 +85,10 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				let moviesAclDataset: SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo;
 				
 				try {
+					console.log('here 1')
 					moviesAclDataset = await getSolidDatasetWithAcl(`${pod}/movies`, {fetch: session.fetch}) as any;
 				} catch {
+					console.log('here');
 					moviesAclDataset = await createContainerAt(`${pod}/movies`, {fetch: session.fetch}) as any;
 				}
 				
@@ -99,7 +101,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					friendsDataset = createSolidDataset();
 					
 					let groupThing = createThing({url: `${pod}/friends#group`});
-					groupThing = setUrl(groupThing, RDF.type, 'http://xmlns.com/foaf/0.1/Group');
+					groupThing = setUrl(groupThing, RDF.type, 'http://www.w3.org/2006/vcard/ns#Group');
 					
 					// inserts friends into the group
 					friendsDataset = setThing(friendsDataset, groupThing);
@@ -113,7 +115,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const me = getThing(profile, `${pod}/profile/card#me`)!;
 				
 				// get all friends in the pod
-				const groupFriends = new Set(getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member'));
+				const groupFriends = new Set(getUrlAll(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember'));
 				// get all friends in the profile
 				const profileFriends = new Set(getUrlAll(me, 'http://xmlns.com/foaf/0.1/knows'));
 				// add new friends to the pod
@@ -122,7 +124,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				for (const friend of newFriends) {
 					console.log('print friend : ' + friend);
 					if(friend != webID) { // avoid adding the user itself as a friend
-						groupThing = addUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', friend);
+						groupThing = addUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', friend);
 					} 
 				}
 
@@ -131,7 +133,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				
 				// remove deleted friends from 'friends' group
 				for (const friend of deletedFriends) {
-					groupThing = removeUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', friend);
+					groupThing = removeUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', friend);
 				}
 
 				if (newFriends.length > 0 || deletedFriends.length > 0) {
@@ -140,7 +142,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch});
 				}
 				
-				const friends = getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member');
+				const friends = getUrlAll(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember');
 
 				// remove later - for debugging 
 				for (const friend of friends) {
@@ -319,7 +321,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			// create update manager to "patch" the data as the data is updated in real time
 			const updater = new $rdf.UpdateManager(store);
 			
-			const me_f = $rdf.sym(webID); // creates a user node
+			const me_f = $rdf.sym(webID); // creates a user node identified by the webID URI
 			const profile_f = me_f.doc(); 
 			console.log("My WedID: " + webID);
 			
@@ -336,17 +338,32 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			
 			// Add new friend to the friends list
 			let friendsDataset: SolidDataset;
-			friendsDataset = await getSolidDataset(`${pod}/friends`, {fetch: session.fetch});
+
+			try {
+				// retrieve friends list
+				friendsDataset = await getSolidDataset(`${pod}/friends`, {fetch: session.fetch});
+			} catch {
+				friendsDataset = createSolidDataset();
+				
+				let groupThing = createThing({url: `${pod}/friends#group`});
+				groupThing = setUrl(groupThing, RDF.type, 'http://www.w3.org/2006/vcard/ns#Group');
+				
+				// inserts friends into the group
+				friendsDataset = setThing(friendsDataset, groupThing);
+				
+				await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch});
+			}
+
 			let groupThing = getThing(friendsDataset, `${pod}/friends#group`)!;
 			
 			if(newFriend.length != 0) { // if new friend exists
-				groupThing = addUrl(groupThing, 'http://xmlns.com/foaf/0.1/member', newFriend); // add to group thing
+				groupThing = addUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', newFriend); // add to group thing
 				friendsDataset = setThing(friendsDataset, groupThing); // update friends dataset
 					
 				await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch}); // save changes back
 				console.log("new friend added");
 
-				const friends = getUrlAll(groupThing, 'http://xmlns.com/foaf/0.1/member');
+				const friends = getUrlAll(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember');
 				console.log("friends after adding : " + friends);
 			}
 		}
