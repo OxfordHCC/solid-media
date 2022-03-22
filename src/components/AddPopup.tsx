@@ -79,7 +79,9 @@ class AddPopupSearchList extends Component<{close: () => void, save: (media: Med
 										{results.map(r => {
 											return (
 												<div class='add-popup-search-result'>
-													{`${r.title} - ${r.released.toLocaleDateString('en-GB', DATE_FORMAT)}`}
+													<div class='add-popup-search-results-text'>
+														{`${r.title} - ${r.released.toLocaleDateString('en-GB', DATE_FORMAT)}`}
+													</div>
 													<div class='add-popup-search-result-buttons'>
 														<div class='add-popup-search-result-watch' onClick={() => {
 															watch(r);
