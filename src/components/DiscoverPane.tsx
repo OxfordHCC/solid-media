@@ -6,7 +6,7 @@ import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useAuthentication } from './authentication';
 import { loadData, MediaData, getIds } from '../media';
-import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess } from '@inrupt/solid-client';
+import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
 
@@ -154,53 +154,64 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					console.log("friend : " + friend);
 				}
 
-				if (!hasResourceAcl(moviesAclDataset)) {
-					// Temporarily allow friends access by default
-					// TODO: Create a UI element to do this
+				try {
+					// initialises ACL for the moviesAclDataset (during first log-in on the app)
+					if (!hasResourceAcl(moviesAclDataset)) {
+						// Temporarily allow friends access by default
+						// TODO: Create a UI element to do this
+						let moviesAcl = createAcl(moviesAclDataset);
+						moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+						moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+						// Temporarily set /movies access to everyone by default
+						moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
+						moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
+						for (const id of friends) { // add read access for all existing friends
+							moviesAcl = setAgentDefaultAccess(moviesAcl, id, READ_ACCESS);
+							moviesAcl = setAgentResourceAccess(moviesAcl, id, READ_ACCESS);
+						}
+						// Set full access for the user itself
+						moviesAcl = setAgentDefaultAccess(moviesAcl, webID, FULL_ACCESS);
+						moviesAcl = setAgentResourceAccess(moviesAcl, webID, FULL_ACCESS);
+						await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
+					}
+				} catch {
+					// try/catch because hasResourceAcl & getResourceAcl throws an error on the first sign-up
+				}
+
+				// Try & Check if Global Access setting for /movies is set to everyone for read access
+				try {
 					let moviesAcl = createAcl(moviesAclDataset);
-					moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
-					moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
-					// Temporarily set /movies access to everyone by default
-					moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
-					moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
-					for (const id of friends) {
-						moviesAcl = setAgentDefaultAccess(moviesAcl, id, READ_ACCESS);
-						moviesAcl = setAgentResourceAccess(moviesAcl, id, READ_ACCESS);
+					let currentGlobalAccess = getPublicAccess(moviesAclDataset);
+					let currentGroupAccess = getGroupAccess(moviesAclDataset, `${pod}/friends#group`);
+					if (currentGlobalAccess && !currentGlobalAccess['read'] || currentGroupAccess && !currentGroupAccess['read']) {
+						moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+						moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
+						moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
+						moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
+						await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 					}
-					moviesAcl = setAgentDefaultAccess(moviesAcl, webID, FULL_ACCESS);
-					moviesAcl = setAgentResourceAccess(moviesAcl, webID, FULL_ACCESS);
-					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
-				}
 
-
-				// Check if Global Access setting for /movies is set to everyone for read access
-				let moviesAcl = createAcl(moviesAclDataset);
-				let currentGlobalAccess = getPublicAccess(moviesAclDataset);
-				if (currentGlobalAccess && currentGlobalAccess['read'] == false) {
-					moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
-					moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
-					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
-				}
-
-
-				// provide movies access to new friends
-				if (newFriends.length > 0) {
-					let moviesAcl = getResourceAcl(moviesAclDataset)!;
-					for (const id of newFriends) {
-						moviesAcl = setAgentDefaultAccess(moviesAcl, id, {...NO_ACCESS, read: true});
-						moviesAcl = setAgentResourceAccess(moviesAcl, id, {...NO_ACCESS, read: true});
+					// provide movies access to new friends
+					if (newFriends.length > 0) {
+						let moviesAcl = getResourceAcl(moviesAclDataset)!;
+						for (const id of newFriends) {
+							moviesAcl = setAgentDefaultAccess(moviesAcl, id, READ_ACCESS);
+							moviesAcl = setAgentResourceAccess(moviesAcl, id, READ_ACCESS);
+						}
+						await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
 					}
-					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
-				}
 
-				// remove movie access for deleted friends
-				if (deletedFriends.length > 0) {
-					let moviesAcl = getResourceAcl(moviesAclDataset)!; 
-					for (const id of deletedFriends) {
-						moviesAcl = setAgentDefaultAccess(moviesAcl, id, {...NO_ACCESS, read: false});
-						moviesAcl = setAgentResourceAccess(moviesAcl, id, {...NO_ACCESS, read: false});
-					} 
-					await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
+					// remove movie access for deleted friends
+					if (deletedFriends.length > 0) {
+						let moviesAcl = getResourceAcl(moviesAclDataset)!; 
+						for (const id of deletedFriends) {
+							moviesAcl = setAgentDefaultAccess(moviesAcl, id, NO_ACCESS);
+							moviesAcl = setAgentResourceAccess(moviesAcl, id, NO_ACCESS);
+						} 
+						await saveAclFor(moviesAclDataset, moviesAcl, {fetch: session.fetch});
+					}
+				} catch {
+					console.log('resource ACL isn\'t setup yet - first sign-up');
 				}
 				
 				// creates an object of {type: {user or friend}, id: {users webID or friends webID}}
@@ -282,8 +293,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							// if the movie has been watched & check if the same movie does not already exist in the watched list
 							if (movie.watched && !myWatched.includes(movie.movie)) {
 								myWatched.push(movie.movie);
-							}
-							else {
+							} else {
 								if(!myUnwatched.includes(movie.movie)) {
 									// check if the same movie does not already exist
 									myUnwatched.push(movie.movie);
@@ -297,15 +307,17 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						} break;
 						
 						case 'friend': {
-							if (!(movie.movie in movieDict)) movieDict[movie.movie] =
+							if (!(movie.movie in movieDict)) {
+								movieDict[movie.movie] =
 								{...movie, watched: false, liked: null, me: false, friend: true};
-							else movieDict[movie.movie].friend = true;
+							} else {
+								movieDict[movie.movie].friend = true;
+							}
 							
 							// if the friend has watched the movie and it isn't there in friendWatched already
 							if (movie.watched && !friendWatched.includes(movie.movie)) {
 								friendWatched.push(movie.movie);
-							} 
-							else {
+							} else {
 								if(!friendUnwatched.includes(movie.movie)) {
 									friendUnwatched.push(movie.movie);
 								}
@@ -345,14 +357,18 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			console.log("My WedID: " + webID);
 			
 			// read the value filled up by the user in the text input
-			let newFriend = (document.getElementById("friend") as HTMLInputElement).value;
-			console.log("new friend to be added : " + newFriend);
+			let newFriendWebID = (document.getElementById("friend") as HTMLInputElement).value;
+			console.log("new friend to be added : " + newFriendWebID);
 
 			let ins = [];
-			ins.push($rdf.st($rdf.sym(webID), FOAF('knows'), $rdf.sym(newFriend), $rdf.sym(webID).doc())); 
+			ins.push($rdf.st($rdf.sym(webID), FOAF('knows'), $rdf.sym(newFriendWebID), $rdf.sym(webID).doc())); 
 			updater.update([], ins, (uri, ok_f, message_f) => {
 				console.log(uri);
-				if (!ok_f) alert(message_f);
+				if (!ok_f) {
+					alert(message_f);
+				} else {
+					window.location.reload();
+				}
 			});
 			
 			// Add new friend to the friends list
@@ -375,8 +391,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 
 			let groupThing = getThing(friendsDataset, `${pod}/friends#group`)!;
 			
-			if(newFriend.length != 0) { // if new friend exists
-				groupThing = addUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', newFriend); // add to group thing
+			if(newFriendWebID.length != 0) { // if new friend exists
+				groupThing = addUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', newFriendWebID); // add to group thing
 				friendsDataset = setThing(friendsDataset, groupThing); // update friends dataset
 					
 				await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, {fetch: session.fetch}); // save changes back
@@ -385,6 +401,9 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const friends = getUrlAll(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember');
 				console.log("friends after adding : " + friends);
 			}
+
+			// TODO: Write a function to fetch newly added friend's movies on the fly, instead of refreshing the window
+
 		}
 
 		async function save(media: MediaData) {
@@ -672,6 +691,16 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						<p class="loader__text">loading</p>
 					</div>
 				}
+				{globalState.state.friendWatched && !globalState.state.friendWatched.length &&
+					globalState.state.friendUnwatched && !globalState.state.friendUnwatched.length &&
+					globalState.state.friendLiked && !globalState.state.friendLiked.length &&
+					globalState.state.myWatched && !globalState.state.myWatched.length &&
+					globalState.state.myUnwatched && !globalState.state.myUnwatched.length &&
+					globalState.state.myLiked && !globalState.state.myLiked.length &&
+					<div class="empty-container-data">
+						<h3>Add Movies or Friends</h3>
+					</div>
+				}
 				{globalState.state.friendWatched && globalState.state.friendWatched.length != 0 &&
 					<div>
 						<h3 style="margin-left: 2%;">Friends Collection</h3>
@@ -726,12 +755,6 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						this.setState({addFriends: false});
 					}}
 					add={() => {
-						// session.logout();
-						// logout();
-						// async (): Promise<void> => {
-						// 	await logout();
-						// 	session.info.isLoggedIn = false;
-						// };
 						addNewFriendData();
 						this.setState({addFriends: false});
 					}}

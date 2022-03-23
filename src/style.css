@@ -73,7 +73,7 @@ body {
 	top: 50%;
 	line-height: 0px;
 	font-size: 40px;
-	text-shadow: 0 0 1vw rgba(0, 0, 0, 1);
+	text-shadow: 0 0 0.4vw rgba(0, 0, 0, 1);
 }
 
 .carousel-left {
@@ -172,7 +172,7 @@ body {
 	border: none;
 	background: none;
 	font-size: 40px;
-	text-shadow: 0 0 1vw rgba(0, 0, 0, 1);
+	text-shadow: 0 0 0.4vw rgba(0, 0, 0, 1);
 	top: 1vw;
 	left: 1vw;
 	color: white;
@@ -336,28 +336,32 @@ body {
 	text-transform: uppercase;
 	letter-spacing: 1px;
 	font-family: Anton, sans-serif;
-  }
-  .loader__filmstrip {
-	position: relative;
-	width: 56px;
-	height: 70px;
-	background: #5765FF;
-	z-index: -1;
-  }
-  .loader__filmstrip:before, .loader__filmstrip:after {
-	content: "";
-	position: absolute;
-	height: 120%;
-	border-left: 5px dashed #F5F1ED;
-	-webkit-animation: roll 20ms infinite;
-			animation: roll 20ms infinite;
-  }
-  .loader__filmstrip:before {
-	left: 5px;
-  }
-  .loader__filmstrip:after {
-	right: 5px;
-  }
+}
+
+.loader__filmstrip {
+position: relative;
+width: 56px;
+height: 70px;
+background: #5765FF;
+z-index: -1;
+}
+
+.loader__filmstrip:before, .loader__filmstrip:after {
+content: "";
+position: absolute;
+height: 120%;
+border-left: 5px dashed #F5F1ED;
+-webkit-animation: roll 20ms infinite;
+		animation: roll 20ms infinite;
+}
+
+.loader__filmstrip:before {
+left: 5px;
+}
+
+.loader__filmstrip:after {
+right: 5px;
+}
   
   @-webkit-keyframes roll {
 	0% {
@@ -381,7 +385,7 @@ body {
 	width: 100%;
 	height: 100vh;
 	position: relative;
-	background: url('https://i.ibb.co/vXqDmnh/background.jpg') no-repeat center center/cover;
+	background: url('assets/background.jpg') no-repeat center center/cover;
 }
 
 .showcase::after {
@@ -490,4 +494,11 @@ body {
 	justify-content: center;
 	align-items: center;
 	margin-top: 5vh;
+}
+
+.empty-container-data {
+	justify-content: center; 
+	display: flex;
+	align-items: center;
+	margin-top: 10%;
 }
