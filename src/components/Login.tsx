@@ -7,8 +7,6 @@ import Form from './Form';
 
 import { HOMEPAGE } from '../env';
 
-import logo from "./../assets/logo.png";
-
 const providers = [
 	{title: "Inrupt Pod Spaces", url: 'https://broker.pod.inrupt.com/'},
 	{title: "inrupt.net", url: 'https://inrupt.net/'},
@@ -40,7 +38,7 @@ export default class Login extends Component<{redirect: string | null}> {
 				<div class="login-page">
 					<header class="showcase">
 						<div class="logo">
-							<img src={logo}></img>
+							<img src={'assets/logo.png'}></img>
 						</div>
 						<div class="showcase-content">
 							<div class="formm">

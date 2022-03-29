@@ -14,8 +14,6 @@ import { logout } from '@inrupt/solid-client-authn-browser';
 
 import { HOMEPAGE } from '../env';
 
-import logo from "./../assets/logo.png";
-
 import * as $rdf from "rdflib"
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
@@ -667,7 +665,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 		return (
 			<div class="movies-page">
 				<div class="logo-container">
-					<img src={logo}></img>
+					<img src={'assets/logo.png'}></img>
 				</div>
 				<div class='add-button-wrapper'>
 					<button class='add-button' onClick={() => this.setState({addPopup: true})}>➕ Add movies</button>
