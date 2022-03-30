@@ -443,8 +443,7 @@ right: 5px;
 }
 
 .formm .info .provider {
-	margin-bottom: 30px;
-	width: 96.5%;
+	width: 75%;
 	height: 40px;
 	border-radius: 5px;
 	border: none;
@@ -469,6 +468,21 @@ right: 5px;
 	cursor: pointer;
 	outline: none;
 	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.btn-secondary {
+	width: 18%;
+	height: 56px;
+	border-radius: 5px;
+	background: #5765FF;
+	color: #fff;
+	font-size: inherit;
+	font-weight: bold;
+	border: none;
+	cursor: pointer;
+	outline: none;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+	margin-left: 3%;
 }
 
 .login-page {
@@ -501,4 +515,17 @@ right: 5px;
 	display: flex;
 	align-items: center;
 	margin-top: 10%;
+}
+
+.pod-input-container {
+	justify-content: space-between;
+	margin-bottom: 15px;
+}
+
+.info {
+	display: inline;
+}
+
+.btn1 {
+	display: inline;
 }

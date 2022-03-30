@@ -38,7 +38,7 @@ export default class Login extends Component<{redirect: string | null}> {
 				<div class="login-page">
 					<header class="showcase">
 						<div class="logo">
-							<img src={'assets/logo.png'}></img>
+							<img src={'./assets/logo.png'}></img>
 						</div>
 						<div class="showcase-content">
 							<div class="formm">
@@ -48,16 +48,25 @@ export default class Login extends Component<{redirect: string | null}> {
 									redirectUrl: window.location.href,
 								})}>
 									<h3>Sign In</h3>
-									<h3>Select your pod provider</h3>
-									<div class="info">
-										<input
-											class="provider"
-											name='provider'
-											type='text'
-											placeholder='Pod Provider'
-											value={this.state.provider}
-											onInput={({target}) => this.setState({provider: (target as HTMLInputElement).value})}
-										/>
+									<h3>Select or enter your pod provider</h3>
+									<div class="pod-input-container">
+										<div class="info">
+											<input
+												class="provider"
+												name='provider'
+												type='text'
+												placeholder='Pod Provider'
+												value={this.state.provider}
+												onInput={({target}) => this.setState({provider: (target as HTMLInputElement).value})}
+											/>
+										</div>
+										<div class="btn1">
+												<input 
+													class="btn-secondary" 
+													type='submit'  
+													value="Login"
+												/>
+										</div>
 									</div>
 									
 									{providers.map(({url, title}) => <>

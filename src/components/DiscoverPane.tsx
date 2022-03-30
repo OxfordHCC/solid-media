@@ -665,7 +665,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 		return (
 			<div class="movies-page">
 				<div class="logo-container">
-					<img src={'assets/logo.png'}></img>
+					<img src={'./assets/logo.png'}></img>
 				</div>
 				<div class='add-button-wrapper'>
 					<button class='add-button' onClick={() => this.setState({addPopup: true})}>➕ Add movies</button>
