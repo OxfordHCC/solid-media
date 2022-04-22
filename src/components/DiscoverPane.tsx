@@ -90,9 +90,9 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				let moviesAclDataset: SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo;
 				
 				try {
-					moviesAclDataset = await getSolidDatasetWithAcl(`${pod}/movies`, {fetch: session.fetch}) as any;
+					moviesAclDataset = await getSolidDatasetWithAcl(`${pod}/movies/`, {fetch: session.fetch}) as any;
 				} catch {
-					moviesAclDataset = await createContainerAt(`${pod}/movies`, {fetch: session.fetch}) as any;
+					moviesAclDataset = await createContainerAt(`${pod}/movies/`, {fetch: session.fetch}) as any;
 				}
 				
 				let friendsDataset: SolidDataset;
@@ -222,7 +222,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						const pod = parts.slice(0, parts.length - 2).join('/');
 
 						// getting movies from the user and their friends movies pod
-						const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
+						const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
 						
 						const movies = getContainedResourceUrlAll(moviesDataset);
 						
