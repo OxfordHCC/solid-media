@@ -405,6 +405,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 		}
 
 		async function save(media: MediaData) {
+			// Adds movies to Wishlist
+
 			const ids = await getIds(media.tmdbUrl);
 			
 			const datasetName = media.title
@@ -455,6 +457,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 		}
 		
 		async function watch(media: MovieData, date: Date = new Date()) {
+			// Adds movies to watched movies list
+
 			let dataset = media.dataset;
 			
 			let thing = createThing();
@@ -466,7 +470,6 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			thing = setUrl(thing, 'https://schema.org/object', `${media.movie}#it`);
 			
 			dataset = setThing(dataset, thing);
-			
 			await saveSolidDatasetAt(media.solidUrl, dataset, {fetch: session.fetch});
 			
 			media.dataset = dataset;
@@ -744,8 +747,31 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					}}
 					watch={async (media: MediaData) => {
 						let data = Object.values(globalState.state.movies!).find(x => x.title === media.title);
-						if (!data) data = await save(media);
-						if (!data.watched) await watch(data);
+
+						if (data) {
+							// save movie if the movie has not been watched by the user itself, but by a friend
+							let movieWebID = data.solidUrl;
+							const movieWebIDParts = movieWebID.split('/');
+							const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
+
+							const webID = session.info.webId!;
+							const parts = webID.split('/');
+							const pod = parts.slice(0, parts.length - 2).join('/');
+
+							if (movieWebIDPod != pod) {
+								// save movie to users wishlist first
+								data = await save(media);
+							}
+						}
+						
+						if (!data) {
+							data = await save(media);
+						}
+						
+						if (!data.watched) {
+							// save movie to users watched movies collection
+							await watch(data);
+						}
 					}}
 				/>}
 				{this.state.addFriends && <AddFriends
