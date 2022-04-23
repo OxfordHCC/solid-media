@@ -84,11 +84,11 @@ class AddPopupSearchList extends Component<{close: () => void, save: (media: Med
 													</div>
 													<div class='add-popup-search-result-buttons'>
 														<div class='add-popup-search-result-watch' onClick={() => {
-															watch(r);
+															watch(r); // adds to watched movies
 															close();
 														}}>✔️</div>
 														<div class='add-popup-search-result-save' onClick={() => {
-															save(r);
+															save(r); // adds to wishlist
 															close();
 														}}>➕</div>
 													</div>
