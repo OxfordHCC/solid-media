@@ -790,7 +790,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					add={() => {
 						this.setState({showLogout: false});
 					}}
-				/>}
+				/>
+				}
 			</div>
 		);
 	}
