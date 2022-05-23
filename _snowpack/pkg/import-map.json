@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "@inrupt/solid-client": "./@inrupt/solid-client.js",
+    "@inrupt/solid-client-authn-browser": "./@inrupt/solid-client-authn-browser.js",
+    "@inrupt/vocab-common-rdf": "./@inrupt/vocab-common-rdf.js",
+    "preact": "./preact.js",
+    "rdflib": "./rdflib.js",
+    "wouter-preact": "./wouter-preact.js"
+  }
+}
