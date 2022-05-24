@@ -2,7 +2,7 @@
   "name": "solid-media",
   "version": "1.0.3",
   "description": "A media profile app build on Solid",
-  "homepage": "https://OxfordHCC.github.io/solid-media",
+  "homepage": "https://solid-media-oxfordhcc.netlify.app",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/OxfordHCC/solid-media"
