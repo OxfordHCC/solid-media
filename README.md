@@ -18,7 +18,7 @@
 
 Solid Media is a demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app.
 
-The application can be downloaded and deployed locally, or accessed at [solid-media](https://oxfordhcc.github.io/solid-media/).
+Currently the application must be downloaded and deployed locally. Its public access will be made available soon. 
 
 **To play with the application you will need a WebID or a Solid pod provided by [solidcommunity.net](https://solidcommunity.net).**
 
