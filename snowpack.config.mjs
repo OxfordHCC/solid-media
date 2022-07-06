@@ -16,7 +16,7 @@ export default {
 		'@snowpack/plugin-typescript',
 	] : [],
 	env: {
-		HOMEPAGE: '',
+		HOMEPAGE: '/solid-media',
   	},
 	webDependencies: [
 		"preact",
