@@ -1,4 +1,4 @@
-export const HOMEPAGE = "";
+export const HOMEPAGE = "/solid-media";
 export const MODE = "production";
 export const NODE_ENV = "production";
 export const SSR = false;
