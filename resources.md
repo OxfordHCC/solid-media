@@ -17,7 +17,7 @@
 - [Solid UI React Docs](https://solid-ui-react.docs.inrupt.com/?path=/story/intro--page)
 - [Solid Client Libraries Docs](https://docs.inrupt.com/developer-tools/javascript/client-libraries/)
 - [solid-client-authn](https://docs.inrupt.com/developer-tools/javascript/client-libraries/authentication/)
-- - [Web Access Control Spec](https://solid.github.io/web-access-control-spec/)
+- [Web Access Control Spec](https://solid.github.io/web-access-control-spec/)
 ### Linked Data
   - [RDF Lib with Solid](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
   - [Using rdflib.js](https://github.com/solidos/solid-tutorial-rdflib.js)
