@@ -10,21 +10,22 @@
 ## Tutorials:
 1. [Getting started as a Solid developer](https://solidproject.org/developers/tutorials/getting-started)
 2. [solidcommunity.net Walkthrough - User guide](https://github.com/SolidOS/userguide)
-3. [Building your first Solid app](https://solidproject.org//developers/tutorials/first-app)
-4. [How to Build a Solid To-Do App with React](https://www.freecodecamp.org/news/create-a-solid-to-do-app-with-react/?ref=morioh.com&utm_source=morioh.com) [[codesandbox](https://codesandbox.io/s/solid-todo-tutorial-7uz4j)]
-5. [Hosting a Web Page On Your Pod](https://solid.gitbook.io/solid-hacks/static-pages/hosting-a-web-page-on-your-pod)
+3. [Hosting a Web Page On Your Pod](https://solid.gitbook.io/solid-hacks/static-pages/hosting-a-web-page-on-your-pod)
+4. [Building your first Solid app](https://solidproject.org//developers/tutorials/first-app) [[codesandbox](https://codesandbox.io/s/github/solid/solidproject.org/tree/main/_posts/developers/apps/inrupt-tutorial/codesandbox/?hidenavigation=1&module=%2Findex.js&view=editor)]
+5. [How to Build a Solid To-Do App with React](https://www.freecodecamp.org/news/create-a-solid-to-do-app-with-react/?ref=morioh.com&utm_source=morioh.com) [[codesandbox](https://codesandbox.io/s/solid-todo-tutorial-7uz4j)]
 
 ## Documentation:
+- [Solid Developer Tools & Libraries](https://github.com/solid/solidproject.org/blob/main/_posts/developers/apps/tools/2019-01-01-00_overview.md#authentication)
 - [Solid UI React Docs](https://solid-ui-react.docs.inrupt.com/?path=/story/intro--page)
 - [Solid Client Libraries Docs](https://docs.inrupt.com/developer-tools/javascript/client-libraries/)
 - [solid-client-authn](https://docs.inrupt.com/developer-tools/javascript/client-libraries/authentication/)
 - [Web Access Control Spec](https://solid.github.io/web-access-control-spec/)
-### Linked Data
+<br/>Linked Data
   - [RDF Lib with Solid](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
   - [Using rdflib.js](https://github.com/solidos/solid-tutorial-rdflib.js)
-- [Ontologies and vocabularies](https://github.com/solid/vocab)
-- [List of Common Vocabularies](https://docs.inrupt.com/developer-tools/javascript/client-libraries/tutorial/use-vocabularies/)
-- [Solid Namespace Library: Collection of common RDF namespaces](https://github.com/solid/solid-namespace)
+  - [Ontologies and vocabularies](https://github.com/solid/vocab)
+  - [List of Common Vocabularies](https://docs.inrupt.com/developer-tools/javascript/client-libraries/tutorial/use-vocabularies/)
+  - [Solid Namespace Library: Collection of common RDF namespaces](https://github.com/solid/solid-namespace)
 
 ## Existing SOLID Apps Repositories:
 - [Solid apps you can test and play around with](https://inrupt.com/solidApps/solid-app-listing)
