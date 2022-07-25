@@ -5,12 +5,13 @@
 - [SOLID Research Paper](http://emansour.com/research/lusail/solid_protocols.pdf)
 - [SOLID Project on GitHub](https://github.com/solid)
 - [Slides: Solid: taking back the Web through decentralization by Ruben Verborgh](https://rubenverborgh.github.io/Slides-FOSDEM-2019/)
+- [Paradigm shifts for the decentralized Web](https://ruben.verborgh.org/blog/2017/12/20/paradigm-shifts-for-the-decentralized-web/) - by Ruben Verborgh
 
 ## Tutorials:
 1. [Getting started as a Solid developer](https://solidproject.org/developers/tutorials/getting-started)
 2. [solidcommunity.net Walkthrough - User guide](https://github.com/SolidOS/userguide)
 3. [Building your first Solid app](https://solidproject.org//developers/tutorials/first-app)
-4. [How to Build a Solid To-Do App with React](https://www.freecodecamp.org/news/create-a-solid-to-do-app-with-react/?ref=morioh.com&utm_source=morioh.com)
+4. [How to Build a Solid To-Do App with React](https://www.freecodecamp.org/news/create-a-solid-to-do-app-with-react/?ref=morioh.com&utm_source=morioh.com) [[codesandbox](https://codesandbox.io/s/solid-todo-tutorial-7uz4j)]
 5. [Hosting a Web Page On Your Pod](https://solid.gitbook.io/solid-hacks/static-pages/hosting-a-web-page-on-your-pod)
 
 ## Documentation:
@@ -25,15 +26,6 @@
 - [List of Common Vocabularies](https://docs.inrupt.com/developer-tools/javascript/client-libraries/tutorial/use-vocabularies/)
 - [Solid Namespace Library: Collection of common RDF namespaces](https://github.com/solid/solid-namespace)
 
-## Blogs:
-1. [Paradigm shifts for the decentralized Web](https://ruben.verborgh.org/blog/2017/12/20/paradigm-shifts-for-the-decentralized-web/) - by Ruben Verborgh
-
-## Community Channels:
-- [SOLID Gitter](https://gitter.im/solid/home): Join the community to discuss any doubts, resources, issues, or help others :)
-- [SOLID Project Forum](https://forum.solidproject.org/)
-- [SOLID Project subreddit](https://www.reddit.com/r/SOLID/)
-- [RDFLib Gitter](https://gitter.im/linkeddata/rdflib.js)
-
 ## Existing SOLID Apps Repositories:
 - [Solid apps you can test and play around with](https://inrupt.com/solidApps/solid-app-listing)
 - [Pixolid](https://github.com/carloss8/pixolid/)
@@ -41,3 +33,11 @@
 - [SOLID Focus Task Manager](https://github.com/NoelDeMartin/solid-focus)
 - [SOLID Profile Viewer](https://gitlab.com/angelo-v/solid-profile-viewer)
 - [SOLID Groups](https://gitlab.com/angelo-v/solid-groups)
+- [SOLIDFlix](https://github.com/OxfordHCC/solid-media)
+
+## Community Channels:
+- [SOLID Gitter](https://gitter.im/solid/home): Join the community to discuss any doubts, resources, issues, or help others :)
+- [SOLID Project Forum](https://forum.solidproject.org/)
+- [SOLID Project subreddit](https://www.reddit.com/r/SOLID/)
+- [RDFLib Gitter](https://gitter.im/linkeddata/rdflib.js)
+
