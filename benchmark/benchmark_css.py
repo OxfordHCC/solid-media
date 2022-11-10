@@ -12,7 +12,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 PATH = os.getcwd()
 MAX_DATA_BATCH_SIZE = 5085
-START_DATA_BATCH_SIZE = 1410 # 15
+START_DATA_BATCH_SIZE = 15 
 
 # selenium settings
 chrome_options = webdriver.ChromeOptions()
@@ -44,8 +44,8 @@ def login():
     # css login - enter credentials
     input_username = driver.find_element(by=By.ID, value='email')
     input_password = driver.find_element(by=By.ID, value='password')
-    input_username.send_keys('hunarbatra147@gmail.com')
-    input_password.send_keys('14HunarLovesSolid14@')
+    input_username.send_keys('')
+    input_password.send_keys('')
     time.sleep(5)
     input_password.send_keys(Keys.ENTER)
     time.sleep(5)

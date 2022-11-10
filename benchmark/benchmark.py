@@ -31,15 +31,15 @@ time.sleep(5)
 # enter credentials
 input_username = driver.find_element(by=By.ID, value='username')
 input_password = driver.find_element(by=By.ID, value='password')
-input_username.send_keys('benchmarkuser12')
-input_password.send_keys('BenchmarkUser1@')
+input_username.send_keys('')
+input_password.send_keys('')
 time.sleep(5)
 input_password.send_keys(Keys.ENTER)
 
 # benchmarking values list
 load_time = [] # for data_batch size \in [0:5085]
 
-for data_batch in range(1605, MAX_DATA_BATCH_SIZE+1, 15):
+for data_batch in range(15, MAX_DATA_BATCH_SIZE+1, 15):
     # refresh page
     if data_batch != 15:
         while True:
