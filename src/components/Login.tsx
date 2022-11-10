@@ -53,6 +53,7 @@ export default class Login extends Component<{redirect: string | null}> {
 										<div class="info">
 											<input
 												class="provider"
+												id="provider"
 												name='provider'
 												type='text'
 												placeholder='Pod Provider'

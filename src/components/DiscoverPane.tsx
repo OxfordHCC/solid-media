@@ -5,7 +5,7 @@ import AddPopup from './AddPopup';
 import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useAuthentication } from './authentication';
-import { loadData, MediaData, getIds } from '../media';
+import { loadData, MediaData, getIds, search } from '../media';
 import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
@@ -47,6 +47,7 @@ export type MovieData = {
 	solidUrl: string,
 	watched: boolean,
 	liked: boolean | null,
+	recommended: boolean,
 	title: string,
 	released: Date,
 	image: string,
@@ -62,6 +63,7 @@ type State = {
 	friendWatched?: string[],
 	friendUnwatched?: string[],
 	friendLiked?: string[],
+	recommendedDict?: string[],
 	movies?: {[key: string]: MovieData},
 	loading?: boolean,
 };
@@ -87,6 +89,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			});
 			
 			(async () => {
+				let loadingStart = (new Date()).getTime();
+				
 				let moviesAclDataset: SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo;
 				
 				try {
@@ -263,15 +267,19 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							if (value === max) liked = true;
 							else if (value === min) liked = false;
 						}
+
+						let recommended = false;
+						const recommend = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
+						if (recommend) recommended = true;
 						
 						const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
 						
 						const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 						
-						// fetch current movie assets from tmdb API
+						// fetch current movie assets from imdb API
 						const {title, released, icon} = await loadData(tmdbUrl);
 						
-						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, title, released, image: icon, dataset: movieDataset};
+						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
 					})
 				);
 				
@@ -282,6 +290,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const friendWatched: string[] = [];
 				const friendUnwatched: string[] = [];
 				const friendLiked: string[] = [];
+				const recommendedDict: string[] = [];
 				
 				for (const {type, ...movie} of movies) {
 					switch (type) {
@@ -291,6 +300,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							// if the movie has been watched & check if the same movie does not already exist in the watched list
 							if (movie.watched && !myWatched.includes(movie.movie)) {
 								myWatched.push(movie.movie);
+							} else if (movie.recommended && !recommendedDict.includes(movie.movie)) {
+								recommendedDict.push(movie.movie);
 							} else {
 								if(!myUnwatched.includes(movie.movie)) {
 									// check if the same movie does not already exist
@@ -336,7 +347,51 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					friendUnwatched,
 					friendLiked,
 					movies: movieDict,
+					recommendedDict,
 				});
+
+				let loadingEnd = (new Date()).getTime();
+				let currentSeconds = (loadingEnd - loadingStart)/1000;
+				console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
+				let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
+
+				// Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
+				const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
+				const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+				const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
+				const sampledTitles: String[] = []
+				for (let movie of sampledMovies) {
+					sampledTitles.push(movie.title);
+				}
+
+				// fetch movie recommendations
+				const response = await fetch('https://solidflix.herokuapp.com/', {
+					method: 'POST',
+					body: JSON.stringify(sampledTitles),
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				  
+				let recommendedList;
+				if (response.body !== null) {
+					const body = await response.text();
+					recommendedList = JSON.parse(body);
+					console.log(recommendedList);
+				}
+
+				for(const name of recommendedList) {
+					const movies = await search(name);
+					const movie = movies.find(x => x.title === name);
+					if (movie) {
+						save(movie, true);
+					}
+				}
+
+				// load time
+				let loadingEnd2 = (new Date()).getTime();
+				let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
+				// console.log('Fetching 10 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
 			})();
 		}
 		
@@ -400,11 +455,11 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				console.log("friends after adding : " + friends);
 			}
 
-			// TODO: Write a function to fetch newly added friend's movies on the fly, instead of refreshing the window
+			// TODO: Write a function to fetch newly added friend's movies dynamically, instead of refreshing the window
 
 		}
 
-		async function save(media: MediaData) {
+		async function save(media: MediaData, recommended: Boolean = false, watch: Boolean = false) {
 			// Adds movies to Wishlist
 
 			const ids = await getIds(media.tmdbUrl);
@@ -425,6 +480,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			movie = setDatetime(movie, DCTERMS.created, time);
 			movie = setDatetime(movie, DCTERMS.modified, time);
 			movie = setUrl(movie, RDF.type, 'https://schema.org/Movie');
+			if (watch) movie = setUrl(movie, RDF.type, 'https://schema.org/WatchAction');
+			if (recommended) movie = setUrl(movie, RDF.type, 'https://schema.org/Recommendation');
 			movie = setStringNoLocale(movie, 'https://schema.org/name', media.title);
 			movie = setStringNoLocale(movie, 'https://schema.org/description', media.description);
 			movie = setStringNoLocale(movie, 'https://schema.org/image', media.image);
@@ -438,8 +495,9 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			const movieData = {
 				movie: media.tmdbUrl,
 				solidUrl: datasetUrl,
-				watched: false,
+				watched: Boolean(watch),
 				liked: null,
+				recommended: Boolean(recommended),
 				title: media.title,
 				released: media.released,
 				image: media.image,
@@ -448,10 +506,24 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				friend: false,
 			};
 			
-			globalState.setState({
-				myUnwatched: [media.tmdbUrl, ...globalState.state.myUnwatched!],
-				movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
-			});
+			if (!movieData.recommended) {
+				if (!movieData.watched) {
+					globalState.setState({
+						myUnwatched: [media.tmdbUrl, ...globalState.state.myUnwatched!],
+						movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
+					});
+				} else {
+					globalState.setState({
+						myWatched: [media.tmdbUrl, ...globalState.state.myWatched!],
+						movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
+					});
+				}
+			} else {
+				globalState.setState({
+					recommendedDict: [media.tmdbUrl, ...globalState.state.recommendedDict!.filter(x => x !== media.tmdbUrl)],
+					movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
+				});
+			}
 			
 			return movieData;
 		}
@@ -476,6 +548,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			
 			globalState.setState({
 				myUnwatched: globalState.state.myUnwatched!.filter(x => x !== media.movie),
+				recommendedDict: globalState.state.myUnwatched!.filter(x => x !== media.movie),
 				myWatched: [media.movie, ...globalState.state.myWatched!],
 				movies: {...globalState.state.movies, [media.movie]: {...media, watched: true, dataset}},
 			});
@@ -483,7 +556,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 		
 		const createCarouselElement = (movie: string, type: 'friend' | 'me'): VNode => {
 			const movieData = globalState.state.movies![movie];
-			const {solidUrl, watched, liked, title, released, image} = movieData;
+			const {solidUrl, watched, liked, recommended, title, released, image} = movieData;
 			let {dataset} = movieData;
 			
 			function remove(type: string) {
@@ -600,6 +673,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 										
 										globalState.setState({
 											myUnwatched: globalState.state.myUnwatched!.filter(x => x !== movie),
+											recommendedDict: globalState.state.recommendedDict!.filter(x => x !== movie),
 											myWatched: [movie, ...globalState.state.myWatched!],
 											movies: {...globalState.state.movies, [movie]: {...movieData, watched: true, dataset}},
 										});
@@ -617,6 +691,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 										myUnwatched: globalState.state.myUnwatched!.filter(x => x !== movie),
 										myWatched: globalState.state.myWatched!.filter(x => x !== movie),
 										myLiked: globalState.state.myLiked!.filter(x => x !== movie),
+										recommendedDict: globalState.state.recommendedDict!.filter(x => x !== movie),
 										movies: remove ? remaining : globalState.state.movies,
 									});
 								}},
@@ -702,6 +777,12 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						<h3>Add Movies or Friends</h3>
 					</div>
 				}
+				{globalState.state.recommendedDict && globalState.state.recommendedDict.length != 0 &&
+					<div>
+						<h3 style="margin-left: 2%;">Recommended Movies</h3>
+						<Carousel>{(globalState.state.recommendedDict ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
+					</div>
+				}
 				{globalState.state.friendWatched && globalState.state.friendWatched.length != 0 &&
 					<div>
 						<h3 style="margin-left: 2%;">Friends Collection</h3>
@@ -742,14 +823,14 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					close={() => this.setState({addPopup: false})}
 					save={async (media: MediaData) => {
 						if (!Object.values(globalState.state.movies!).some(x => x.title === media.title)) {
-							await save(media);
+							await save(media, false);
 						}
 					}}
 					watch={async (media: MediaData) => {
 						let data = Object.values(globalState.state.movies!).find(x => x.title === media.title);
 
 						if (data) {
-							// save movie if the movie has not been watched by the user itself, but by a friend
+							// retreive movie metadata if it has been watched by the user or their friends
 							let movieWebID = data.solidUrl;
 							const movieWebIDParts = movieWebID.split('/');
 							const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
@@ -758,20 +839,16 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 							const parts = webID.split('/');
 							const pod = parts.slice(0, parts.length - 2).join('/');
 
-							if (movieWebIDPod != pod) {
-								// save movie to users wishlist first
-								data = await save(media);
+							if (movieWebIDPod != pod) { // if user's friend has watched the movie, and not the user itself: save(movie)
+								data = await save(media, false, true);
 							}
+						} else {
+							data = await save(media, false, true);
 						}
 						
-						if (!data) {
-							data = await save(media);
-						}
-						
-						if (!data.watched) {
-							// save movie to users watched movies collection
-							await watch(data);
-						}
+						// if (!data.watched) {
+						// 	await watch(data);
+						// }
 					}}
 				/>}
 				{this.state.addFriends && <AddFriends
