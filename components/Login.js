@@ -54,6 +54,7 @@ export default class Login extends Component {
         class: "info"
       }, /* @__PURE__ */ h("input", {
         class: "provider",
+        id: "provider",
         name: "provider",
         type: "text",
         placeholder: "Pod Provider",
