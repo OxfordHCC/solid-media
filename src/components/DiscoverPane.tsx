@@ -365,7 +365,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				}
 
 				// fetch movie recommendations
-				const response = await fetch('https://solidflix.herokuapp.com/', {
+				const response = await fetch('http://5a22-34-125-253-230.ngrok.io/', {
 					method: 'POST',
 					body: JSON.stringify(sampledTitles),
 					headers: {
