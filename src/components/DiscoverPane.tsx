@@ -363,9 +363,9 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				for (let movie of sampledMovies) {
 					sampledTitles.push(movie.title);
 				}
-
+				
 				// fetch movie recommendations
-				const response = await fetch('https://5a22-34-125-253-230.ngrok.io/', {
+				const response = await fetch('https://f17e-125-63-123-197.ngrok.io', {
 					method: 'POST',
 					body: JSON.stringify(sampledTitles),
 					headers: {
