@@ -249,7 +249,7 @@ export default class DiscoverPane extends Component {
         for (let movie of sampledMovies) {
           sampledTitles.push(movie.title);
         }
-        const response = await fetch("https://f17e-125-63-123-197.ngrok.io", {
+        const response = await fetch("https://299b-125-63-123-197.ngrok.io", {
           method: "POST",
           body: JSON.stringify(sampledTitles),
           headers: {
