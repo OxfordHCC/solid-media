@@ -153,6 +153,7 @@ export default class DiscoverPane extends Component {
             return [];
           }
         }))).flat(1);
+        const test_start = new Date().getTime();
         const movies = await Promise.all(movieList.map(async ({type, url}) => {
           const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
           const movieThing = getThing(movieDataset, `${url}#it`);
@@ -180,6 +181,7 @@ export default class DiscoverPane extends Component {
           const {title, released, icon} = await loadData(tmdbUrl);
           return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended, title, released, image: icon, dataset: movieDataset};
         }));
+        console.log((new Date().getTime() - test_start) / 1e3 + " seconds");
         const movieDict = {};
         const myWatched = [];
         const myUnwatched = [];
@@ -241,7 +243,6 @@ export default class DiscoverPane extends Component {
         let loadingEnd = new Date().getTime();
         let currentSeconds = (loadingEnd - loadingStart) / 1e3;
         console.log("# of movies loaded: " + movieList.length + " | time taken: " + currentSeconds + " seconds");
-        let dataLoadEndedTime = (new Date().getTime() - loadingStart) / 1e3;
         const userMovies = movies.filter((x) => x.type === "me" && !x.recommended);
         const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
         const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
@@ -249,7 +250,7 @@ export default class DiscoverPane extends Component {
         for (let movie of sampledMovies) {
           sampledTitles.push(movie.title);
         }
-        const response = await fetch("https://299b-125-63-123-197.ngrok.io", {
+        const response = await fetch("https://api.pod.ewada.ox.ac.uk/solidflix-recommender/", {
           method: "POST",
           body: JSON.stringify(sampledTitles),
           headers: {
@@ -269,8 +270,6 @@ export default class DiscoverPane extends Component {
             save(movie, true);
           }
         }
-        let loadingEnd2 = new Date().getTime();
-        let currentSeconds2 = (loadingEnd2 - loadingStart) / 1e3;
       })();
     }
     async function addNewFriendData() {
