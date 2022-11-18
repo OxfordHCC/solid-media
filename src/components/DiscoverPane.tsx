@@ -237,6 +237,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					}
 				}))).flat(1);
 				
+				const test_start = (new Date()).getTime();
 				const movies = await Promise.all(
 					movieList.map(async ({type, url}) => {
 						// iterating through all movies (user + their friends)
@@ -282,6 +283,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
 					})
 				);
+				console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
 				
 				const movieDict: {[key: string]: MovieData} = {};
 				const myWatched: string[] = [];
@@ -304,7 +306,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 								recommendedDict.push(movie.movie);
 							} else {
 								if(!myUnwatched.includes(movie.movie)) {
-									// check if the same movie does not already exist
+									// check if the same movie does not already exist in users wishlist
 									myUnwatched.push(movie.movie);
 								}
 							}
@@ -350,10 +352,14 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					recommendedDict,
 				});
 
+				// globalState.setState({
+				// 	recommendedDict: []
+				// }); // deletes all recommendations, and adds new recos at each load
+
 				let loadingEnd = (new Date()).getTime();
 				let currentSeconds = (loadingEnd - loadingStart)/1000;
 				console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
-				let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
+				// let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
 
 				// Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
 				const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
@@ -365,7 +371,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				}
 
 				// fetch movie recommendations
-				const response = await fetch('https://299b-125-63-123-197.ngrok.io', {
+				const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
 					method: 'POST',
 					body: JSON.stringify(sampledTitles),
 					headers: {
@@ -389,8 +395,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				}
 
 				// load time
-				let loadingEnd2 = (new Date()).getTime();
-				let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
+				// let loadingEnd2 = (new Date()).getTime();
+				// let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
 				// console.log('Fetching 10 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
 			})();
 		}
