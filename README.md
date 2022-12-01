@@ -16,7 +16,7 @@
 
 # Welcome to Solid Media
 
-Solid Media is a demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app.
+Solid Media is a demonstration of the use of [Solid](https://solidproject.org/) in a small media recommendation sharing app. It is inspired by [Media Kraken](https://noeldemartin.github.io/media-kraken/login).
 
 Currently the application must be downloaded and deployed locally. Its public access will be made available soon. 
 
