@@ -363,11 +363,17 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 
 				// Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
 				const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
-				const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-				const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
 				const sampledTitles: String[] = []
-				for (let movie of sampledMovies) {
-					sampledTitles.push(movie.title);
+				if (userMovies.length <= 10) {
+					for (let movie of userMovies) {
+						sampledTitles.push(movie.title);
+					}
+				} else {
+					const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+					const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
+					for (let movie of sampledMovies) {
+						sampledTitles.push(movie.title);
+					}
 				}
 
 				// fetch movie recommendations
