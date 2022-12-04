@@ -27,7 +27,7 @@ export default class AddPopup extends Component {
           const data = await file.text();
           const [, ...lines] = data.split("\n").slice(0, -1);
           for (const line of lines) {
-            const [, name, watched] = line.match(/"([^"]*)","([^"]*)"/);
+            const [, name, watched] = line.match(/([^"]*),([^"]*)/);
             if (!name.includes(": Season ")) {
               const movies = await search(name);
               const movie = movies.find((x) => x.title === name);

@@ -5,11 +5,13 @@ import Loading from "./Loading.js";
 import Form from "./Form.js";
 import {HOMEPAGE} from "../env.js";
 const providers = [
-  {title: "Inrupt Pod Spaces", url: "https://broker.pod.inrupt.com/"},
+  {title: "Inrupt Pod Spaces", url: "https://start.inrupt.com/"},
   {title: "inrupt.net", url: "https://inrupt.net/"},
   {title: "solidcommunity.net", url: "https://solidcommunity.net/"},
   {title: "Solid Web", url: "https://solidweb.org/"},
-  {title: "Trinpod", url: "https://trinpod.us/"}
+  {title: "Trinpod", url: "https://trinpod.us/"},
+  {title: "use.id", url: "https://get.use.id/"},
+  {title: "solidweb.me", url: "https://solidweb.me/"}
 ];
 export default class Login extends Component {
   constructor() {

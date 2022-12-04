@@ -244,11 +244,17 @@ export default class DiscoverPane extends Component {
         let currentSeconds = (loadingEnd - loadingStart) / 1e3;
         console.log("# of movies loaded: " + movieList.length + " | time taken: " + currentSeconds + " seconds");
         const userMovies = movies.filter((x) => x.type === "me" && !x.recommended);
-        const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-        const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
         const sampledTitles = [];
-        for (let movie of sampledMovies) {
-          sampledTitles.push(movie.title);
+        if (userMovies.length <= 10) {
+          for (let movie of userMovies) {
+            sampledTitles.push(movie.title);
+          }
+        } else {
+          const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+          const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
+          for (let movie of sampledMovies) {
+            sampledTitles.push(movie.title);
+          }
         }
         const response = await fetch("https://api.pod.ewada.ox.ac.uk/solidflix-recommender/", {
           method: "POST",
