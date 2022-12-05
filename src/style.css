@@ -417,7 +417,7 @@ right: 5px;
 	position: relative;
 	z-index: 2;
 	width: 450px;
-	height: fit-content;
+	height: 500px;
 	background: rgb(0, 0, 0, 0.65);
 	margin: 0 auto;
 	display: flex;
@@ -426,6 +426,7 @@ right: 5px;
 	align-items: flex-start;
 	text-align: left;
 	padding: 60px 65px;
+	border-radius: 25px;
 }
 
 .formm h1 {
