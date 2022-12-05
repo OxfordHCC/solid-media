@@ -8,12 +8,12 @@ import Form from './Form';
 import { HOMEPAGE } from '../env';
 
 const providers = [
-	{title: "Inrupt Pod Spaces", url: 'https://start.inrupt.com/'},
+	// {title: "Inrupt Pod Spaces", url: 'https://start.inrupt.com/'},
 	{title: "inrupt.net", url: 'https://inrupt.net/'},
 	{title: "solidcommunity.net", url: 'https://solidcommunity.net/'},
 	{title: "Solid Web", url: 'https://solidweb.org/'},
-	{title: "Trinpod", url: 'https://trinpod.us/'},
-	{title: "use.id", url: 'https://get.use.id/'},
+	// {title: "Trinpod", url: 'https://trinpod.us/'},
+	// {title: "use.id", url: 'https://get.use.id/'},
 	{title: "solidweb.me", url: 'https://solidweb.me/'}
 ];
 
