@@ -61,11 +61,13 @@ A public version can be accessed [https://oxfordhcc.github.io/solid-media/](http
 
 To get started with sharing your movies, you will need a [WebID](https://solidcommunity.net) to log into the system, so that you can store movies on your Solid pod and share them with your friends. We recommend you register with [solidcommunity.net](https://solidcommunity.net). Alternatively, you could use  other supported pod providers such as [Inrupt](https://inrupt.net/), [Solid Web](https://solidweb.org/), [solidweb.me](https://solidweb.me/) or using your self-hosted pod url.
 
-Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
-
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/login.png" width="800" />
 
-After logging in, you'll be able to add movies, add friends, view your movies (watch history, liked and wishlisted movies) and your friends movies (watch history, liked and wishlisted movies).
+Once you have set up a Solid/WebID then you can log in and start to add movies to your pod.
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/options.png" width="400" />
+
+After logging in, you'll be able to add movies, add friends, view your personalised movie recommendations, view your movies (watch history, liked and wishlisted movies), your friends movies (watch history, liked and wishlisted movies), like and wishlist movies.
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/users-movies.png" width="800" />
 
@@ -79,6 +81,8 @@ You can add movies by uploading your netflix viewing history csv file, or by man
 </p>
 
 Once you have added movies in **Solidflix**, you can express your level of interest of a movie by the `thumb up` or `thumb down` button, and the movies will show up as your favorites.
+
+<img src="https://github.com/OxfordHCC/solid-media/blob/main/img/ratings.png" width="600" />
 
 ### Sharing with friends
 
