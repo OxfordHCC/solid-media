@@ -8,9 +8,155 @@ for (let i = 0; i < movie_id_values.length; i++) {
 }
 
 
+// Function to compute the movie vector for a single pod URL
+async function computeMovieVector(podUrl, idMatchingDict) {
+  const movieVectorLength = Object.keys(idMatchingDict).length;
+  const movieVector = Array(movieVectorLength).fill(0);
+
+  // Fetch movies from the given pod URL and retrieve their tmdbUrls
+  const movies = await fetchMoviesFromPod(podUrl); 
+
+  // Iterate through the movies and update the movie vector
+  for (const movie of movies) {
+    // Extract the movie ID from the tmdbUrl (e.g., "https://www.themoviedb.org/movie/289")
+    const tmdbId = extractMovieIdFromUrl(movie.tmdbUrl);
+
+    // Find the key associated with the tmdb ID in the id_matching_dict
+    const key = getKeyByValue(idMatchingDict, tmdbId);
+
+    // If a key is found, update the movie vector at that position to 1
+    if (key !== null) {
+      movieVector[key] = 1;
+    }
+  }
+
+  return movieVector;
+}
+
+// Function to extract movie ID from a tmdbUrl
+function extractMovieIdFromUrl(tmdbUrl) {
+  // Parse the URL and extract the last segment as the movie ID
+  const urlSegments = tmdbUrl.split('/');
+  return parseInt(urlSegments[urlSegments.length - 1]);
+}
+
+
+// Example usage:
+const podURLs = people.map(person => person.id);
+console.log('All Pod URLs', podURLs);
+
+// Compute the minhash for all people
+const numPerm = 128; // Number of permutation functions
+const seed = 100;
+// Generate a list of random hash functions (should be the same across all users)
+const hashFunctions = generateHashFunctions(numPerm, seed); 
+
+// Compute movie vectors for each pod URL
+const movieVectors = await Promise.all(
+  podURLs.map(async (podUrl) => {
+    const movieVector = await computeMovieVector(podUrl, id_matching_dict);
+
+    // Count the number of 1s in the movie vector
+    const onesCount = movieVector.reduce((count, value) => count + value, 0);
+
+    // Find the positions of the 1s in the movie vector
+    const onesPositions = movieVector.reduce(
+      (positions, value, index) => {
+        if (value === 1) positions.push(index);
+          return positions;
+        },
+     []
+    );
+
+// Compute MinHash for the movie vector
+    const minhashValues = minHash(movieVector, hashFunctions);
+
+    console.log(`Pod URL: ${podUrl}`);
+    console.log('Movie Vector:', movieVector);
+    console.log('Number of 1s:', onesCount);
+    console.log('Positions of 1s:', onesPositions);
+    console.log('MinHash Values:', minhashValues);
+
+    return { podUrl, movieVector, onesCount, onesPositions, minhashValues };
+  })
+);
+
+console.log('Movie Vectors:', movieVectors);
 
 
 
+// Test code to save the minhash vector to a person's pod
+async function saveVector(vector, podUrl) {
+  try {
+const parts = podUrl.split('/');
+const pod = parts.slice(0, parts.length - 2).join('/');
+    // Generate a unique dataset URL for the vector
+    const datasetUrl = `${pod}/movie/test`;
+
+    // Create a new Solid Dataset
+    let vectorDataset = createSolidDataset();
+
+    // Create a new Thing for the vector data
+    let vectorThing = createThing({ url: `${datasetUrl}#it` });
+
+    // Set vector data properties (customize as needed)
+    vectorThing = setUrl(vectorThing, 'https://schema.org/type', 'https://schema.org/Vector');
+    vectorThing = setDatetime(vectorThing, 'https://schema.org/dateCreated', new Date());
+    vectorThing = setStringNoLocale(vectorThing, 'https://schema.org/vectorData', JSON.stringify(vector));
+
+    // Add the vector Thing to the dataset
+    vectorDataset = setThing(vectorDataset, vectorThing);
+
+    // Save the Solid Dataset to the specified Pod URL
+    await saveSolidDatasetAt(datasetUrl, vectorDataset, { fetch: session.fetch });
+
+    console.log('Vector data saved successfully.');
+
+    return datasetUrl;
+  } catch (error) {
+    console.error('Error saving vector data:', error);
+    return null;
+  }
+}
+
+// Example usage:
+const vectorData = [0.1, 0.2, 0.3, 0.4]; // Replace with your vector data
+const podUrl = 'https://yushiyang.solidcommunity.net/profile/card#me'; // Replace with your Pod URL
+const savedDatasetUrl = await saveVector(vectorData, podUrl);
+
+if (savedDatasetUrl) {
+  console.log('Saved vector data at:', savedDatasetUrl);
+}
+
+
+
+// Compute the minhash for all people
+const numPerm = 128; // Number of permutation functions
+const seed = 100;
+// Generate a list of random hash functions (should be the same across all users)
+const hashFunctions = generateHashFunctions(numPerm, seed); 
+
+// Collect the movie indexes for each pod URL
+const allMovieIndexes = await Promise.all(
+  podURLs.map(async (podUrl) => {
+    const movieIndexes = await collectMovieIndexes(podUrl);
+
+
+// Compute MinHash for the movie vector
+    const minhashValues = minHash(movieIndexes, hashFunctions);
+
+    console.log(`Pod URL: ${podUrl}`);
+    console.log('Movie Indexes:', movieIndexes);
+    console.log('MinHash Values:', minhashValues);
+
+    return { podUrl, movieIndexes, minhashValues };
+  })
+);
+
+
+
+
+// OLD VERSION OF MINHASH
 // Calculate userMovieVector for 'me'
 				// Initialize the movie vector for "me" with 0s for all movies in movieList
         const myMovieVector = Array(movies.length).fill(0);
