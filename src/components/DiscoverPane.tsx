@@ -222,157 +222,157 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const people = [{type: 'me', id: webID}, ...friends.map(x => ({type: 'friend', id: x}))] as {type: 'me' | 'friend', id: string}[];
 				// console.log('people', people)
 
-				// creates a list of movies including users and their friends movies data
-				const movieList = (await Promise.all(people.map(async x => {
-					try {
-						const parts = x.id.split('/');
-						const pod = parts.slice(0, parts.length - 2).join('/');
-						// console.log('Pod', pod)
+				// // creates a list of movies including users and their friends movies data
+				// const movieList = (await Promise.all(people.map(async x => {
+				// 	try {
+				// 		const parts = x.id.split('/');
+				// 		const pod = parts.slice(0, parts.length - 2).join('/');
+				// 		// console.log('Pod', pod)
 
-						// getting movies from the user and their friends movies pod
-						const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
+				// 		// getting movies from the user and their friends movies pod
+				// 		const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
 						
-						const movies = getContainedResourceUrlAll(moviesDataset);
+				// 		const movies = getContainedResourceUrlAll(moviesDataset);
 						
-						// adds the url to the specfic movie resource to the movies list
-						return movies.map(m => ({...x, url: m}));
-					} catch {
-						return [];
-					}
-				}))).flat(1);
+				// 		// adds the url to the specfic movie resource to the movies list
+				// 		return movies.map(m => ({...x, url: m}));
+				// 	} catch {
+				// 		return [];
+				// 	}
+				// }))).flat(1);
 
 
 
-				const test_start = (new Date()).getTime();
-				const movies = await Promise.all(
-					movieList.map(async ({type, url}) => {
-						// iterating through all movies (user + their friends)
-						const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
+				// const test_start = (new Date()).getTime();
+				// const movies = await Promise.all(
+				// 	movieList.map(async ({type, url}) => {
+				// 		// iterating through all movies (user + their friends)
+				// 		const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
 						
-						// fetching the stored metadata for each movie
-						const movieThing = getThing(movieDataset, `${url}#it`)!;
+				// 		// fetching the stored metadata for each movie
+				// 		const movieThing = getThing(movieDataset, `${url}#it`)!;
 						
-						const things = getThingAll(movieDataset);
+				// 		const things = getThingAll(movieDataset);
 						
-						// checking if the user has watched the movie
-						const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
+				// 		// checking if the user has watched the movie
+				// 		const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
 						
-						// checking if the user has reviewed this movie
-						const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
+				// 		// checking if the user has reviewed this movie
+				// 		const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
 						
-						let liked = null;
+				// 		let liked = null;
 						
-						if (review) {
-							const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
+				// 		if (review) {
+				// 			const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
 							
-							const rating = getThing(movieDataset, ratingUrl)!;
+				// 			const rating = getThing(movieDataset, ratingUrl)!;
 							
-							const min = getInteger(rating, 'https://schema.org/worstRating');
-							const max = getInteger(rating, 'https://schema.org/bestRating');
-							const value = getInteger(rating, 'https://schema.org/ratingValue');
+				// 			const min = getInteger(rating, 'https://schema.org/worstRating');
+				// 			const max = getInteger(rating, 'https://schema.org/bestRating');
+				// 			const value = getInteger(rating, 'https://schema.org/ratingValue');
 							
-							if (value === max) liked = true;
-							else if (value === min) liked = false;
-						}
+				// 			if (value === max) liked = true;
+				// 			else if (value === min) liked = false;
+				// 		}
 
-						let recommended = false;
-						const recommend = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
-						if (recommend) recommended = true;
+				// 		let recommended = false;
+				// 		const recommend = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
+				// 		if (recommend) recommended = true;
 						
-						const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+				// 		const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
 						
-						const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+				// 		const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 						
-						// fetch current movie assets from imdb API
-						const {title, released, icon} = await loadData(tmdbUrl);
+				// 		// fetch current movie assets from imdb API
+				// 		const {title, released, icon} = await loadData(tmdbUrl);
 						
-						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
-					})
-				);
-				console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
+				// 		return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
+				// 	})
+				// );
+				// console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
 				
-				const movieDict: {[key: string]: MovieData} = {};
-				const myWatched: string[] = [];
-				const myUnwatched: string[] = [];
-				const myLiked: string[] = [];
-				const friendWatched: string[] = [];
-				const friendUnwatched: string[] = [];
-				const friendLiked: string[] = [];
-				const recommendedDict: string[] = [];
+				// const movieDict: {[key: string]: MovieData} = {};
+				// const myWatched: string[] = [];
+				// const myUnwatched: string[] = [];
+				// const myLiked: string[] = [];
+				// const friendWatched: string[] = [];
+				// const friendUnwatched: string[] = [];
+				// const friendLiked: string[] = [];
+				// const recommendedDict: string[] = [];
 				
 
-				for (const {type, ...movie} of movies) {
-					switch (type) {
-						case 'me': {
-							movieDict[movie.movie] = {...movie, me: true, friend: movieDict[movie.movie]?.friend};
+				// for (const {type, ...movie} of movies) {
+				// 	switch (type) {
+				// 		case 'me': {
+				// 			movieDict[movie.movie] = {...movie, me: true, friend: movieDict[movie.movie]?.friend};
 							
-							// if the movie has been watched & check if the same movie does not already exist in the watched list
-							if (movie.watched && !myWatched.includes(movie.movie)) {
-								myWatched.push(movie.movie);
-							} else if (movie.recommended && !recommendedDict.includes(movie.movie)) {
-								recommendedDict.push(movie.movie);
-							} else {
-								if(!myUnwatched.includes(movie.movie)) {
-									// check if the same movie does not already exist in users wishlist
-									myUnwatched.push(movie.movie);
-								}
-							}
+				// 			// if the movie has been watched & check if the same movie does not already exist in the watched list
+				// 			if (movie.watched && !myWatched.includes(movie.movie)) {
+				// 				myWatched.push(movie.movie);
+				// 			} else if (movie.recommended && !recommendedDict.includes(movie.movie)) {
+				// 				recommendedDict.push(movie.movie);
+				// 			} else {
+				// 				if(!myUnwatched.includes(movie.movie)) {
+				// 					// check if the same movie does not already exist in users wishlist
+				// 					myUnwatched.push(movie.movie);
+				// 				}
+				// 			}
 							
-							// if the user liked the movie and it doesn't already exist in myLiked
-							if (movie.liked && !myLiked.includes(movie.movie)) {
-								myLiked.push(movie.movie);
-							}
-						} break;
+				// 			// if the user liked the movie and it doesn't already exist in myLiked
+				// 			if (movie.liked && !myLiked.includes(movie.movie)) {
+				// 				myLiked.push(movie.movie);
+				// 			}
+				// 		} break;
 						
-						case 'friend': {
-							if (!(movie.movie in movieDict)) {
-								movieDict[movie.movie] =
-								{...movie, watched: false, liked: null, me: false, friend: true};
-							} else {
-								movieDict[movie.movie].friend = true;
-							}
+				// 		case 'friend': {
+				// 			if (!(movie.movie in movieDict)) {
+				// 				movieDict[movie.movie] =
+				// 				{...movie, watched: false, liked: null, me: false, friend: true};
+				// 			} else {
+				// 				movieDict[movie.movie].friend = true;
+				// 			}
 							
-							// if the friend has watched the movie and it isn't there in friendWatched already
-							if (movie.watched && !friendWatched.includes(movie.movie)) {
-								friendWatched.push(movie.movie);
-							} else {
-								if(!friendUnwatched.includes(movie.movie)) {
-									friendUnwatched.push(movie.movie);
-								}
-							}
+				// 			// if the friend has watched the movie and it isn't there in friendWatched already
+				// 			if (movie.watched && !friendWatched.includes(movie.movie)) {
+				// 				friendWatched.push(movie.movie);
+				// 			} else {
+				// 				if(!friendUnwatched.includes(movie.movie)) {
+				// 					friendUnwatched.push(movie.movie);
+				// 				}
+				// 			}
 							
-							if (movie.liked && !friendLiked.includes(movie.movie)) {
-								friendLiked.push(movie.movie);
-							}
-						} break;
-					}
-				}
+				// 			if (movie.liked && !friendLiked.includes(movie.movie)) {
+				// 				friendLiked.push(movie.movie);
+				// 			}
+				// 		} break;
+				// 	}
+				// }
 				
                 
-				// console.log('myLiked:', myLiked);
-                // console.log('myWatched:', myWatched);
-                // console.log('friendLiked:', friendLiked);
-                // console.log('friendWatched:', friendWatched);
+				// // console.log('myLiked:', myLiked);
+                // // console.log('myWatched:', myWatched);
+                // // console.log('friendLiked:', friendLiked);
+                // // console.log('friendWatched:', friendWatched);
 
 
-				// Update global state with values
-                globalState.setState({
-					myWatched,
-					myUnwatched,
-					myLiked,
-					friendWatched,
-					friendUnwatched,
-					friendLiked,
-					movies: movieDict,
-					recommendedDict,
-					// myMovieVector,
-					// myMinHash,
-					});
+				// // Update global state with values
+                // globalState.setState({
+				// 	myWatched,
+				// 	myUnwatched,
+				// 	myLiked,
+				// 	friendWatched,
+				// 	friendUnwatched,
+				// 	friendLiked,
+				// 	movies: movieDict,
+				// 	recommendedDict,
+				// 	// myMovieVector,
+				// 	// myMinHash,
+				// 	});
 
 				
-                globalState.setState({
-					recommendedDict: []
-				}); // deletes all recommendations, and adds new recos at each load
+                // globalState.setState({
+				// 	recommendedDict: []
+				// }); // deletes all recommendations, and adds new recos at each load
 
 
 
@@ -441,7 +441,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  
 					return movies;
 				  } catch {
-					return [];
+					return []; // If no movies from the podUrl, returns an empty array
 				  }
 				}
                 
@@ -464,7 +464,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					}
 				  
 					// Now, movieIndexes contains all the extracted tmdbIds
-					return movieIndexes;
+					return movieIndexes; // If movies is empty, movieIndexes will be empty too
 				  }
 
 				  
@@ -490,6 +490,12 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					  // Collect the movie indexes for the current pod URL
 					  const movieIndexes = await collectMovieIndexes(podUrl);
 				  
+					  // if movie indexes are empty, exclude this podUrl in results
+					  if (movieIndexes.length === 0) {
+						console.log(`Skipping Pod URL: ${podUrl} (No Movies)`);
+						continue;
+					  }
+
 					  // Compute MinHash for the movie vector
 					  const minhashValues = minHash(movieIndexes, hashFunctions);
 				  
@@ -660,28 +666,6 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  console.log('Similar Users for Me', filteredSimilarUsers);
 
 
-				
-				
-				// let loadingEnd = (new Date()).getTime();
-				// let currentSeconds = (loadingEnd - loadingStart)/1000;
-				// console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
-				// // let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
-
-				// // Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
-				// const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
-				// const sampledTitles: String[] = []
-				// if (userMovies.length <= 10) {
-				// 	for (let movie of userMovies) {
-				// 		sampledTitles.push(movie.title);
-				// 	}
-				// } else {
-				// 	const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-				// 	const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
-				// 	for (let movie of sampledMovies) {
-				// 		sampledTitles.push(movie.title);
-				// 	}
-				// }
-
 
 				// Randomly sample 5 movies from similar users
 				function sampleMovieTitles(allMovieTitles, sampleSize) {
@@ -711,9 +695,12 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					const movies = await fetchMoviesFromPod(userPodUrl);
 					OthersMovieTitles.push(...movies.map((movie) => movie.title));
 				  }
+
+				console.log('Movies from Similar Users', OthersMovieTitles)
 				  
 				const myMovies = await fetchMoviesFromPod(meUser.podUrl);
 				myMovieTitles.push(...myMovies.map((movie) => movie.title));
+				console.log('My Movies', myMovieTitles)
 				  
 				const sampledTitlesfromOthers = sampleMovieTitles(OthersMovieTitles, 5);
 				const mySampledTitles = sampleMovieTitles(myMovieTitles, 10);
@@ -721,6 +708,52 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				console.log('Sampled Movies From Me', mySampledTitles)
 
 
+				// Produce top 5 recommendations based on similar users
+				let recommendedList; 
+				  
+				  if (sampledTitlesfromOthers.length < 5) {
+					const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
+					  method: 'POST',
+					  body: JSON.stringify(mySampledTitles),
+					  headers: {
+						'Content-Type': 'application/json'
+					  }
+					});
+				  
+					if (response.body !== null) {
+					  const body = await response.text();
+					  const recommendedNames = JSON.parse(body);
+					  console.log('Recommended Movies from', recommendedNames);
+				  
+					  recommendedList = sampledTitlesfromOthers.concat(recommendedNames.slice(0, 5 - sampledTitlesfromOthers.length));
+					}
+				  } else {
+					recommendedList = sampledTitlesfromOthers;
+				  }
+				  
+				  console.log('Final Recommended List', recommendedList);
+
+				// let loadingEnd = (new Date()).getTime();
+				// let currentSeconds = (loadingEnd - loadingStart)/1000;
+				// console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
+				// // let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
+
+				// // Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
+				// const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
+				// const sampledTitles: String[] = []
+				// if (userMovies.length <= 10) {
+				// 	for (let movie of userMovies) {
+				// 		sampledTitles.push(movie.title);
+				// 	}
+				// } else {
+				// 	const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+				// 	const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
+				// 	for (let movie of sampledMovies) {
+				// 		sampledTitles.push(movie.title);
+				// 	}
+				// }
+
+				
 				// fetch movie recommendations
 				// const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
 				// 	method: 'POST',
@@ -737,18 +770,18 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				// 	console.log(recommendedList);
 				// }
 
-				// for(const name of recommendedList) {
-				// 	const movies = await search(name);
-				// 	const movie = movies.find(x => x.title === name);
-				// 	if (movie) {
-				// 		save(movie, true);
-				// 	}
-				// }
+				for(const name of recommendedList) {
+					const movies = await search(name);
+					const movie = movies.find(x => x.title === name);
+					if (movie) {
+						save(movie, true);
+					}
+				}
 
 				// load time
 				// let loadingEnd2 = (new Date()).getTime();
 				// let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
-				// console.log('Fetching 10 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
+				// console.log('Fetching 5 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
 			})();
 		}
 		
