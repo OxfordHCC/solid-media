@@ -6,7 +6,7 @@ import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useAuthentication } from './authentication';
 import { loadData, MediaData, getIds, search } from '../media';
-import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
+import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
 import seedrandom from 'seedrandom';
@@ -222,152 +222,165 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const people = [{type: 'me', id: webID}, ...friends.map(x => ({type: 'friend', id: x}))] as {type: 'me' | 'friend', id: string}[];
 				// console.log('people', people)
 
-				// // creates a list of movies including users and their friends movies data
-				// const movieList = (await Promise.all(people.map(async x => {
-				// 	try {
-				// 		const parts = x.id.split('/');
-				// 		const pod = parts.slice(0, parts.length - 2).join('/');
-				// 		// console.log('Pod', pod)
+				// creates a list of movies including users and their friends movies data
+				const movieList = (await Promise.all(people.map(async x => {
+					try {
+						const parts = x.id.split('/');
+						const pod = parts.slice(0, parts.length - 2).join('/');
+						// console.log('Pod', pod)
 
-				// 		// getting movies from the user and their friends movies pod
-				// 		const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
+						// getting movies from the user and their friends movies pod
+						const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
 						
-				// 		const movies = getContainedResourceUrlAll(moviesDataset);
+						const movies = getContainedResourceUrlAll(moviesDataset);
 						
-				// 		// adds the url to the specfic movie resource to the movies list
-				// 		return movies.map(m => ({...x, url: m}));
-				// 	} catch {
-				// 		return [];
-				// 	}
-				// }))).flat(1);
+						// adds the url to the specfic movie resource to the movies list
+						return movies.map(m => ({...x, url: m}));
+					} catch {
+						return [];
+					}
+				}))).flat(1);
 
 
 
-				// const test_start = (new Date()).getTime();
-				// const movies = await Promise.all(
-				// 	movieList.map(async ({type, url}) => {
-				// 		// iterating through all movies (user + their friends)
-				// 		const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
+				const test_start = (new Date()).getTime();
+				const all_movies_zero = await Promise.all(
+					    movieList.map(async ({type, url}) => {
+						// Fetch the user pod URL based on the movie URL
+                        const parts = url.split('/');
+                        const userPodUrl = parts.slice(0, parts.length - 2).join('/');
+                        const fullPodUrl = userPodUrl + '/profile/card#me';
+
+						// iterating through all movies (user + their friends)
+						try {const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
+					
+
+
+						// fetching the stored metadata for each movie
+						const movieThing = getThing(movieDataset, `${url}#it`)!;
 						
-				// 		// fetching the stored metadata for each movie
-				// 		const movieThing = getThing(movieDataset, `${url}#it`)!;
+						const things = getThingAll(movieDataset);
 						
-				// 		const things = getThingAll(movieDataset);
+						// checking if the user has watched the movie
+						const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
 						
-				// 		// checking if the user has watched the movie
-				// 		const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
+						// checking if the user has reviewed this movie
+						const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
 						
-				// 		// checking if the user has reviewed this movie
-				// 		const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
+						let liked = null;
 						
-				// 		let liked = null;
-						
-				// 		if (review) {
-				// 			const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
+						if (review) {
+							const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
 							
-				// 			const rating = getThing(movieDataset, ratingUrl)!;
+							const rating = getThing(movieDataset, ratingUrl)!;
 							
-				// 			const min = getInteger(rating, 'https://schema.org/worstRating');
-				// 			const max = getInteger(rating, 'https://schema.org/bestRating');
-				// 			const value = getInteger(rating, 'https://schema.org/ratingValue');
+							const min = getInteger(rating, 'https://schema.org/worstRating');
+							const max = getInteger(rating, 'https://schema.org/bestRating');
+							const value = getInteger(rating, 'https://schema.org/ratingValue');
 							
-				// 			if (value === max) liked = true;
-				// 			else if (value === min) liked = false;
-				// 		}
+							if (value === max) liked = true;
+							else if (value === min) liked = false;
+						}
 
-				// 		let recommended = false;
-				// 		const recommend = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
-				// 		if (recommend) recommended = true;
+						let recommended = false;
+						const recommend = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
+						if (recommend) recommended = true;
 						
-				// 		const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+						const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
 						
-				// 		const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+						const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 						
-				// 		// fetch current movie assets from imdb API
-				// 		const {title, released, icon} = await loadData(tmdbUrl);
+						// fetch current movie assets from imdb API
+						const {title, released, icon} = await loadData(tmdbUrl);
 						
-				// 		return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
-				// 	})
-				// );
-				// console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
+						return {movie: tmdbUrl, userPodUrl: fullPodUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
+					}
+					catch{return undefined}
+				  })		
+				);
+
+
+				const all_movies = all_movies_zero.filter(Boolean)
+
+				console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
 				
-				// const movieDict: {[key: string]: MovieData} = {};
-				// const myWatched: string[] = [];
-				// const myUnwatched: string[] = [];
-				// const myLiked: string[] = [];
-				// const friendWatched: string[] = [];
-				// const friendUnwatched: string[] = [];
-				// const friendLiked: string[] = [];
-				// const recommendedDict: string[] = [];
+				const movieDict: {[key: string]: MovieData} = {};
+				const myWatched: string[] = [];
+				const myUnwatched: string[] = [];
+				const myLiked: string[] = [];
+				const friendWatched: string[] = [];
+				const friendUnwatched: string[] = [];
+				const friendLiked: string[] = [];
+				const recommendedDict: string[] = [];
 				
 
-				// for (const {type, ...movie} of movies) {
-				// 	switch (type) {
-				// 		case 'me': {
-				// 			movieDict[movie.movie] = {...movie, me: true, friend: movieDict[movie.movie]?.friend};
+				for (const {type, ...movie} of all_movies) {
+					switch (type) {
+						case 'me': {
+							movieDict[movie.movie] = {...movie, me: true, friend: movieDict[movie.movie]?.friend};
 							
-				// 			// if the movie has been watched & check if the same movie does not already exist in the watched list
-				// 			if (movie.watched && !myWatched.includes(movie.movie)) {
-				// 				myWatched.push(movie.movie);
-				// 			} else if (movie.recommended && !recommendedDict.includes(movie.movie)) {
-				// 				recommendedDict.push(movie.movie);
-				// 			} else {
-				// 				if(!myUnwatched.includes(movie.movie)) {
-				// 					// check if the same movie does not already exist in users wishlist
-				// 					myUnwatched.push(movie.movie);
-				// 				}
-				// 			}
+							// if the movie has been watched & check if the same movie does not already exist in the watched list
+							if (movie.watched && !myWatched.includes(movie.movie)) {
+								myWatched.push(movie.movie);
+							} else if (movie.recommended && !recommendedDict.includes(movie.movie)) {
+								recommendedDict.push(movie.movie);
+							} else {
+								if(!myUnwatched.includes(movie.movie)) {
+									// check if the same movie does not already exist in users wishlist
+									myUnwatched.push(movie.movie);
+								}
+							}
 							
-				// 			// if the user liked the movie and it doesn't already exist in myLiked
-				// 			if (movie.liked && !myLiked.includes(movie.movie)) {
-				// 				myLiked.push(movie.movie);
-				// 			}
-				// 		} break;
+							// if the user liked the movie and it doesn't already exist in myLiked
+							if (movie.liked && !myLiked.includes(movie.movie)) {
+								myLiked.push(movie.movie);
+							}
+						} break;
 						
-				// 		case 'friend': {
-				// 			if (!(movie.movie in movieDict)) {
-				// 				movieDict[movie.movie] =
-				// 				{...movie, watched: false, liked: null, me: false, friend: true};
-				// 			} else {
-				// 				movieDict[movie.movie].friend = true;
-				// 			}
+						case 'friend': {
+							if (!(movie.movie in movieDict)) {
+								movieDict[movie.movie] =
+								{...movie, watched: false, liked: null, me: false, friend: true};
+							} else {
+								movieDict[movie.movie].friend = true;
+							}
 							
-				// 			// if the friend has watched the movie and it isn't there in friendWatched already
-				// 			if (movie.watched && !friendWatched.includes(movie.movie)) {
-				// 				friendWatched.push(movie.movie);
-				// 			} else {
-				// 				if(!friendUnwatched.includes(movie.movie)) {
-				// 					friendUnwatched.push(movie.movie);
-				// 				}
-				// 			}
+							// if the friend has watched the movie and it isn't there in friendWatched already
+							if (movie.watched && !friendWatched.includes(movie.movie)) {
+								friendWatched.push(movie.movie);
+							} else {
+								if(!friendUnwatched.includes(movie.movie)) {
+									friendUnwatched.push(movie.movie);
+								}
+							}
 							
-				// 			if (movie.liked && !friendLiked.includes(movie.movie)) {
-				// 				friendLiked.push(movie.movie);
-				// 			}
-				// 		} break;
-				// 	}
-				// }
+							if (movie.liked && !friendLiked.includes(movie.movie)) {
+								friendLiked.push(movie.movie);
+							}
+						} break;
+					}
+				}
 				
                 
-				// // console.log('myLiked:', myLiked);
-                // // console.log('myWatched:', myWatched);
-                // // console.log('friendLiked:', friendLiked);
-                // // console.log('friendWatched:', friendWatched);
+				// console.log('myLiked:', myLiked);
+                // console.log('myWatched:', myWatched);
+                // console.log('friendLiked:', friendLiked);
+                // console.log('friendWatched:', friendWatched);
 
 
-				// // Update global state with values
-                // globalState.setState({
-				// 	myWatched,
-				// 	myUnwatched,
-				// 	myLiked,
-				// 	friendWatched,
-				// 	friendUnwatched,
-				// 	friendLiked,
-				// 	movies: movieDict,
-				// 	recommendedDict,
-				// 	// myMovieVector,
-				// 	// myMinHash,
-				// 	});
+				// Update global state with values
+                globalState.setState({
+					myWatched,
+					myUnwatched,
+					myLiked,
+					friendWatched,
+					friendUnwatched,
+					friendLiked,
+					movies: movieDict,
+					recommendedDict,
+					// myMovieVector,
+					// myMinHash,
+					});
 
 				
                 // globalState.setState({
@@ -411,39 +424,54 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					return minHashValues;
 				  }
 				
-				
-				async function fetchMoviesFromPod(podUrl) {
-				  try {
-					const parts = podUrl.split('/');
-					const pod = parts.slice(0, parts.length - 2).join('/');
-
-					// Fetch movies from the given pod URL and retrieve their URLs
-					const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch: session.fetch });
-					const movieUrls = getContainedResourceUrlAll(moviesDataset);
 				  
-					// Fetch and process movie data for each URL
-					const movies = await Promise.all(
-					movieUrls.map(async url => {
-						const movieDataset = await getSolidDataset(url, { fetch: session.fetch });
-				  
-						// Fetching the stored metadata for each movie
-						const movieThing = getThing(movieDataset, `${url}#it`)!;
-						const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
-				  
-						const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
-				  
-						// Fetch current movie assets from tMDb API
-						const { title, released, icon } = await loadData(tmdbUrl);
-				  
-						return { tmdbUrl: tmdbUrl, solidUrl: url, title, released, image: icon, dataset: movieDataset };
-					  })
-					);
-				  
-					return movies;
-				  } catch {
-					return []; // If no movies from the podUrl, returns an empty array
+				// Get all the watched movies for a user
+				async function getWatchedMoviesByPod(podURL) {
+				  const watchedMovies = all_movies.filter((movie) => {
+					return movie.userPodUrl === podURL && movie.watched === true;
+				  });
+					
+				  if (watchedMovies.length === 0) {
+					// Handle the case where no movies are found in the user's pod
+					return [];
 				  }
+				  
+				  return watchedMovies;
 				}
+
+
+				// async function fetchMoviesFromPod(podUrl) {
+				//   try {
+				// 	const parts = podUrl.split('/');
+				// 	const pod = parts.slice(0, parts.length - 2).join('/');
+
+				// 	// Fetch movies from the given pod URL and retrieve their URLs
+				// 	const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch: session.fetch });
+				// 	const movieUrls = getContainedResourceUrlAll(moviesDataset);
+				  
+				// 	// Fetch and process movie data for each URL
+				// 	const movies = await Promise.all(
+				// 	movieUrls.map(async url => {
+				// 		const movieDataset = await getSolidDataset(url, { fetch: session.fetch });
+				  
+				// 		// Fetching the stored metadata for each movie
+				// 		const movieThing = getThing(movieDataset, `${url}#it`)!;
+				// 		const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+				  
+				// 		const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+				  
+				// 		// Fetch current movie assets from tMDb API
+				// 		const { title, released, icon } = await loadData(tmdbUrl);
+				  
+				// 		return { tmdbUrl: tmdbUrl, solidUrl: url, title, released, image: icon, dataset: movieDataset };
+				// 	  })
+				// 	);
+				  
+				// 	return movies;
+				//   } catch {
+				// 	return []; // If no movies from the podUrl, returns an empty array
+				//   }
+				// }
                 
 
 
@@ -451,13 +479,13 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
                 async function collectMovieIndexes(podUrl) {
 					const movieIndexes = []; // Initialize an empty array to store movie indexes
 				  
-					// Fetch movies from the given pod URL and retrieve their tmdbUrls
-					const movies = await fetchMoviesFromPod(podUrl);
+					// Fetch the watched movies from the given pod URL and retrieve their tmdbUrls
+					const movies = await getWatchedMoviesByPod(podUrl);
 				  
 					// Iterate through the movies and update the movieIndexes array
 					for (const movie of movies) {
 					  // Extract the movie ID from the tmdbUrl (e.g., "https://www.themoviedb.org/movie/289")
-					  const tmdbId = extractMovieIdFromUrl(movie.tmdbUrl);
+					  const tmdbId = extractMovieIdFromUrl(movie.movie);
 				  
 					  // Add the tmdbId to the movieIndexes array
 					  movieIndexes.push(tmdbId);
@@ -571,7 +599,70 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 
 				
 
-                // ADDED NEW CODE - LSH
+				async function retrieveMinhashesFromFriends(friendUrls) {
+					const minhashes = [];
+				  
+					for (const friendUrl of friendUrls) {
+					  try {
+						const parts = friendUrl.split('/');
+					    const friendPod = parts.slice(0, parts.length - 2).join('/');
+                    
+						// Go to the MinHash dataset URL for the friend
+						const datasetUrl = `${friendPod}/minhash`;
+				  
+						// Fetch the Solid Dataset from the friend's Pod
+						const friendDataset = await getSolidDataset(datasetUrl, { fetch: session.fetch });
+				  
+						// Retrieve the MinHash Thing from the dataset
+						const friendMinhashThing = getThing(friendDataset, `${datasetUrl}#it`);
+				  
+						// Check if the MinHash Thing exists
+						if (friendMinhashThing) {
+						  // Get the MinHash data property and parse it as JSON
+						  const minhashData = getStringNoLocale(friendMinhashThing, 'https://schema.org/vectorData');
+						  
+						  if (minhashData) {
+							const minhashVector = JSON.parse(minhashData);
+							minhashes.push({ friendUrl, minhashVector });
+						  }
+						}
+					  } catch (error) {
+						console.error(`Error fetching MinHash from ${friendUrl}:`, error);
+					  }
+					}
+				  
+					return minhashes;
+				  }
+				  
+				  
+			// 	// Example Use Case
+            //     const friendUrls = [
+	        //     'https://yushiyang.solidcommunity.net/profile/card#me',
+	        //     'https://solidweb.me/testfriend4/profile/card#me',
+            //     ];
+  
+            //     // Fetch MinHash vectors from friends' pods
+            //     async function retrieveFriendsMinHashes() {
+	        //     try {
+	        //       const friendMinhashes = await retrieveMinhashesFromFriends(friendUrls);
+  
+	        //     // Now have an array of friend MinHash vectors
+	        //     for (const { friendUrl, minhashVector } of friendMinhashes) {
+		    //       console.log(`Retrieved MinHash vector for friend ${friendUrl}:`, minhashVector);
+  
+		    //      }
+	        //     } catch (error) {
+	        //     console.error('Error retrieving friends\' MinHashes from their pods:', error);
+	        //     }
+            //   }
+  
+            //   // Call the function to retrieve friends' MinHash vectors from their pods
+            //   retrieveFriendsMinHashes();
+
+
+
+
+                // ADDED CODE FOR LSH
 				function hashBand(band) {
 					let hash = 0;
 					for (let i = 0; i < band.length; i++) {
@@ -651,20 +742,27 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  
 				  // Filter savedResults to get minhashValues for 'me'
 				  // Find the user with type === 'me' in savedResults
+				  let filteredSimilarUsers = []; 
+
 				  const myId = people.find((person) => person.type === 'me').id;
 				  const meUser = savedResults.find((user) => user.podUrl === myId);
-				  const myMinhashValues = meUser.minhashValues;
+				 
+				  if (!meUser || !meUser.minhashValues || meUser.minhashValues.length === 0) {
+					// Handle the case where MinHash values for 'me' are missing or empty
+					console.error('MinHash values for "me" are missing or empty.');
+				  } else {
+					const myMinhashValues = meUser.minhashValues;
+					
+				    // Query the LSH index
+				    const queryMinhash = myMinhashValues;
+				    const similarUsers = queryLSH(buckets, queryMinhash, numPerm, bandSize);
 				  
-				  // Query the LSH index
-				  const queryMinhash = myMinhashValues;
-				  const similarUsers = queryLSH(buckets, queryMinhash, numPerm, bandSize);
+				    // Remove 'me' from similarUsers
+				    const userIdToRemove = meUser.podUrl 
+				    filteredSimilarUsers = similarUsers.filter((user) => user !== userIdToRemove);
 				  
-				  // Remove 'me' from similarUsers
-				  const userIdToRemove = meUser.podUrl 
-				  const filteredSimilarUsers = similarUsers.filter((user) => user !== userIdToRemove);
-				  
-				  console.log('Similar Users for Me', filteredSimilarUsers);
-
+				    console.log('Similar Users for Me', filteredSimilarUsers);
+				  }
 
 
 				// Randomly sample 5 movies from similar users
@@ -692,13 +790,13 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
                 const myMovieTitles = [];
 
 				for (const userPodUrl of filteredSimilarUsers) {
-					const movies = await fetchMoviesFromPod(userPodUrl);
+					const movies = await getWatchedMoviesByPod(userPodUrl);
 					OthersMovieTitles.push(...movies.map((movie) => movie.title));
 				  }
 
 				console.log('Movies from Similar Users', OthersMovieTitles)
 				  
-				const myMovies = await fetchMoviesFromPod(meUser.podUrl);
+				const myMovies = await getWatchedMoviesByPod(meUser.podUrl);
 				myMovieTitles.push(...myMovies.map((movie) => movie.title));
 				console.log('My Movies', myMovieTitles)
 				  
@@ -732,6 +830,19 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  }
 				  
 				  console.log('Final Recommended List', recommendedList);
+
+				  globalState.setState({
+					
+					recommendedDict: await Promise.all(recommendedList.map(async (name) => {
+
+						const movies = await search(name);
+						
+						const movie = movies.find(x => x.title === name);
+						
+						return movie.tmdbUrl;
+						
+						}))
+				  });
 
 				// let loadingEnd = (new Date()).getTime();
 				// let currentSeconds = (loadingEnd - loadingStart)/1000;
@@ -880,7 +991,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			
 			movieDataset = setThing(movieDataset, movie);
 			
-			await saveSolidDatasetAt(datasetUrl, movieDataset, {fetch: session.fetch});
+			// await saveSolidDatasetAt(datasetUrl, movieDataset, {fetch: session.fetch});
 			
 			const movieData = {
 				movie: media.tmdbUrl,
