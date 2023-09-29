@@ -506,7 +506,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 
 				async function processPodURLs(people) {
 					const numPerm = 128; // Number of permutation functions
-					const seed = 100;
+					const seed = 1000;
 					// Generate a list of random hash functions (should be the same across all users)
 					const hashFunctions = generateHashFunctions(numPerm, seed);
 				  
@@ -531,7 +531,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					  console.log('Movie Indexes:', movieIndexes);
 					  console.log('MinHash Values:', minhashValues);
 				  
-					  // Save the computed minhash vector to the person's pod
+					//   // Save the computed minhash vector to the person's pod
 					//   const savedDatasetUrl = await saveVector(minhashValues, podUrl);
 				  
 					//   if (savedDatasetUrl) {
@@ -542,7 +542,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						podUrl,
 						movieIndexes,
 						minhashValues
-						// savedDatasetUrl,
+						// savedDatasetUrl
 					  });
 					}
 				  
@@ -564,38 +564,38 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
                 
 
 				// Save the minhash vector to a person's pod
-                async function saveVector(vector, podUrl) {
-                  try {
-					const parts = podUrl.split('/');
-					const pod = parts.slice(0, parts.length - 2).join('/');
-                    // Generate a unique dataset URL for the vector
-                    const datasetUrl = `${pod}/minhash`;
+                // async function saveVector(vector, podUrl) {
+                //   try {
+				// 	const parts = podUrl.split('/');
+				// 	const pod = parts.slice(0, parts.length - 2).join('/');
+                //     // Generate a unique dataset URL for the vector
+                //     const datasetUrl = `${pod}/movies/minhash`;
 
-                    // Create a new Solid Dataset
-                    let vectorDataset = createSolidDataset();
+                //     // Create a new Solid Dataset
+                //     let vectorDataset = createSolidDataset();
 
-                    // Create a new Thing for the vector data
-                    let vectorThing = createThing({ url: `${datasetUrl}#it` });
+                //     // Create a new Thing for the vector data
+                //     let vectorThing = createThing({ url: `${datasetUrl}#it` });
 
-                    // Set vector data properties (customize as needed)
-                    vectorThing = setUrl(vectorThing, 'https://schema.org/type', 'https://schema.org/Vector');
-                    vectorThing = setDatetime(vectorThing, 'https://schema.org/dateCreated', new Date());
-                    vectorThing = setStringNoLocale(vectorThing, 'https://schema.org/vectorData', JSON.stringify(vector));
+                //     // Set vector data properties 
+                //     vectorThing = setUrl(vectorThing, 'https://schema.org/type', 'https://schema.org/Vector');
+                //     vectorThing = setDatetime(vectorThing, 'https://schema.org/dateCreated', new Date());
+                //     vectorThing = setStringNoLocale(vectorThing, 'https://schema.org/vectorData', JSON.stringify(vector));
 
-                    // Add the vector Thing to the dataset
-                    vectorDataset = setThing(vectorDataset, vectorThing);
+                //     // Add the vector Thing to the dataset
+                //     vectorDataset = setThing(vectorDataset, vectorThing);
 
-                    // Save the Solid Dataset to the specified Pod URL
-                    await saveSolidDatasetAt(datasetUrl, vectorDataset, { fetch: session.fetch });
+                //     // Save the Solid Dataset to the specified Pod URL
+                //     await saveSolidDatasetAt(datasetUrl, vectorDataset, { fetch: session.fetch });
 
-                    console.log('Vector data saved successfully.');
+                //     console.log('Vector data saved successfully.');
 
-                    return datasetUrl;
-                  } catch (error) {
-                    console.error('Error saving vector data:', error);
-                    return null;
-                  }
-                }
+                //     return datasetUrl;
+                //   } catch (error) {
+                //     console.error('Error saving vector data:', error);
+                //     return null;
+                //   }
+                // }
 
 				
 
@@ -608,7 +608,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					    const friendPod = parts.slice(0, parts.length - 2).join('/');
                     
 						// Go to the MinHash dataset URL for the friend
-						const datasetUrl = `${friendPod}/minhash`;
+						const datasetUrl = `${friendPod}/movies/minhash`;
 				  
 						// Fetch the Solid Dataset from the friend's Pod
 						const friendDataset = await getSolidDataset(datasetUrl, { fetch: session.fetch });
@@ -636,10 +636,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  
 				  
 			// 	// Example Use Case
-            //     const friendUrls = [
-	        //     'https://yushiyang.solidcommunity.net/profile/card#me',
-	        //     'https://solidweb.me/testfriend4/profile/card#me',
-            //     ];
+            //     const friendUrls = people.filter((person) => person.type === 'friend').map((friend) => friend.id);
   
             //     // Fetch MinHash vectors from friends' pods
             //     async function retrieveFriendsMinHashes() {
@@ -723,11 +720,10 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				  }
 				  
 				  
-				  
 				  // Create LSH buckets
 				  const numPerm = 128;
-				  const numBands = 32; 
-                  const bandSize = numPerm / numBands; 
+				  const numBands = 90; 
+                  const bandSize = numPerm / numBands; // the smaller, the more similar users
                   const buckets = {};
 				  
 				  console.log('savedResults again', savedResults)
@@ -775,12 +771,14 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					  }
 					} else {
 					  const shuffledTitles = allMovieTitles.sort(() => 0.5 - Math.random());
-					  const sampledTitles = shuffledTitles.slice(0, Math.min(10, shuffledTitles.length));
-					  for (let title of sampledTitles) {
+					  const sampled = shuffledTitles.slice(0, Math.min(5, shuffledTitles.length));
+					  
+					  for (let title of sampled) {
 						sampledTitles.push(title);
 					  }
 					}
 				  
+					console.log('SampledTitles', sampledTitles)
 					return sampledTitles;
 				  }
 
@@ -883,9 +881,10 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 
 				for(const name of recommendedList) {
 					const movies = await search(name);
-					const movie = movies.find(x => x.title === name);
+					const movie = movies.find(x => x.title.toLowerCase() === name.toLowerCase());
 					if (movie) {
-						save(movie, true);
+						await save(movie, true);
+						console.log('Saved movie', movie.title)
 					}
 				}
 
@@ -991,7 +990,7 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 			
 			movieDataset = setThing(movieDataset, movie);
 			
-			// await saveSolidDatasetAt(datasetUrl, movieDataset, {fetch: session.fetch});
+			await saveSolidDatasetAt(datasetUrl, movieDataset, {fetch: session.fetch});
 			
 			const movieData = {
 				movie: media.tmdbUrl,
