@@ -6,9 +6,10 @@ import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useAuthentication } from './authentication';
 import { loadData, MediaData, getIds, search } from '../media';
-import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
+import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
+import seedrandom from 'seedrandom';
 
 import { logout } from '@inrupt/solid-client-authn-browser';
 
@@ -216,14 +217,17 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					console.log('resource ACL isn\'t setup yet - first sign-up');
 				}
 				
+
 				// creates an object of {type: {user or friend}, id: {users webID or friends webID}}
 				const people = [{type: 'me', id: webID}, ...friends.map(x => ({type: 'friend', id: x}))] as {type: 'me' | 'friend', id: string}[];
-				
+				// console.log('people', people)
+
 				// creates a list of movies including users and their friends movies data
 				const movieList = (await Promise.all(people.map(async x => {
 					try {
 						const parts = x.id.split('/');
 						const pod = parts.slice(0, parts.length - 2).join('/');
+						// console.log('Pod', pod)
 
 						// getting movies from the user and their friends movies pod
 						const moviesDataset = await getSolidDataset(`${pod}/movies/`, {fetch: session.fetch});
@@ -236,13 +240,22 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						return [];
 					}
 				}))).flat(1);
-				
+
+
+
 				const test_start = (new Date()).getTime();
-				const movies = await Promise.all(
-					movieList.map(async ({type, url}) => {
+				const all_movies_zero = await Promise.all(
+					    movieList.map(async ({type, url}) => {
+						// Fetch the user pod URL based on the movie URL
+                        const parts = url.split('/');
+                        const userPodUrl = parts.slice(0, parts.length - 2).join('/');
+                        const fullPodUrl = userPodUrl + '/profile/card#me';
+
 						// iterating through all movies (user + their friends)
-						const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
-						
+						try {const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
+					
+
+
 						// fetching the stored metadata for each movie
 						const movieThing = getThing(movieDataset, `${url}#it`)!;
 						
@@ -280,9 +293,15 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 						// fetch current movie assets from imdb API
 						const {title, released, icon} = await loadData(tmdbUrl);
 						
-						return {movie: tmdbUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
-					})
+						return {movie: tmdbUrl, userPodUrl: fullPodUrl, solidUrl: url, type, watched, liked, recommended: recommended, title, released, image: icon, dataset: movieDataset};
+					}
+					catch{return undefined}
+				  })		
 				);
+
+
+				const all_movies = all_movies_zero.filter(Boolean)
+
 				console.log(((new Date()).getTime() - test_start)/1000 + ' seconds')
 				
 				const movieDict: {[key: string]: MovieData} = {};
@@ -294,7 +313,8 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 				const friendLiked: string[] = [];
 				const recommendedDict: string[] = [];
 				
-				for (const {type, ...movie} of movies) {
+
+				for (const {type, ...movie} of all_movies) {
 					switch (type) {
 						case 'me': {
 							movieDict[movie.movie] = {...movie, me: true, friend: movieDict[movie.movie]?.friend};
@@ -341,7 +361,15 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					}
 				}
 				
-				globalState.setState({
+                
+				// console.log('myLiked:', myLiked);
+                // console.log('myWatched:', myWatched);
+                // console.log('friendLiked:', friendLiked);
+                // console.log('friendWatched:', friendWatched);
+
+
+				// Update global state with values
+                globalState.setState({
 					myWatched,
 					myUnwatched,
 					myLiked,
@@ -350,60 +378,520 @@ export default class DiscoverPane extends Component<{globalState: {state: any}}>
 					friendLiked,
 					movies: movieDict,
 					recommendedDict,
-				});
+					// myMovieVector,
+					// myMinHash,
+					});
 
-				// globalState.setState({
+				
+                // globalState.setState({
 				// 	recommendedDict: []
 				// }); // deletes all recommendations, and adds new recos at each load
 
-				let loadingEnd = (new Date()).getTime();
-				let currentSeconds = (loadingEnd - loadingStart)/1000;
-				console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
-				// let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
 
-				// Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
-				const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
-				const sampledTitles: String[] = []
-				if (userMovies.length <= 10) {
-					for (let movie of userMovies) {
-						sampledTitles.push(movie.title);
+
+                // ADDED NEW CODE - Define the functions for minhash 
+				// Generates a list of random hash functions, each represented by a pair (a, b)
+				// Allow seed setting to recreate the hash functions/permutations
+				function generateHashFunctions(numPerm, seed = 100) {
+					const rng = seedrandom(seed); // Create a random number generator with a seed
+					
+					const hashFunctions = [];
+					for (let i = 0; i < numPerm; i++) {
+					  const a = Math.floor(rng() * (2 ** 32 - 1)) + 1; // Generate random 'a' value
+					  const b = Math.floor(rng() * (2 ** 32 - 1)); // Generate random 'b' value
+					  hashFunctions.push([a, b]); // Append hash function parameters to the list
 					}
-				} else {
-					const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-					const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
-					for (let movie of sampledMovies) {
-						sampledTitles.push(movie.title);
-					}
+					
+					return hashFunctions;
 				}
+				
 
-				// fetch movie recommendations
-				const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
-					method: 'POST',
-					body: JSON.stringify(sampledTitles),
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				});
+				// Computes MinHash values for a given vector using a list of hash functions
+				function minHash(movieIndexes, hashFunctions) {
+					const minHashValues = [];
 				  
-				let recommendedList;
-				if (response.body !== null) {
-					const body = await response.text();
-					recommendedList = JSON.parse(body);
-					console.log(recommendedList);
+					for (const [a, b] of hashFunctions) {
+					  let minHash = Number.POSITIVE_INFINITY;
+				  
+					  for (const movieIndex of movieIndexes) { // Use 'of' instead of 'in' here
+						const hashVal = (a * parseInt(movieIndex) + b) % 5000;
+						minHash = Math.min(minHash, hashVal);
+					  }
+				  
+					  minHashValues.push(minHash);
+					}
+				  
+					return minHashValues;
+				  }
+				
+				  
+				// Get all the watched movies for a user
+				async function getWatchedMoviesByPod(podURL) {
+				  const watchedMovies = all_movies.filter((movie) => {
+					return movie.userPodUrl === podURL && movie.watched === true;
+				  });
+					
+				  if (watchedMovies.length === 0) {
+					// Handle the case where no movies are found in the user's pod
+					return [];
+				  }
+				  
+				  return watchedMovies;
 				}
+
+
+				// async function fetchMoviesFromPod(podUrl) {
+				//   try {
+				// 	const parts = podUrl.split('/');
+				// 	const pod = parts.slice(0, parts.length - 2).join('/');
+
+				// 	// Fetch movies from the given pod URL and retrieve their URLs
+				// 	const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch: session.fetch });
+				// 	const movieUrls = getContainedResourceUrlAll(moviesDataset);
+				  
+				// 	// Fetch and process movie data for each URL
+				// 	const movies = await Promise.all(
+				// 	movieUrls.map(async url => {
+				// 		const movieDataset = await getSolidDataset(url, { fetch: session.fetch });
+				  
+				// 		// Fetching the stored metadata for each movie
+				// 		const movieThing = getThing(movieDataset, `${url}#it`)!;
+				// 		const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+				  
+				// 		const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+				  
+				// 		// Fetch current movie assets from tMDb API
+				// 		const { title, released, icon } = await loadData(tmdbUrl);
+				  
+				// 		return { tmdbUrl: tmdbUrl, solidUrl: url, title, released, image: icon, dataset: movieDataset };
+				// 	  })
+				// 	);
+				  
+				// 	return movies;
+				//   } catch {
+				// 	return []; // If no movies from the podUrl, returns an empty array
+				//   }
+				// }
+                
+
+
+                // Function to compute the movie vector for a single pod URL
+                async function collectMovieIndexes(podUrl) {
+					const movieIndexes = []; // Initialize an empty array to store movie indexes
+				  
+					// Fetch the watched movies from the given pod URL and retrieve their tmdbUrls
+					const movies = await getWatchedMoviesByPod(podUrl);
+				  
+					// Iterate through the movies and update the movieIndexes array
+					for (const movie of movies) {
+					  // Extract the movie ID from the tmdbUrl (e.g., "https://www.themoviedb.org/movie/289")
+					  const tmdbId = extractMovieIdFromUrl(movie.movie);
+				  
+					  // Add the tmdbId to the movieIndexes array
+					  movieIndexes.push(tmdbId);
+					}
+				  
+					// Now, movieIndexes contains all the extracted tmdbIds
+					return movieIndexes; // If movies is empty, movieIndexes will be empty too
+				  }
+
+				  
+                // Function to extract movie ID from a tmdbUrl
+                function extractMovieIdFromUrl(tmdbUrl) {
+                  // Parse the URL and extract the last segment as the movie ID
+                  const urlSegments = tmdbUrl.split('/');
+                  return parseInt(urlSegments[urlSegments.length - 1]);
+                }
+
+
+				async function processPodURLs(people) {
+					const numPerm = 128; // Number of permutation functions
+					const seed = 1000;
+					// Generate a list of random hash functions (should be the same across all users)
+					const hashFunctions = generateHashFunctions(numPerm, seed);
+				  
+					const results = [];
+				  
+					for (const person of people) {
+					  const podUrl = person.id;
+				  
+					  // Collect the movie indexes for the current pod URL
+					  const movieIndexes = await collectMovieIndexes(podUrl);
+				  
+					  // if movie indexes are empty, exclude this podUrl in results
+					  if (movieIndexes.length === 0) {
+						console.log(`Skipping Pod URL: ${podUrl} (No Movies)`);
+						continue;
+					  }
+
+					  // Compute MinHash for the movie vector
+					  const minhashValues = minHash(movieIndexes, hashFunctions);
+				  
+					  console.log(`Pod URL: ${podUrl}`);
+					  console.log('Movie Indexes:', movieIndexes);
+					  console.log('MinHash Values:', minhashValues);
+				  
+					//   // Save the computed minhash vector to the person's pod
+					//   const savedDatasetUrl = await saveVector(minhashValues, podUrl);
+				  
+					//   if (savedDatasetUrl) {
+					// 	console.log('Saved minhash vector at:', savedDatasetUrl);
+					//   }
+				  
+					  results.push({
+						podUrl,
+						movieIndexes,
+						minhashValues
+						// savedDatasetUrl
+					  });
+					}
+				  
+					return results;
+				  }
+
+				  
+				// Example usage:
+                let savedResults;
+
+  				// Call the processPodURLs function and store the results synchronously
+				try {
+				  savedResults = await processPodURLs(people);
+				  console.log('Processed all Pod URLs:', savedResults);
+				} catch (error) {
+			      console.error('Error processing Pod URLs:', error);
+				}
+				  
+                
+
+				// Save the minhash vector to a person's pod
+                // async function saveVector(vector, podUrl) {
+                //   try {
+				// 	const parts = podUrl.split('/');
+				// 	const pod = parts.slice(0, parts.length - 2).join('/');
+                //     // Generate a unique dataset URL for the vector
+                //     const datasetUrl = `${pod}/movies/minhash`;
+
+                //     // Create a new Solid Dataset
+                //     let vectorDataset = createSolidDataset();
+
+                //     // Create a new Thing for the vector data
+                //     let vectorThing = createThing({ url: `${datasetUrl}#it` });
+
+                //     // Set vector data properties 
+                //     vectorThing = setUrl(vectorThing, 'https://schema.org/type', 'https://schema.org/Vector');
+                //     vectorThing = setDatetime(vectorThing, 'https://schema.org/dateCreated', new Date());
+                //     vectorThing = setStringNoLocale(vectorThing, 'https://schema.org/vectorData', JSON.stringify(vector));
+
+                //     // Add the vector Thing to the dataset
+                //     vectorDataset = setThing(vectorDataset, vectorThing);
+
+                //     // Save the Solid Dataset to the specified Pod URL
+                //     await saveSolidDatasetAt(datasetUrl, vectorDataset, { fetch: session.fetch });
+
+                //     console.log('Vector data saved successfully.');
+
+                //     return datasetUrl;
+                //   } catch (error) {
+                //     console.error('Error saving vector data:', error);
+                //     return null;
+                //   }
+                // }
+
+				
+
+				async function retrieveMinhashesFromFriends(friendUrls) {
+					const minhashes = [];
+				  
+					for (const friendUrl of friendUrls) {
+					  try {
+						const parts = friendUrl.split('/');
+					    const friendPod = parts.slice(0, parts.length - 2).join('/');
+                    
+						// Go to the MinHash dataset URL for the friend
+						const datasetUrl = `${friendPod}/movies/minhash`;
+				  
+						// Fetch the Solid Dataset from the friend's Pod
+						const friendDataset = await getSolidDataset(datasetUrl, { fetch: session.fetch });
+				  
+						// Retrieve the MinHash Thing from the dataset
+						const friendMinhashThing = getThing(friendDataset, `${datasetUrl}#it`);
+				  
+						// Check if the MinHash Thing exists
+						if (friendMinhashThing) {
+						  // Get the MinHash data property and parse it as JSON
+						  const minhashData = getStringNoLocale(friendMinhashThing, 'https://schema.org/vectorData');
+						  
+						  if (minhashData) {
+							const minhashVector = JSON.parse(minhashData);
+							minhashes.push({ friendUrl, minhashVector });
+						  }
+						}
+					  } catch (error) {
+						console.error(`Error fetching MinHash from ${friendUrl}:`, error);
+					  }
+					}
+				  
+					return minhashes;
+				  }
+				  
+				  
+			// 	// Example Use Case
+            //     const friendUrls = people.filter((person) => person.type === 'friend').map((friend) => friend.id);
+  
+            //     // Fetch MinHash vectors from friends' pods
+            //     async function retrieveFriendsMinHashes() {
+	        //     try {
+	        //       const friendMinhashes = await retrieveMinhashesFromFriends(friendUrls);
+  
+	        //     // Now have an array of friend MinHash vectors
+	        //     for (const { friendUrl, minhashVector } of friendMinhashes) {
+		    //       console.log(`Retrieved MinHash vector for friend ${friendUrl}:`, minhashVector);
+  
+		    //      }
+	        //     } catch (error) {
+	        //     console.error('Error retrieving friends\' MinHashes from their pods:', error);
+	        //     }
+            //   }
+  
+            //   // Call the function to retrieve friends' MinHash vectors from their pods
+            //   retrieveFriendsMinHashes();
+
+
+
+
+                // ADDED CODE FOR LSH
+				function hashBand(band) {
+					let hash = 0;
+					for (let i = 0; i < band.length; i++) {
+					  const value = band[i];
+					  // Use bitwise left shift and addition to create the hash
+					  hash = (hash << 5) - hash + value;
+					}
+					return hash;
+				  }
+				  
+				  // function hashBand(band) {
+				  // 	// Generate a hash value for a band (simple hash function)
+				  // 	return band.reduce((hash, value) => hash + value, 0);
+				  // 	}
+				  
+				  function insertIntoLSH(buckets, userPodUrl, minhash, numPerm, bandSize) {
+					// Loop through the MinHash values in bands
+					for (let i = 0; i < numPerm; i += bandSize) {
+					  // Extract a band of MinHash values
+					  const band = minhash.slice(i, i + bandSize); // Extract a band of MinHash values
+					  // Hash the band to get a unique identifier for this band
+					  const bandHash = hashBand(band); // Hash the band
+				  
+					  // Check if the bucket for this bandHash exists
+					  if (!buckets[bandHash]) {
+						// If not, create a new bucket (represented as a Set)
+						buckets[bandHash] = new Set();
+					  }
+				  
+					  // Add the user's Pod URL to the bucket for this bandHash
+					  buckets[bandHash].add(userPodUrl);
+					  console.log(`Inserted ${userPodUrl} into bucket ${bandHash}`);
+					}
+				  }
+				  
+				  function queryLSH(buckets, minhashQuery, numPerm, bandSize) {
+					// Create a Set to store similar users
+					const similarUsers = new Set();
+				  
+					// Loop through the MinHash values in the query in bands
+					for (let i = 0; i < numPerm; i += bandSize) {
+					  // Extract a band of MinHash values from the query
+					  const band = minhashQuery.slice(i, i + bandSize); // Extract a band from the query MinHash
+					  // Hash the band to get the corresponding bucket identifier
+					  const bandHash = hashBand(band);
+				  
+					  // Check if a bucket for this bandHash exists
+					  if (buckets[bandHash]) {
+						// If it exists, iterate through the users in that bucket
+						for (const user of buckets[bandHash]) {
+						  // Add each user to the set of similar users
+						  similarUsers.add(user);
+						}
+					  }
+					}
+				  
+					return Array.from(similarUsers);
+				  }
+				  
+				  
+				  // Create LSH buckets
+				  const numPerm = 128;
+				  const numBands = 90; 
+                  const bandSize = numPerm / numBands; // the smaller, the more similar users
+                  const buckets = {};
+				  
+				  console.log('savedResults again', savedResults)
+
+				  for (let idx = 0; idx < savedResults.length; idx++) {
+					const minhash = savedResults[idx].minhashValues;
+					const userPodUrl = savedResults[idx].podUrl; // Use the ID as the userPodUrl
+					insertIntoLSH(buckets, userPodUrl, minhash, numPerm, bandSize);
+				}
+			
+				  console.log('Buckets', buckets);
+				  
+				  // Filter savedResults to get minhashValues for 'me'
+				  // Find the user with type === 'me' in savedResults
+				  let filteredSimilarUsers = []; 
+
+				  const myId = people.find((person) => person.type === 'me').id;
+				  const meUser = savedResults.find((user) => user.podUrl === myId);
+				 
+				  if (!meUser || !meUser.minhashValues || meUser.minhashValues.length === 0) {
+					// Handle the case where MinHash values for 'me' are missing or empty
+					console.error('MinHash values for "me" are missing or empty.');
+				  } else {
+					const myMinhashValues = meUser.minhashValues;
+					
+				    // Query the LSH index
+				    const queryMinhash = myMinhashValues;
+				    const similarUsers = queryLSH(buckets, queryMinhash, numPerm, bandSize);
+				  
+				    // Remove 'me' from similarUsers
+				    const userIdToRemove = meUser.podUrl 
+				    filteredSimilarUsers = similarUsers.filter((user) => user !== userIdToRemove);
+				  
+				    console.log('Similar Users for Me', filteredSimilarUsers);
+				  }
+
+
+				// Randomly sample 5 movies from similar users
+				function sampleMovieTitles(allMovieTitles, sampleSize) {
+					const sampledTitles = [];
+				  
+					if (allMovieTitles.length <= sampleSize) {
+					  for (let title of allMovieTitles) {
+						sampledTitles.push(title);
+					  }
+					} else {
+					  const shuffledTitles = allMovieTitles.sort(() => 0.5 - Math.random());
+					  const sampled = shuffledTitles.slice(0, Math.min(5, shuffledTitles.length));
+					  
+					  for (let title of sampled) {
+						sampledTitles.push(title);
+					  }
+					}
+				  
+					console.log('SampledTitles', sampledTitles)
+					return sampledTitles;
+				  }
+
+
+                // Produce recommendations based on similar users
+				const OthersMovieTitles = [];
+                const myMovieTitles = [];
+
+				for (const userPodUrl of filteredSimilarUsers) {
+					const movies = await getWatchedMoviesByPod(userPodUrl);
+					OthersMovieTitles.push(...movies.map((movie) => movie.title));
+				  }
+
+				console.log('Movies from Similar Users', OthersMovieTitles)
+				  
+				const myMovies = await getWatchedMoviesByPod(meUser.podUrl);
+				myMovieTitles.push(...myMovies.map((movie) => movie.title));
+				console.log('My Movies', myMovieTitles)
+				  
+				const sampledTitlesfromOthers = sampleMovieTitles(OthersMovieTitles, 5);
+				const mySampledTitles = sampleMovieTitles(myMovieTitles, 10);
+				console.log('Sampled Movies From Similar Users', sampledTitlesfromOthers)
+				console.log('Sampled Movies From Me', mySampledTitles)
+
+
+				// Produce top 5 recommendations based on similar users
+				let recommendedList; 
+				  
+				  if (sampledTitlesfromOthers.length < 5) {
+					const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
+					  method: 'POST',
+					  body: JSON.stringify(mySampledTitles),
+					  headers: {
+						'Content-Type': 'application/json'
+					  }
+					});
+				  
+					if (response.body !== null) {
+					  const body = await response.text();
+					  const recommendedNames = JSON.parse(body);
+					  console.log('Recommended Movies from', recommendedNames);
+				  
+					  recommendedList = sampledTitlesfromOthers.concat(recommendedNames.slice(0, 5 - sampledTitlesfromOthers.length));
+					}
+				  } else {
+					recommendedList = sampledTitlesfromOthers;
+				  }
+				  
+				  console.log('Final Recommended List', recommendedList);
+
+				  globalState.setState({
+					
+					recommendedDict: await Promise.all(recommendedList.map(async (name) => {
+
+						const movies = await search(name);
+						
+						const movie = movies.find(x => x.title === name);
+						
+						return movie.tmdbUrl;
+						
+						}))
+				  });
+
+				// let loadingEnd = (new Date()).getTime();
+				// let currentSeconds = (loadingEnd - loadingStart)/1000;
+				// console.log('# of movies loaded: ' + movieList.length + ' | time taken: ' + currentSeconds + ' seconds');
+				// // let dataLoadEndedTime = ((new Date()).getTime() - loadingStart)/1000;
+
+				// // Random Sampling: sample 10 movies randomly from watched/liked/wishlist movies
+				// const userMovies = movies.filter(x => x.type === "me" && !x.recommended)
+				// const sampledTitles: String[] = []
+				// if (userMovies.length <= 10) {
+				// 	for (let movie of userMovies) {
+				// 		sampledTitles.push(movie.title);
+				// 	}
+				// } else {
+				// 	const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+				// 	const sampledMovies = shuffledMovies.slice(0, Math.min(10, shuffledMovies.length));
+				// 	for (let movie of sampledMovies) {
+				// 		sampledTitles.push(movie.title);
+				// 	}
+				// }
+
+				
+				// fetch movie recommendations
+				// const response = await fetch('https://api.pod.ewada.ox.ac.uk/solidflix-recommender/', {
+				// 	method: 'POST',
+				// 	body: JSON.stringify(sampledTitles),
+				// 	headers: {
+				// 		'Content-Type': 'application/json'
+				// 	}
+				// });
+				  
+				// let recommendedList;
+				// if (response.body !== null) {
+				// 	const body = await response.text();
+				// 	recommendedList = JSON.parse(body);
+				// 	console.log(recommendedList);
+				// }
 
 				for(const name of recommendedList) {
 					const movies = await search(name);
-					const movie = movies.find(x => x.title === name);
+					const movie = movies.find(x => x.title.toLowerCase() === name.toLowerCase());
 					if (movie) {
-						save(movie, true);
+						await save(movie, true);
+						console.log('Saved movie', movie.title)
 					}
 				}
 
 				// load time
 				// let loadingEnd2 = (new Date()).getTime();
 				// let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
-				// console.log('Fetching 10 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
+				// console.log('Fetching 5 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
 			})();
 		}
 		
