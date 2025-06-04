@@ -1,4 +1,4 @@
-import { h, Component, VNode } from 'preact';
+import { Component, VNode } from 'preact';
 import { Props } from './types';
 import Carousel, { CarouselElement } from './Carousel';
 import AddPopup from './AddPopup';
@@ -68,7 +68,7 @@ type State = {
 	loading?: boolean,
 };
 
-export default class DiscoverPane extends Component<{globalState: {state: any}}> {
+export default class DiscoverPane extends Component<{globalState: {state: State, setState: (state: Partial<State>) => void}}> {
 	state = {
 		addPopup: false,
 		addFriends: false,

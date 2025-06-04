@@ -1,4 +1,4 @@
-import {h, Component, VNode, createRef} from 'preact';
+import { Component, VNode, createRef } from 'preact';
 import {Props} from './types';
 import Loading from './Loading';
 import {search, MediaData} from '../media';

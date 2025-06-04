@@ -1,4 +1,4 @@
-import {h, Component, VNode} from 'preact';
+import { Component, VNode } from 'preact';
 import {Props} from './types';
 
 export default class Form extends Component<{submit: (value: any) => void}> {

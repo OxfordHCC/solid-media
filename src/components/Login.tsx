@@ -1,4 +1,4 @@
-import { h, Component, Fragment, VNode } from 'preact';
+import { Component, Fragment, VNode } from 'preact';
 import { Redirect } from 'wouter-preact';
 import { Props } from './types';
 import { session } from './authentication';

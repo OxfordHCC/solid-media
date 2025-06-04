@@ -10,11 +10,14 @@
   "engines": {
     "node": ">=14.x"
   },
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "preinstall": "npm-force-resolutions",
-    "start": "snowpack dev --polyfill-node",
-    "build": "snowpack build --polyfill-node && mkdirp ./build/login/ && ncp ./build/spaRedirect.html ./build/login/index.html && mkdirp ./build/view/ && ncp ./build/spaRedirect.html ./build/view/index.html",
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build && ncp ./src/spaRedirect.html ./build/spaRedirect.html && mkdirp ./build/login/ && ncp ./build/spaRedirect.html ./build/login/index.html && mkdirp ./build/view/ && ncp ./build/spaRedirect.html ./build/view/index.html",
+    "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",
     "predeploy": "npm run build && ncp ./src/.nojekyll ./build/.nojekyll",
     "deploy": "gh-pages -d build -t true"
@@ -30,13 +33,13 @@
     "wouter-preact": "^2.7.5"
   },
   "devDependencies": {
-    "@snowpack/plugin-typescript": "^1.2.1",
+    "@preact/preset-vite": "^2.10.1",
     "gh-pages": "^3.2.3",
     "mkdirp": "^1.0.4",
     "ncp": "^2.0.0",
     "npm-force-resolutions": "^0.0.10",
-    "snowpack": "^3.8.8",
-    "typescript": "^4.6.3"
+    "typescript": "^4.6.3",
+    "vite": "^6.3.5"
   },
   "resolutions": {
     "rollup-plugin-polyfill-node": "0.7.0"

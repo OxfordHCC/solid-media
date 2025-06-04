@@ -29,7 +29,7 @@ You can use the latest deployed application here: [SolidFlix](https://oxfordhcc.
 
 If you wish to deploy Solid-media locally, then please follow the instructions below to build the project.
 
-Solidflix is developed using [Typescript](https://www.typescriptlang.org/) and [snowpack](https://www.snowpack.dev/tutorials/getting-started). If you are unfamiliar with them, then you will need to have your `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
+Solidflix is developed using [Typescript](https://www.typescriptlang.org/) and [Vite](https://vitejs.dev/). If you are unfamiliar with them, then you will need to have your `npm` set up. Please follow [this tutorial](https://docs.npmjs.com/getting-started).
 
 
 ### Clone project and installations
@@ -42,15 +42,25 @@ Solidflix is developed using [Typescript](https://www.typescriptlang.org/) and [
 
 3. `cd solid-media` into the directory.
 
-4. Set up your `snowpack`
+4. Install dependencies:
 
-`npm install --save-dev snowpack`
+`npm install`
 
-Run
+5. Run the development server:
 
-`npm run start`
+`npm run dev` or `npm start`
 
 The application will be opened on your local web browser [http://localhost:8080](http://localhost:8080).
+
+### Build for production
+
+To build the application for production:
+
+`npm run build`
+
+To preview the production build:
+
+`npm run preview`
 
 
 ## Getting started with Solidflix

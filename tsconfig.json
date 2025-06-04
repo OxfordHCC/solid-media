@@ -1,14 +1,21 @@
 {
 	"compilerOptions": {
 		"target": "ESNext",
-		"jsx": "react",
-		"jsxFactory": "h",
-		"jsxFragmentFactory": "Fragment",
-		"noEmit": true,
+		"lib": ["DOM", "DOM.Iterable", "ES2021"],
+		"allowJs": false,
+		"skipLibCheck": true,
+		"esModuleInterop": false,
+		"allowSyntheticDefaultImports": true,
 		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"module": "ESNext",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
-		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true
-	}
+		"isolatedModules": true,
+		"noEmit": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact"
+	},
+	"include": ["src/**/*", "vite.config.ts"],
+	"exclude": ["node_modules", "build"]
 }

@@ -1,4 +1,4 @@
-import {h, Component, VNode} from 'preact';
+import { Component, VNode } from 'preact';
 import {Props} from './types';
 
 export default class Logout extends Component<{close: () => void, add: () => void}> {

@@ -1,4 +1,5 @@
-import {h, Component, VNode} from 'preact';
+import { Component, VNode } from 'preact';
+import { useState } from 'preact/hooks';
 import {Router, Switch, Route, useLocation} from 'wouter-preact';
 import {Props} from './types';
 import Login from './Login';
@@ -8,22 +9,20 @@ import {getSearchParam} from './lib';
 
 import {HOMEPAGE} from '../env';
 
-export default class App extends Component {
-	state = {};
+export default function App(): VNode {
+	const [location, setLocation] = useLocation();
+	const [state, setState] = useState({});
 	
-	public render({}: Props): VNode {
-		const [location, setLocation] = useLocation();
-		const spaUrl = getSearchParam("spaurl");
-		if (spaUrl !== null) setLocation(spaUrl);
-		
-		return (
-			<Router>
-				<Switch>
-					<Route<{args: string}> path={`${HOMEPAGE}/login`} component={() => <Login redirect={getSearchParam("redirect")} />} />
-					<Route<{args: string}> path={`${HOMEPAGE}/view`} component={() => <ViewScreen url={getSearchParam("url")} />} />
-					<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen globalState={this} />} />
-				</Switch>
-			</Router>
-		);
-	}
+	const spaUrl = getSearchParam("spaurl");
+	if (spaUrl !== null) setLocation(spaUrl);
+	
+	return (
+		<Router>
+			<Switch>
+				<Route<{args: string}> path={`${HOMEPAGE}/login`} component={() => <Login redirect={getSearchParam("redirect")} />} />
+				<Route<{args: string}> path={`${HOMEPAGE}/view`} component={() => <ViewScreen url={getSearchParam("url")} />} />
+				<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen globalState={{state, setState}} />} />
+			</Switch>
+		</Router>
+	);
 }

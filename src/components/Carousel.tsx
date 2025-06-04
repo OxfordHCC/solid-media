@@ -1,4 +1,4 @@
-import {h, Component, VNode, toChildArray, createRef} from 'preact';
+import { Component, VNode, toChildArray, createRef } from 'preact';
 import {useLocation} from 'wouter-preact';
 import {Props, CList} from './types';
 import {noDefault} from './lib';
