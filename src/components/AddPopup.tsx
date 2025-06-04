@@ -11,9 +11,9 @@ const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 export default class AddPopup extends Component<{close: () => void, save: (media: MediaData) => Promise<any>, watch: (media: MediaData, date?: Date) => Promise<any>}> {
 	state: {subPopup: null | 'netflix'}
 		= {subPopup: null};
-	
+
 	fileInput = createRef();
-	
+
 	public render({close, save, watch}: Props<{close: () => void, save: (media: MediaData) => Promise<any>, watch: (media: MediaData, date?: Date) => Promise<any>}>): VNode {
 		return (
 			<div class='add-popup'>
@@ -61,11 +61,11 @@ export default class AddPopup extends Component<{close: () => void, save: (media
 
 class AddPopupSearchList extends Component<{close: () => void, save: (media: MediaData) => Promise<any>, watch: (media: MediaData) => Promise<any>}> {
 	ref = createRef();
-	
+
 	state = {
 		results: <div />,
 	};
-	
+
 	public render({close, save, watch}: Props<{close: () => void, save: (media: MediaData) => Promise<any>, watch: (media: MediaData) => Promise<any>}>): VNode {
 		return (
 			<div>

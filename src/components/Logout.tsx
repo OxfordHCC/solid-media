@@ -2,7 +2,7 @@ import { Component, VNode } from 'preact';
 import {Props} from './types';
 
 export default class Logout extends Component<{close: () => void, add: () => void}> {
-	
+
 	public render({close, add}: Props<{close: () => void, add: () => void}>): VNode {
 		return (
 			<div class='add-popup'>
@@ -11,11 +11,11 @@ export default class Logout extends Component<{close: () => void, add: () => voi
 					<div>
 						<h2 style="text-align: center">Logout Successful</h2>
                         <div class="btn">
-                            <input 
-                                class="btn-primary" 
-                                type='submit' 
+                            <input
+                                class="btn-primary"
+                                type='submit'
                                 onClick={close}
-                                value='Return to Login' 
+                                value='Return to Login'
                             />
 						</div>
 					</div>

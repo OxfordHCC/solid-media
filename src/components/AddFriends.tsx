@@ -2,7 +2,7 @@ import { Component, VNode } from 'preact';
 import {Props} from './types';
 
 export default class AddFriends extends Component<{close: () => void, add: () => void}> {
-	
+
 	public render({close, add}: Props<{close: () => void, add: () => void}>): VNode {
 		return (
 			<div class='add-popup'>
@@ -12,11 +12,11 @@ export default class AddFriends extends Component<{close: () => void, add: () =>
 						<h2>Add Friends</h2>
                         <h4>Enter the webID</h4>
                         <input id="friend"/>
-						<input 
-							class="btn-primary" 
-							type='submit' 
+						<input
+							class="btn-primary"
+							type='submit'
 							onClick={add}
-							value='Add' 
+							value='Add'
                         />
 					</div>
 				</div>

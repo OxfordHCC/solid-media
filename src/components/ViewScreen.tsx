@@ -9,11 +9,11 @@ import {HOMEPAGE} from '../env';
 export default class ViewScreen extends Component<{url: string | null}> {
 	public render({url}: Props<{url: string | null}>): VNode {
 		const [location, setLocation] = useLocation();
-		
+
 		return (
 			<Loading render={async () => {
 				const {title, description, released, image, backdrop} = await loadData(url!);
-				
+
 				return (
 					<div class='view'>
 						<img class='view-background' src={backdrop} />

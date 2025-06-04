@@ -22,18 +22,18 @@ export default class Login extends Component<{redirect: string | null}> {
 		handleRedirect: true,
 		provider: '',
 	};
-	
+
 	public render({redirect}: Props<{redirect: string | null}>): VNode {
 
 		// check whether user has logged in, using 'authentication'
-		
+
 		if (session.info.isLoggedIn) {
 			return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
 		} else if (this.state.handleRedirect) {
 			session
 				.handleIncomingRedirect({ restorePreviousSession : true })
 				.then(() => { this.setState({handleRedirect: false}); });
-			
+
 			return <Loading />;
 		} else {
 			return (
@@ -64,21 +64,21 @@ export default class Login extends Component<{redirect: string | null}> {
 											/>
 										</div>
 										<div class="btn1">
-												<input 
-													class="btn-secondary" 
-													type='submit'  
+												<input
+													class="btn-secondary"
+													type='submit'
 													value="Login"
 												/>
 										</div>
 									</div>
-									
+
 									{providers.map(({url, title}) => <>
 										<div class="btn">
-											<input 
-												class="btn-primary" 
-												type='submit' 
-												onClick={() => this.setState({provider: url})} 
-												value={title} 
+											<input
+												class="btn-primary"
+												type='submit'
+												onClick={() => this.setState({provider: url})}
+												value={title}
 											/>
 										</div>
 										<br />

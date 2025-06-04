@@ -7,12 +7,12 @@ export default class Carousel extends Component<Props<{}, CList<VNode>>> {
 	state = {
 		scroll: 0,
 	};
-	
+
 	list = createRef();
-	
+
 	public render({children}: Props<{}, CList<VNode>>): VNode {
 		const count = toChildArray(children).length;
-		
+
 		return (
 			<div class='carousel'>
 				<div ref={this.list} class='carousel-list'>
@@ -31,10 +31,10 @@ export default class Carousel extends Component<Props<{}, CList<VNode>>> {
 			</div>
 		);
 	}
-	
+
 	public componentDidUpdate() {
 		const scroll = Math.min(toChildArray(this.props.children).length - 3, Math.max(0, this.state.scroll - 0.3));
-		
+
 		this.list.current.scrollLeft = scroll * 0.27 * window.innerWidth;
 	}
 }
@@ -50,7 +50,7 @@ type CarouselElementProps = {
 export class CarouselElement extends Component<CarouselElementProps> {
 	public render({title, subtitle, image, redirect, buttons = []}: Props<CarouselElementProps>): VNode {
 		const [location, setLocation] = useLocation();
-		
+
 		return (
 			<div onClick={noDefault(() => redirect && setLocation(redirect))} class='carousel-panel'>
 				<div class='carousel-element'>

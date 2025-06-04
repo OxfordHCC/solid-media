@@ -65,7 +65,7 @@ To preview the production build:
 
 ## Getting started with Solidflix
 
-A public version can be accessed [https://oxfordhcc.github.io/solid-media/](https://oxfordhcc.github.io/solid-media/). 
+A public version can be accessed [https://oxfordhcc.github.io/solid-media/](https://oxfordhcc.github.io/solid-media/).
 
 ### Log in with a WebID
 
@@ -108,15 +108,15 @@ Once you finish adding friends, you will be able to see your friends' movies on 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/friends-movies.png" width="800" />
 
 ### Personalised Movie Recommendations
-Solidflix provides personalised movie recommendations which come from a content-based movie recommendation model fitted with [TMDB 5000 movies](https://www.kaggle.com/tmdb/tmdb-movie-metadata) dataset. Based on randomly samples movies from users' watched, liked or wishlisted movies, the recommendation model returns personalised similar movie recommendations with the highest cosine similarity score. 
+Solidflix provides personalised movie recommendations which come from a content-based movie recommendation model fitted with [TMDB 5000 movies](https://www.kaggle.com/tmdb/tmdb-movie-metadata) dataset. Based on randomly samples movies from users' watched, liked or wishlisted movies, the recommendation model returns personalised similar movie recommendations with the highest cosine similarity score.
 To retreive recommendations, a POST request with a list of movies is sent to our hosted REST API: [https://api.pod.ewada.ox.ac.uk/solidflix-recommender/](https://api.pod.ewada.ox.ac.uk/solidflix-recommender/). The code for the recommendation model can be found [here](https://github.com/OxfordHCC/solid-media/tree/main/solidflix-movie-reco-api).
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/recommendations.png" width="800" />
 
 ## Architecture
 
-The diagram below shows the architecture of Solidflix, where the client is the users' browser and we have our server for the recommendations. 
-Once a user signs in and gives authorisation consent to Solidflix, the app will be able to store and retreive data from the users' pod. 
+The diagram below shows the architecture of Solidflix, where the client is the users' browser and we have our server for the recommendations.
+Once a user signs in and gives authorisation consent to Solidflix, the app will be able to store and retreive data from the users' pod.
 We are using the TMDB API to fetch movies metadata while storing movies on the pod, which takes in only the movie id's.
 The recommendation model only takes in movie id's, such that no personal data is ever sent back to the server.
 
@@ -128,7 +128,7 @@ The recommendation model only takes in movie id's, such that no personal data is
 
 The authentication is handled by `Login.tsx` and uses `@inrupt/solid-client-authn-browser`.
 
-The basic structure can be supported using these lines. 
+The basic structure can be supported using these lines.
 ```
 async function login() {
   if (!session.info.isLoggedIn && !new URL(window.location.href).searchParams.get("code")) {
@@ -138,12 +138,12 @@ async function login() {
       redirectUrl: window.location.href
     });
   }
-} 
+}
 ```
 
 ### Fetch movie data from a pod
 
-Here we used `getSolidDataset` from `@inrupt/solid-client` to retrieve `movies` data from a pod. 
+Here we used `getSolidDataset` from `@inrupt/solid-client` to retrieve `movies` data from a pod.
 
 ```
 const movieList = (await Promise.all(people.map(async x => {
@@ -151,12 +151,12 @@ const movieList = (await Promise.all(people.map(async x => {
 		const parts = x.id.split('/');
 		const pod = parts.slice(0, parts.length - 2).join('/');
 
-		# retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod. 
-		
+		# retrieve the movies from a personal pod, in which `movie` data are stored on the root directory of the pod.
+
 		const moviesDataset = await getSolidDataset(`${pod}/movies`, {fetch: session.fetch});
-		
+
 		const movies = getContainedResourceUrlAll(moviesDataset);
-		
+
 		return movies.map(m => ({...x, url: m}));
 	} catch {
 		return [];
@@ -169,11 +169,11 @@ The metadata about a movie, including its title, a short description and an icon
 
 ```
 const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
-						
+
 const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 
 const {title, released, icon} = await loadData(tmdbUrl);
-						
+
 ```
 
 ### Add friends
@@ -185,14 +185,14 @@ Here we used rdflib.js to set a local data store and associated data fetcher to 
 const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
 // create a local RDF store
 const store = $rdf.graph();
-// create a fetcher to read/write 
+// create a fetcher to read/write
 const fetcher = new $rdf.Fetcher(store, {fetch: session.fetch});
 // create update manager to "patch" the data as the data is updated in real time
 const updater = new $rdf.UpdateManager(store);
 
 // RDF Statement (subject, predicate, object, why)
 let ins = [];
-ins.push($rdf.st($rdf.sym(webID), FOAF('knows'), $rdf.sym(newFriendWebID), $rdf.sym(webID).doc())); 
+ins.push($rdf.st($rdf.sym(webID), FOAF('knows'), $rdf.sym(newFriendWebID), $rdf.sym(webID).doc()));
 updater.update([], ins, (uri, ok, message) => {
 	if (!ok) alert(message_f);
 });
@@ -201,7 +201,7 @@ updater.update([], ins, (uri, ok, message) => {
 
 ### Group authentication
 
-The diagram below shows that the sharing of resources on solid pods currently relies on the authentication to be set up at both the `profile` level and the `pod` level, where the group is setup as a vcard. Once a user adds a friend, they get added to users' RDF and to the vcard group as a member. READ_ACCESS for the users' movies data is shared with the /friends group. 
+The diagram below shows that the sharing of resources on solid pods currently relies on the authentication to be set up at both the `profile` level and the `pod` level, where the group is setup as a vcard. Once a user adds a friend, they get added to users' RDF and to the vcard group as a member. READ_ACCESS for the users' movies data is shared with the /friends group.
 If a user deletes any movie data or unlikes a movie, the movies shown to their friends get updated accordingly.
 
 <img src="https://github.com/OxfordHCC/solid-media/blob/main/img/group.jpg" width="800" />

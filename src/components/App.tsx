@@ -12,10 +12,10 @@ import {HOMEPAGE} from '../env';
 export default function App(): VNode {
 	const [location, setLocation] = useLocation();
 	const [state, setState] = useState({});
-	
+
 	const spaUrl = getSearchParam("spaurl");
 	if (spaUrl !== null) setLocation(spaUrl);
-	
+
 	return (
 		<Router>
 			<Switch>

@@ -5,11 +5,11 @@ export default class Loading extends Component<{render?: () => Promise<VNode>}, 
 	state: {contents: VNode | null} = {
 		contents: null,
 	};
-	
+
 	public componentWillReceiveProps(nextProps: any) {
 		this.setState({contents: null});
 	}
-	
+
 	public render({render}: Props<{render?: () => Promise<VNode>}>): VNode {
 		if (this.state.contents !== null) {
 			return this.state.contents;
@@ -17,7 +17,7 @@ export default class Loading extends Component<{render?: () => Promise<VNode>}, 
 			render()
 				.then(contents => this.setState({contents}));
 		}
-		
+
 		return (
 			<div>
 				Loading...
