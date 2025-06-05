@@ -1,4 +1,5 @@
-import { Component, VNode } from 'preact';
+import { VNode } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 import { Props } from './types';
 import Carousel, { CarouselElement } from './Carousel';
 import AddPopup from './AddPopup';
@@ -68,29 +69,20 @@ type State = {
 	loading?: boolean,
 };
 
-export default class DiscoverPane extends Component<{globalState: {state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void}}> {
-	state = {
-		addPopup: false,
-		addFriends: false,
-		showLogout: false,
-	};
+export default function DiscoverPane({globalState}: {globalState: {state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void}}) {
+	const [addPopup, setAddPopup] = useState(false);
+	const [addFriends, setAddFriends] = useState(false);
+	const [showLogout, setShowLogout] = useState(false);
 
-	public render({globalState}: Props<{globalState: {state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void}}>): VNode {
-		const session = useAuthentication();
-		if (!session) return <div />;
+	const session = useAuthentication();
+	if (!session) return <div />;
 
-		const webID = session.info.webId!;
-		const parts = webID.split('/');
-		const pod = parts.slice(0, parts.length - 2).join('/');
+	const webID = session.info.webId!;
+	const parts = webID.split('/');
+	const pod = parts.slice(0, parts.length - 2).join('/');
 
+	useEffect(() => {
 		if (!globalState.state.loading) {
-
-			/// This will not work as expected, due to how React handles state updates.
-			/// Since it's effectively equal for React lifecycles, this update it moved to below for now.
-			/// A better fix is needed later, together replacing the state update below.
-			// globalState.setState({
-			// 	loading: true,
-			// });
 
 			(async () => {
 
@@ -299,7 +291,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 				const friendLiked: string[] = [];
 				const recommendedDict: string[] = [];
 
-				const movies = movieResults.filter(x => x.status === 'fulfilled').map(x => x.value);
+				const movies = movieResults.filter(x => x.status === 'fulfilled').map(x => (x as PromiseFulfilledResult<any>).value);
 
 				for (const {type, ...movie} of movies) {
 					switch (type) {
@@ -415,6 +407,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 			})();
 		}
+	}, [globalState.state.loading, session, pod, webID]);
 
 		async function addNewFriendData() {
 			// Set up a local data store and associated data fetcher
@@ -779,8 +772,8 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 					<img src={'./assets/logo.png'}></img>
 				</div>
 				<div class='add-button-wrapper'>
-					<button class='add-button' onClick={() => this.setState({addPopup: true})}>➕ Add movies</button>
-					<button class='add-button' onClick={() => this.setState({addFriends: true})}>👥 Add friends</button>
+					<button class='add-button' onClick={() => setAddPopup(true)}>➕ Add movies</button>
+					<button class='add-button' onClick={() => setAddFriends(true)}>👥 Add friends</button>
 					<button class='add-button' onClick={() => {
 						session.logout();
 						logout();
@@ -788,7 +781,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 							await logout();
 							session.info.isLoggedIn = false;
 						};
-						this.setState({showLogout: true});
+						setShowLogout(true);
 					}}>👋 Logout</button>
 				</div>
 				{!globalState.state.friendWatched &&
@@ -852,8 +845,8 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 						<Carousel>{(globalState.state.myLiked ?? []).map(x => createCarouselElement(x, 'me'))}</Carousel>
 					</div>
 				}
-				{this.state.addPopup && <AddPopup
-					close={() => this.setState({addPopup: false})}
+				{addPopup && <AddPopup
+					close={() => setAddPopup(false)}
 					save={async (media: MediaData) => {
 						if (!Object.values(globalState.state.movies!).some(x => x.title === media.title)) {
 							await save(media, false);
@@ -884,25 +877,24 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 						// }
 					}}
 				/>}
-				{this.state.addFriends && <AddFriends
+				{addFriends && <AddFriends
 					close={() => {
-						this.setState({addFriends: false});
+						setAddFriends(false);
 					}}
 					add={() => {
 						addNewFriendData();
-						this.setState({addFriends: false});
+						setAddFriends(false);
 					}}
 				/>}
-				{this.state.showLogout && <Logout
+				{showLogout && <Logout
 					close={() => {
-						this.setState({showLogout: false});
+						setShowLogout(false);
 					}}
 					add={() => {
-						this.setState({showLogout: false});
+						setShowLogout(false);
 					}}
 				/>
 				}
 			</div>
 		);
-	}
 }
