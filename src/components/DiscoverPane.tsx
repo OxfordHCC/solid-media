@@ -68,14 +68,14 @@ type State = {
 	loading?: boolean,
 };
 
-export default class DiscoverPane extends Component<{globalState: {state: State, setState: (state: Partial<State>) => void}}> {
+export default class DiscoverPane extends Component<{globalState: {state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void}}> {
 	state = {
 		addPopup: false,
 		addFriends: false,
 		showLogout: false,
 	};
 
-	public render({globalState}: Props<{globalState: {state: State, setState: (state: Partial<State>) => void}}>): VNode {
+	public render({globalState}: Props<{globalState: {state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void}}>): VNode {
 		const session = useAuthentication();
 		if (!session) return <div />;
 
@@ -84,11 +84,16 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 		const pod = parts.slice(0, parts.length - 2).join('/');
 
 		if (!globalState.state.loading) {
-			globalState.setState({
-				loading: true,
-			});
+
+			/// This will not work as expected, due to how React handles state updates.
+			/// Since it's effectively equal for React lifecycles, this update it moved to below for now.
+			/// A better fix is needed later, together replacing the state update below.
+			// globalState.setState({
+			// 	loading: true,
+			// });
 
 			(async () => {
+
 				let loadingStart = (new Date()).getTime();
 
 				let moviesAclDataset: SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo;
@@ -238,7 +243,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 				}))).flat(1);
 
 				const test_start = (new Date()).getTime();
-				const movies = await Promise.all(
+				const movieResults = await Promise.allSettled(
 					movieList.map(async ({type, url}) => {
 						// iterating through all movies (user + their friends)
 						const movieDataset = await getSolidDataset(url, {fetch: session.fetch});
@@ -293,6 +298,8 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 				const friendUnwatched: string[] = [];
 				const friendLiked: string[] = [];
 				const recommendedDict: string[] = [];
+
+				const movies = movieResults.filter(x => x.status === 'fulfilled').map(x => x.value);
 
 				for (const {type, ...movie} of movies) {
 					switch (type) {
@@ -350,6 +357,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 					friendLiked,
 					movies: movieDict,
 					recommendedDict,
+					loading: true,  // Quick and dirty fix. Will need to replace with proper state handling
 				});
 
 				// globalState.setState({
@@ -404,6 +412,7 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 				// let loadingEnd2 = (new Date()).getTime();
 				// let currentSeconds2 = (loadingEnd2 - loadingStart)/1000;
 				// console.log('Fetching 10 recommendations took: ' + (currentSeconds2 - dataLoadEndedTime) + ' sec')
+
 			})();
 		}
 
@@ -520,21 +529,24 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 			if (!movieData.recommended) {
 				if (!movieData.watched) {
-					globalState.setState({
-						myUnwatched: [media.tmdbUrl, ...globalState.state.myUnwatched!],
-						movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
-					});
+					globalState.setState(state => ({
+						...state,
+						myUnwatched: [media.tmdbUrl, ...state.myUnwatched!],
+						movies: {...state.movies, [media.tmdbUrl]: movieData},
+					}));
 				} else {
-					globalState.setState({
-						myWatched: [media.tmdbUrl, ...globalState.state.myWatched!],
-						movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
-					});
+					globalState.setState(state => ({
+						...state,
+						myWatched: [media.tmdbUrl, ...state.myWatched!],
+						movies: {...state.movies, [media.tmdbUrl]: movieData},
+					}));
 				}
 			} else {
-				globalState.setState({
-					recommendedDict: [media.tmdbUrl, ...globalState.state.recommendedDict!.filter(x => x !== media.tmdbUrl)],
-					movies: {...globalState.state.movies, [media.tmdbUrl]: movieData},
-				});
+				globalState.setState(state => ({
+						...state,
+					recommendedDict: [media.tmdbUrl, ...state.recommendedDict!.filter(x => x !== media.tmdbUrl)],
+					movies: {...state.movies, [media.tmdbUrl]: movieData},
+				}));
 			}
 
 			return movieData;
@@ -558,12 +570,13 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 			media.dataset = dataset;
 
-			globalState.setState({
-				myUnwatched: globalState.state.myUnwatched!.filter(x => x !== media.movie),
-				recommendedDict: globalState.state.myUnwatched!.filter(x => x !== media.movie),
-				myWatched: [media.movie, ...globalState.state.myWatched!],
-				movies: {...globalState.state.movies, [media.movie]: {...media, watched: true, dataset}},
-			});
+			globalState.setState(state => ({
+				...state,
+				myUnwatched: state.myUnwatched!.filter(x => x !== media.movie),
+				recommendedDict: state.myUnwatched!.filter(x => x !== media.movie),
+				myWatched: [media.movie, ...state.myWatched!],
+				movies: {...state.movies, [media.movie]: {...media, watched: true, dataset}},
+			}));
 		}
 
 		const createCarouselElement = (movie: string, type: 'friend' | 'me'): VNode => {
@@ -620,18 +633,20 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 										if (liked === false) {
 											await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-											globalState.setState({
-												movies: {...globalState.state.movies, [movie]: {...movieData, liked: null, dataset}},
-											});
+											globalState.setState(state => ({
+												...state,
+												movies: {...state.movies, [movie]: {...movieData, liked: null, dataset}},
+											}));
 										} else {
 											rate(1);
 
 											await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-											globalState.setState({
-												myLiked: globalState.state.myLiked!.filter(x => x !== movie),
-												movies: {...globalState.state.movies, [movie]: {...movieData, liked: false, dataset}},
-											});
+											globalState.setState(state => ({
+												...state,
+												myLiked: state.myLiked!.filter(x => x !== movie),
+												movies: {...state.movies, [movie]: {...movieData, liked: false, dataset}},
+											}));
 										}
 									}},
 									{text: '👍', cssClass: 'carousel-like', selected: liked === true, click: async () => {
@@ -641,19 +656,21 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 										if (liked === true) {
 											await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-											globalState.setState({
-												myLiked: globalState.state.myLiked!.filter(x => x !== movie),
-												movies: {...globalState.state.movies, [movie]: {...movieData, liked: null, dataset}},
-											});
+											globalState.setState(state => ({
+												...state,
+												myLiked: state.myLiked!.filter(x => x !== movie),
+												movies: {...state.movies, [movie]: {...movieData, liked: null, dataset}},
+											}));
 										} else {
 											rate(3);
 
 											await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-											globalState.setState({
-												myLiked: [movie, ...globalState.state.myLiked!],
-												movies: {...globalState.state.movies, [movie]: {...movieData, liked: true, dataset}},
-											});
+											globalState.setState(state => ({
+												...state,
+												myLiked: [movie, ...state.myLiked!],
+												movies: {...state.movies, [movie]: {...movieData, liked: true, dataset}},
+											}));
 										}
 									}},
 								] : []),
@@ -663,11 +680,12 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 										await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-										globalState.setState({
-											myWatched: globalState.state.myWatched!.filter(x => x !== movie),
-											myUnwatched: [movie, ...globalState.state.myUnwatched!],
-											movies: {...globalState.state.movies, [movie]: {...movieData, watched: false, dataset}},
-										});
+										globalState.setState(state => ({
+											...state,
+											myWatched: state.myWatched!.filter(x => x !== movie),
+											myUnwatched: [movie, ...state.myUnwatched!],
+											movies: {...state.movies, [movie]: {...movieData, watched: false, dataset}},
+										}));
 									} else {
 										let thing = createThing();
 
@@ -683,12 +701,13 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 										await saveSolidDatasetAt(solidUrl, dataset, {fetch: session.fetch});
 
-										globalState.setState({
-											myUnwatched: globalState.state.myUnwatched!.filter(x => x !== movie),
-											recommendedDict: globalState.state.recommendedDict!.filter(x => x !== movie),
-											myWatched: [movie, ...globalState.state.myWatched!],
-											movies: {...globalState.state.movies, [movie]: {...movieData, watched: true, dataset}},
-										});
+										globalState.setState(state => ({
+											...state,
+											myUnwatched: state.myUnwatched!.filter(x => x !== movie),
+											recommendedDict: state.recommendedDict!.filter(x => x !== movie),
+											myWatched: [movie, ...state.myWatched!],
+											movies: {...state.movies, [movie]: {...movieData, watched: true, dataset}},
+										}));
 									}
 								}},
 								{text: '❌', cssClass: 'carousel-remove', click: async () => {
@@ -699,13 +718,14 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 									const remove = [...globalState.state.friendWatched!, ...globalState.state.friendUnwatched!]
 										.every(x => x !== movie);
 
-									globalState.setState({
-										myUnwatched: globalState.state.myUnwatched!.filter(x => x !== movie),
-										myWatched: globalState.state.myWatched!.filter(x => x !== movie),
-										myLiked: globalState.state.myLiked!.filter(x => x !== movie),
-										recommendedDict: globalState.state.recommendedDict!.filter(x => x !== movie),
-										movies: remove ? remaining : globalState.state.movies,
-									});
+									globalState.setState(state => ({
+										...state,
+										myUnwatched: state.myUnwatched!.filter(x => x !== movie),
+										myWatched: state.myWatched!.filter(x => x !== movie),
+										myLiked: state.myLiked!.filter(x => x !== movie),
+										recommendedDict: state.recommendedDict!.filter(x => x !== movie),
+										movies: remove ? remaining : state.movies,
+									}));
 								}},
 							]}
 						/>
@@ -739,10 +759,11 @@ export default class DiscoverPane extends Component<{globalState: {state: State,
 
 										await saveSolidDatasetAt(newUrl, movieDataset, {fetch: session.fetch});
 
-										globalState.setState({
-											myUnwatched: [movie, ...globalState.state.myUnwatched!],
-											movies: {...globalState.state.movies, [movie]: {...movieData, me: true, solidUrl: newUrl, dataset: movieDataset}},
-										});
+										globalState.setState(state => ({
+											...state,
+											myUnwatched: [movie, ...state.myUnwatched!],
+											movies: {...state.movies, [movie]: {...movieData, me: true, solidUrl: newUrl, dataset: movieDataset}},
+										}));
 									}
 								}},
 							]}
