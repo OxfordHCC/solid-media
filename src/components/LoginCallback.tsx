@@ -1,5 +1,5 @@
 import { VNode } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { Redirect } from 'wouter-preact';
 import { useSession } from '../contexts/SessionContext';
 import Loading from './Loading';
@@ -7,12 +7,25 @@ import Loading from './Loading';
 import { HOMEPAGE } from '../env';
 
 export default function LoginCallback({redirect}: {redirect: string | null}): VNode {
-	const { session, isLoggedIn, isLoading } = useSession();
+    const [isLoading, setIsLoading] = useState(true);
+	const { session, isLoggedIn, handleIncomingRedirect } = useSession();
 
 	useEffect(() => {
-		// The session context will automatically handle the incoming redirect
-		// when the component mounts, so we don't need to do anything here
-	}, []);
+        setIsLoading(true);
+        const fn = async () => {
+		    const success = await handleIncomingRedirect();
+            if (success) {
+                setIsLoading(false);
+            } else {
+                setIsLoading(false);
+            }
+        }
+
+        fn().catch((error) => {
+            console.error('Error handling incoming redirect:', error);
+            setIsLoading(false);
+        });
+	}, [handleIncomingRedirect]);
 
 	// Show loading while processing the callback
 	if (isLoading) {
