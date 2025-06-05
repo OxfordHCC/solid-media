@@ -5,13 +5,11 @@ import Carousel, { CarouselElement } from './Carousel';
 import AddPopup from './AddPopup';
 import AddFriends from './AddFriends';
 import Logout from './Logout';
-import { useAuthentication } from './authentication';
+import { useSession, useAuthenticatedSession } from '../contexts/SessionContext';
 import { loadData, MediaData, getIds, search } from '../media';
 import { getSolidDataset, deleteSolidDataset, SolidDataset, WithAcl, WithServerResourceInfo, WithAccessibleAcl, getContainedResourceUrlAll, getUrl, getStringNoLocaleAll, hasResourceAcl, getUrlAll, getThing, getThingAll, setGroupDefaultAccess, setGroupResourceAccess, getSolidDatasetWithAcl, createAcl, saveAclFor, setAgentDefaultAccess, setAgentResourceAccess, removeThing, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, setInteger, asUrl, getInteger, createSolidDataset, createContainerAt, addUrl, removeUrl, getResourceAcl, setStringNoLocale, addStringNoLocale, getPublicResourceAccess, getPublicAccess, setPublicDefaultAccess, setPublicResourceAccess, getGroupAccess } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 // import {shuffle} from '../lib';
-
-import { logout } from '@inrupt/solid-client-authn-browser';
 
 import { HOMEPAGE } from '../env';
 
@@ -74,8 +72,9 @@ export default function DiscoverPane({globalState}: {globalState: {state: State,
 	const [addFriends, setAddFriends] = useState(false);
 	const [showLogout, setShowLogout] = useState(false);
 
-	const session = useAuthentication();
-	if (!session) return <div />;
+	const session = useAuthenticatedSession();
+	if (!session) return <div />; // Guard against rendering when not logged in (should receive redirection automatically from `useAuthenticatedSession()`)
+	const { logout } = useSession();
 
 	const webID = session.info.webId!;
 	const parts = webID.split('/');
@@ -774,14 +773,9 @@ export default function DiscoverPane({globalState}: {globalState: {state: State,
 				<div class='add-button-wrapper'>
 					<button class='add-button' onClick={() => setAddPopup(true)}>➕ Add movies</button>
 					<button class='add-button' onClick={() => setAddFriends(true)}>👥 Add friends</button>
-					<button class='add-button' onClick={() => {
-						session.logout();
-						logout();
-						async (): Promise<void> => {
-							await logout();
-							session.info.isLoggedIn = false;
-						};
+					<button class='add-button' onClick={async () => {
 						setShowLogout(true);
+						logout();
 					}}>👋 Logout</button>
 				</div>
 				{!globalState.state.friendWatched &&
@@ -886,14 +880,7 @@ export default function DiscoverPane({globalState}: {globalState: {state: State,
 						setAddFriends(false);
 					}}
 				/>}
-				{showLogout && <Logout
-					close={() => {
-						setShowLogout(false);
-					}}
-					add={() => {
-						setShowLogout(false);
-					}}
-				/>
+				{showLogout && <Logout />
 				}
 			</div>
 		);

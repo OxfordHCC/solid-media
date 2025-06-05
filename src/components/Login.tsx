@@ -2,7 +2,7 @@ import { Fragment, VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Redirect } from 'wouter-preact';
 import { Props } from './types';
-import { session } from './authentication';
+import { useSession } from '../contexts/SessionContext';
 import Loading from './Loading';
 import Form from './Form';
 
@@ -19,21 +19,13 @@ const providers = [
 ];
 
 export default function Login({redirect}: {redirect: string | null}): VNode {
-	const [handleRedirect, setHandleRedirect] = useState(true);
+	const { session, isLoggedIn, isLoading } = useSession();
 	const [provider, setProvider] = useState('');
 
-	useEffect(() => {
-		if (handleRedirect) {
-			session
-				.handleIncomingRedirect({ restorePreviousSession : true })
-				.then(() => { setHandleRedirect(false); });
-		}
-	}, [handleRedirect]);
-
 	// check whether user has logged in, using 'authentication'
-	if (session.info.isLoggedIn) {
+	if (isLoggedIn) {
 		return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
-	} else if (handleRedirect) {
+	} else if (isLoading) {
 		return <Loading />;
 	} else {
 		return (
