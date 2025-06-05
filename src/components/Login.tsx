@@ -1,9 +1,7 @@
 import { Fragment, VNode } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { Redirect } from 'wouter-preact';
+import { useState } from 'preact/hooks';
 import { Props } from './types';
 import { useSession } from '../contexts/SessionContext';
-import Loading from './Loading';
 import Form from './Form';
 import logo from '../assets/logo.png';
 
@@ -20,69 +18,64 @@ const providers = [
 ];
 
 export default function Login({redirect}: {redirect: string | null}): VNode {
-	const { session, isLoggedIn, isLoading } = useSession();
+	const { session } = useSession();
 	const [provider, setProvider] = useState('');
 
-	// check whether user has logged in, using 'authentication'
-	if (isLoggedIn) {
-		return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
-	} else if (isLoading) {
-		return <Loading />;
-	} else {
-		return (
-			<div class="login-page">
-				<header class="showcase">
-					<div class="logo">
-						<img src={logo} alt="Logo"></img>
-					</div>
-					<div class="showcase-content">
-						<div class="formm">
-							<Form submit={({provider}) => session.login({
-								oidcIssuer: provider,
-								clientName: "Solid Media",
-								redirectUrl: window.location.href,
-							})}>
-								<h3>Sign In</h3>
-								<h3>Select or enter your pod provider</h3>
-								<div class="pod-input-container">
-									<div class="info">
+	const callbackUrl = `${window.location.origin}${HOMEPAGE}/callback${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`;
+
+	return (
+		<div class="login-page">
+			<header class="showcase">
+				<div class="logo">
+					<img src={logo} alt="Logo"></img>
+				</div>
+				<div class="showcase-content">
+					<div class="formm">
+						<Form submit={({provider}) => session.login({
+							oidcIssuer: provider,
+							clientName: "Solid Media",
+							redirectUrl: callbackUrl,
+						})}>
+							<h3>Sign In</h3>
+							<h3>Select or enter your pod provider</h3>
+							<div class="pod-input-container">
+								<div class="info">
+									<input
+										class="provider"
+										id="provider"
+										name='provider'
+										type='text'
+										placeholder='Pod Provider'
+										value={provider}
+										onInput={({target}) => setProvider((target as HTMLInputElement).value)}
+									/>
+								</div>
+								<div class="btn1">
 										<input
-											class="provider"
-											id="provider"
-											name='provider'
-											type='text'
-											placeholder='Pod Provider'
-											value={provider}
-											onInput={({target}) => setProvider((target as HTMLInputElement).value)}
+											class="btn-secondary"
+											type='submit'
+											value="Login"
+										/>
+								</div>
+							</div>
+
+							<>
+								{providers.map(({url, title}) => <>
+									<div class="btn">
+										<input
+											class="btn-primary"
+											type='submit'
+											onClick={() => setProvider(url)}
+											value={title}
 										/>
 									</div>
-									<div class="btn1">
-											<input
-												class="btn-secondary"
-												type='submit'
-												value="Login"
-											/>
-									</div>
-								</div>
-
-								<>
-									{providers.map(({url, title}) => <>
-										<div class="btn">
-											<input
-												class="btn-primary"
-												type='submit'
-												onClick={() => setProvider(url)}
-												value={title}
-											/>
-										</div>
-										<br />
-									</>)}
-								</>
-							</Form>
-						</div>
+									<br />
+								</>)}
+							</>
+						</Form>
 					</div>
-				</header>
-			</div>
-		);
-	}
+				</div>
+			</header>
+		</div>
+	);
 }

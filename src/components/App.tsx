@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import {Router, Switch, Route, useLocation} from 'wouter-preact';
 import {Props} from './types';
 import Login from './Login';
+import LoginCallback from './LoginCallback';
 import HomeScreen from './HomeScreen';
 import ViewScreen from './ViewScreen';
 import {getSearchParam} from './lib';
@@ -21,6 +22,7 @@ export default function App(): VNode {
 		<SessionProvider>
 			<Router>
 				<Switch>
+					<Route<{args: string}> path={`${HOMEPAGE}/callback`} component={() => <LoginCallback redirect={getSearchParam("redirect")} />} />
 					<Route<{args: string}> path={`${HOMEPAGE}/login`} component={() => <Login redirect={getSearchParam("redirect")} />} />
 					<Route<{args: string}> path={`${HOMEPAGE}/view`} component={() => <ViewScreen url={getSearchParam("url")} />} />
 					<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen globalState={{state, setState}} />} />
