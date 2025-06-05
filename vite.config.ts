@@ -6,7 +6,9 @@ const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineConfig({
   plugins: [preact()],
-  
+
+  base: process.env.NODE_ENV === 'development' ? '/' : '/solid-media/',
+
   build: {
     outDir: 'build',
     sourcemap: true,
