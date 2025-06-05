@@ -1,4 +1,4 @@
-import { Component, VNode } from 'preact';
+import { VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import {Router, Switch, Route, useLocation} from 'wouter-preact';
 import {Props} from './types';

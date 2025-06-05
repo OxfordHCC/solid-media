@@ -65,17 +65,19 @@ export default function Login({redirect}: {redirect: string | null}): VNode {
 									</div>
 								</div>
 
-								{providers.map(({url, title}) => <>
-									<div class="btn">
-										<input
-											class="btn-primary"
-											type='submit'
-											onClick={() => setProvider(url)}
-											value={title}
-										/>
-									</div>
-									<br />
-								</>)}
+								<>
+									{providers.map(({url, title}) => <>
+										<div class="btn">
+											<input
+												class="btn-primary"
+												type='submit'
+												onClick={() => setProvider(url)}
+												value={title}
+											/>
+										</div>
+										<br />
+									</>)}
+								</>
 							</Form>
 						</div>
 					</div>

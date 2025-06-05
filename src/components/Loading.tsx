@@ -1,27 +1,29 @@
-import { Component, VNode } from 'preact';
+import { VNode } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 import {Props} from './types';
 
-export default class Loading extends Component<{render?: () => Promise<VNode>}, {contents: VNode | null}> {
-	state: {contents: VNode | null} = {
-		contents: null,
-	};
+export default function Loading({render}: {render?: () => Promise<VNode>}): VNode {
+	const [contents, setContents] = useState<VNode | null>(null);
 
-	public componentWillReceiveProps(nextProps: any) {
-		this.setState({contents: null});
-	}
+	useEffect(() => {
+		// Reset contents when render prop changes
+		setContents(null);
+	}, [render]);
 
-	public render({render}: Props<{render?: () => Promise<VNode>}>): VNode {
-		if (this.state.contents !== null) {
-			return this.state.contents;
-		} else if (render !== undefined) {
+	useEffect(() => {
+		if (contents === null && render !== undefined) {
 			render()
-				.then(contents => this.setState({contents}));
+				.then(setContents);
 		}
+	}, [contents, render]);
 
-		return (
-			<div>
-				Loading...
-			</div>
-		);
+	if (contents !== null) {
+		return contents;
 	}
+
+	return (
+		<div>
+			Loading...
+		</div>
+	);
 }
