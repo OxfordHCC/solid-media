@@ -5,6 +5,7 @@ import { Props } from './types';
 import { useSession } from '../contexts/SessionContext';
 import Loading from './Loading';
 import Form from './Form';
+import logo from '../assets/logo.png';
 
 import { HOMEPAGE } from '../env';
 
@@ -32,7 +33,7 @@ export default function Login({redirect}: {redirect: string | null}): VNode {
 			<div class="login-page">
 				<header class="showcase">
 					<div class="logo">
-						<img src={'./assets/logo.png'}></img>
+						<img src={logo} alt="Logo"></img>
 					</div>
 					<div class="showcase-content">
 						<div class="formm">
