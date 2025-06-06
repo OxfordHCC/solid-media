@@ -1,7 +1,7 @@
 import { VNode, toChildArray, ComponentChildren } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { noDefault } from './lib';
+import { noDefault } from '../utils/routing';
 
 export default function Carousel({children}: {children?: ComponentChildren}): VNode {
 	const [scroll, setScroll] = useState(0);

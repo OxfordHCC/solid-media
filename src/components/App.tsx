@@ -4,7 +4,7 @@ import Login from './Login';
 import LoginCallback from './LoginCallback';
 import HomeScreen from './HomeScreen';
 import ViewScreen from './ViewScreen';
-import { getSearchParam } from './lib';
+import { getSearchParam } from '../utils/routing';
 import { SessionProvider } from '../contexts/SessionContext';
 
 import { HOMEPAGE } from '../env';
