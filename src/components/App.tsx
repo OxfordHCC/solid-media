@@ -13,7 +13,6 @@ import {HOMEPAGE} from '../env';
 
 export default function App(): VNode {
 	const [location, setLocation] = useLocation();
-	const [state, setState] = useState({});
 
 	const spaUrl = getSearchParam("spaurl");
 	if (spaUrl !== null) setLocation(spaUrl);
@@ -25,7 +24,7 @@ export default function App(): VNode {
 					<Route<{args: string}> path={`${HOMEPAGE}/callback`} component={() => <LoginCallback redirect={getSearchParam("redirect")} />} />
 					<Route<{args: string}> path={`${HOMEPAGE}/login`} component={() => <Login redirect={getSearchParam("redirect")} />} />
 					<Route<{args: string}> path={`${HOMEPAGE}/view`} component={() => <ViewScreen url={getSearchParam("url")} />} />
-					<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen globalState={{state, setState}} />} />
+					<Route<{args: string}> path={`${HOMEPAGE}/`} component={() => <HomeScreen />} />
 				</Switch>
 			</Router>
 		</SessionProvider>

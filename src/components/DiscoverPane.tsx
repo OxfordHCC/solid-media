@@ -20,13 +20,14 @@ import {
   fetchRecommendations,
   sampleUserMovies
 } from './DiscoverPane/dataLoaders';
-import { 
+import {
   createCarouselElements,
   renderCarouselSections
 } from './DiscoverPane/carouselUtils';
 import { addNewFriendToProfile } from './DiscoverPane/friendsUtils';
 
-export default function DiscoverPane({ globalState }: { globalState: { state: State, setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void } }) {
+export default function DiscoverPane() {
+  const [giantState, setGiantState] = useState<State>({});
   const [addPopup, setAddPopup] = useState(false);
   const [addFriends, setAddFriends] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
@@ -40,10 +41,10 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
   const pod = parts.slice(0, parts.length - 2).join('/');
 
   useEffect(() => {
-    if (!globalState.state.loading) {
+    if (!giantState.loading) {
       loadApplicationData();
     }
-  }, [globalState.state.loading, session, pod, webID]);
+  }, [giantState.loading, session, pod, webID]);
 
   async function loadApplicationData() {
     try {
@@ -62,11 +63,12 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
       const { movieDict, categorizedMovies } = await loadMoviesData(webID, friends, session.fetch);
 
       // Update state with loaded data
-      globalState.setState({
+      setGiantState(prevState => ({
+        ...prevState,
         ...categorizedMovies,
         movies: movieDict,
         loading: true,
-      });
+      }));
 
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
@@ -103,7 +105,7 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
       if (!newFriendWebID.length) return;
 
       await addNewFriendToProfile(webID, newFriendWebID, session.fetch);
-      
+
       // TODO: Fetch newly added friend's movies dynamically instead of refreshing
       window.location.reload();
     } catch (error) {
@@ -165,20 +167,20 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
   function updateStateAfterSave(movieData: MovieData, tmdbUrl: string) {
     if (!movieData.recommended) {
       if (!movieData.watched) {
-        globalState.setState((state: State) => ({
+        setGiantState((state: State) => ({
           ...state,
           myUnwatched: [tmdbUrl, ...state.myUnwatched!],
           movies: { ...state.movies, [tmdbUrl]: movieData },
         }));
       } else {
-        globalState.setState((state: State) => ({
+        setGiantState((state: State) => ({
           ...state,
           myWatched: [tmdbUrl, ...state.myWatched!],
           movies: { ...state.movies, [tmdbUrl]: movieData },
         }));
       }
     } else {
-      globalState.setState((state: State) => ({
+      setGiantState((state: State) => ({
         ...state,
         recommendedDict: [tmdbUrl, ...state.recommendedDict!.filter((x: string) => x !== tmdbUrl)],
         movies: { ...state.movies, [tmdbUrl]: movieData },
@@ -203,7 +205,7 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
 
     media.dataset = dataset;
 
-    globalState.setState((state: State) => ({
+    setGiantState((state: State) => ({
       ...state,
       myUnwatched: state.myUnwatched!.filter((x: string) => x !== media.movie),
       recommendedDict: state.myUnwatched!.filter((x: string) => x !== media.movie),
@@ -213,27 +215,27 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
   }
 
   const createCarouselElement = createCarouselElements(
-    globalState.state.movies!,
+    giantState.movies!,
     pod,
     session,
-    globalState.setState,
-    globalState
+    setGiantState,
+    { state: giantState }
   );
 
   const isDataEmpty = () => {
-    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = globalState.state;
+    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = giantState;
     return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked]
       .every(arr => arr && !arr.length);
   };
 
   const handleAddPopupSave = async (media: MediaData) => {
-    if (!Object.values(globalState.state.movies!).some((x: MovieData) => x.title === media.title)) {
+    if (!Object.values(giantState.movies!).some((x: MovieData) => x.title === media.title)) {
       await save(media, false);
     }
   };
 
   const handleAddPopupWatch = async (media: MediaData) => {
-    let data = Object.values(globalState.state.movies!).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
+    let data = Object.values(giantState.movies!).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -252,14 +254,14 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
       <div class="logo-container">
         <img src={logo} alt="Logo"></img>
       </div>
-      
+
       <div class='add-button-wrapper'>
         <button class='add-button' onClick={() => setAddPopup(true)}>➕ Add movies</button>
         <button class='add-button' onClick={() => setAddFriends(true)}>👥 Add friends</button>
         <button class='add-button' onClick={() => { setShowLogout(true); logout(); }}>👋 Logout</button>
       </div>
 
-      {!globalState.state.friendWatched && (
+      {!giantState.friendWatched && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <div class="loader__filmstrip"></div>
           <p class="loader__text">loading</p>
@@ -272,7 +274,7 @@ export default function DiscoverPane({ globalState }: { globalState: { state: St
         </div>
       )}
 
-      {renderCarouselSections(globalState.state, createCarouselElement)}
+      {renderCarouselSections(giantState, createCarouselElement)}
 
       {addPopup && (
         <AddPopup
