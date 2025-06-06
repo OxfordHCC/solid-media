@@ -38,7 +38,7 @@ import { loadData } from '../../media';
 import { MovieData, PersonInfo, MovieListItem, CategorizedMovies, NO_ACCESS, FULL_ACCESS, READ_ACCESS } from './types';
 
 export async function initializeMoviesContainer(
-  pod: string, 
+  pod: string,
   fetch: typeof window.fetch
 ): Promise<SolidDataset & WithAcl & WithAccessibleAcl & WithServerResourceInfo> {
   try {
@@ -48,9 +48,13 @@ export async function initializeMoviesContainer(
   }
 }
 
+/**
+ * Updates `${pod}/friends` with WebID Profile's friends list.
+ * @returns The updated friends dataset and list of friends.
+ */
 export async function manageFriendsDataset(
-  pod: string, 
-  webID: string, 
+  pod: string,
+  webID: string,
   fetch: typeof window.fetch
 ): Promise<{ friendsDataset: SolidDataset; friends: string[] }> {
   let friendsDataset: SolidDataset;
@@ -91,6 +95,10 @@ export async function manageFriendsDataset(
   return { friendsDataset, friends };
 }
 
+/**
+ * Creates ${pod}/friends with a group Thing if it doesn't exist.
+ * @returns The created friends dataset.
+ */
 async function createInitialFriendsDataset(pod: string, fetch: typeof window.fetch): Promise<SolidDataset> {
   let friendsDataset = createSolidDataset();
   let groupThing = createThing({ url: `${pod}/friends#group` });
@@ -128,25 +136,25 @@ async function createInitialMoviesAcl(
   fetch: typeof window.fetch
 ): Promise<void> {
   let moviesAcl = createAcl(moviesAclDataset);
-  
+
   // Set group access
   moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
   moviesAcl = setGroupResourceAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
-  
+
   // Set public access
   moviesAcl = setPublicDefaultAccess(moviesAcl, READ_ACCESS);
   moviesAcl = setPublicResourceAccess(moviesAcl, READ_ACCESS);
-  
+
   // Set friend access
   for (const id of friends) {
     moviesAcl = setAgentDefaultAccess(moviesAcl, id, READ_ACCESS);
     moviesAcl = setAgentResourceAccess(moviesAcl, id, READ_ACCESS);
   }
-  
+
   // Set full access for the user
   moviesAcl = setAgentDefaultAccess(moviesAcl, webID, FULL_ACCESS);
   moviesAcl = setAgentResourceAccess(moviesAcl, webID, FULL_ACCESS);
-  
+
   await saveAclFor(moviesAclDataset, moviesAcl, { fetch });
 }
 
@@ -158,7 +166,7 @@ async function updateMoviesAclPermissions(
 ): Promise<void> {
   const currentGlobalAccess = getPublicAccess(moviesAclDataset);
   const currentGroupAccess = getGroupAccess(moviesAclDataset, `${pod}/friends#group`);
-  
+
   if (currentGlobalAccess && !currentGlobalAccess['read'] || currentGroupAccess && !currentGroupAccess['read']) {
     let moviesAcl = createAcl(moviesAclDataset);
     moviesAcl = setGroupDefaultAccess(moviesAcl, `${pod}/friends#group`, READ_ACCESS);
@@ -181,7 +189,7 @@ export async function loadMoviesData(
 
   const movieList = await loadMovieList(people, fetch);
   const movieResults = await loadMovieDetails(movieList, fetch);
-  
+
   return categorizeMovies(movieResults);
 }
 
@@ -240,7 +248,7 @@ async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window
 
 function extractLikedStatus(things: any[], movieDataset: any): boolean | null {
   const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
-  
+
   if (!review) return null;
 
   const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
@@ -270,7 +278,7 @@ function categorizeMovies(movies: any[]): { movieDict: { [key: string]: MovieDat
   for (const { type, ...movie } of movies) {
     if (type === 'me') {
       movieDict[movie.movie] = { ...movie, me: true, friend: movieDict[movie.movie]?.friend || false };
-      
+
       if (movie.watched && !categorizedMovies.myWatched.includes(movie.movie)) {
         categorizedMovies.myWatched.push(movie.movie);
       } else if (movie.recommended && !categorizedMovies.recommendedDict.includes(movie.movie)) {
@@ -306,11 +314,11 @@ function categorizeMovies(movies: any[]): { movieDict: { [key: string]: MovieDat
 
 export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
   const sampledTitles: string[] = [];
-  
+
   if (userMovies.length <= maxSamples) {
     return userMovies.map(movie => movie.title);
   }
-  
+
   const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
   const sampledMovies = shuffledMovies.slice(0, maxSamples);
   return sampledMovies.map(movie => movie.title);
