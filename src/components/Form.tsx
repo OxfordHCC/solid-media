@@ -1,7 +1,6 @@
-import { VNode } from 'preact';
-import { Props, CList } from './types';
+import { VNode, ComponentChildren } from 'preact';
 
-export default function Form({submit, children}: Props<{submit: (value: any) => void}, CList<VNode>>): VNode {
+export default function Form({submit, children}: {submit: (value: any) => void; children?: ComponentChildren}): VNode {
 	return (
 		<form onSubmit={e => {
 			e.preventDefault();

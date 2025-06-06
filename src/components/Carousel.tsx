@@ -1,10 +1,9 @@
-import { VNode, toChildArray } from 'preact';
+import { VNode, toChildArray, ComponentChildren } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'wouter-preact';
-import { Props, CList } from './types';
 import { noDefault } from './lib';
 
-export default function Carousel({children}: Props<{}, CList<VNode>>): VNode {
+export default function Carousel({children}: {children?: ComponentChildren}): VNode {
 	const [scroll, setScroll] = useState(0);
 	const listRef = useRef<HTMLDivElement>(null);
 	const count = toChildArray(children).length;
