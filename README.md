@@ -42,11 +42,32 @@ Solidflix is developed using [Typescript](https://www.typescriptlang.org/) and [
 
 3. `cd solid-media` into the directory.
 
-4. Install dependencies:
+4. **Set up environment variables:**
+
+Copy the example environment file and add your TMDB API key:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file and replace `your_api_key_here` with your actual TMDB API key:
+
+```
+VITE_TMDB_API_KEY=your_actual_api_key_here
+```
+
+**Getting a TMDB API Key:**
+- Visit [The Movie Database (TMDB)](https://www.themoviedb.org/)
+- Create a free account
+- Go to your account settings → API → Create → Developer
+- Request an API key and follow the instructions
+- Copy the API key to your `.env` file
+
+5. Install dependencies:
 
 `npm install`
 
-5. Run the development server:
+6. Run the development server:
 
 `npm run dev` or `npm start`
 

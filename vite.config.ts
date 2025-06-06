@@ -18,6 +18,7 @@ export default defineConfig({
     'import.meta.env.HOMEPAGE': JSON.stringify(
       process.env.NODE_ENV === 'development' ? '' : new URL(packageJson.homepage).pathname
     ),
+    'import.meta.env.VITE_TMDB_API_KEY': JSON.stringify(process.env.VITE_TMDB_API_KEY),
   },
 
   resolve: {
