@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import AddPopup from './AddPopup';
+import AddPopup from './AddMovies';
 import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useSession, useAuthenticatedSession } from '../contexts/SessionContext';
