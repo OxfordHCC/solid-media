@@ -16,7 +16,7 @@
     "preinstall": "npm-force-resolutions",
     "dev": "vite",
     "start": "vite",
-    "build": "vite build && ncp ./src/spaRedirect.html ./build/spaRedirect.html && mkdirp ./build/login/ && ncp ./build/spaRedirect.html ./build/login/index.html && mkdirp ./build/view/ && ncp ./build/spaRedirect.html ./build/view/index.html",
+    "build": "vite build && ncp ./src/spaRedirect.html ./build/spaRedirect.html && mkdirp ./build/login/ && ncp ./build/spaRedirect.html ./build/login/index.html && mkdirp ./build/callback/ && ncp ./build/spaRedirect.html ./build/callback/index.html && mkdirp ./build/view/ && ncp ./build/spaRedirect.html ./build/view/index.html",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",
     "predeploy": "npm run build && ncp ./src/.nojekyll ./build/.nojekyll",
