@@ -1,5 +1,5 @@
 import { VNode } from 'preact';
-import {Props, CList} from './types';
+import { Props, CList } from './types';
 
 export default function Form({submit, children}: Props<{submit: (value: any) => void}, CList<VNode>>): VNode {
 	return (

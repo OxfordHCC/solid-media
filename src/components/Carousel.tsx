@@ -1,8 +1,8 @@
 import { VNode, toChildArray } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import {useLocation} from 'wouter-preact';
-import {Props, CList} from './types';
-import {noDefault} from './lib';
+import { useLocation } from 'wouter-preact';
+import { Props, CList } from './types';
+import { noDefault } from './lib';
 
 export default function Carousel({children}: Props<{}, CList<VNode>>): VNode {
 	const [scroll, setScroll] = useState(0);

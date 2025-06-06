@@ -4,7 +4,7 @@ import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useSession, useAuthenticatedSession } from '../contexts/SessionContext';
 import { MediaData, getIds, search } from '../media';
-import { SolidDataset, createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
+import { createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import logo from '../assets/logo.png';
 

@@ -1,6 +1,5 @@
 import { VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import {Props} from './types';
 
 export default function Loading({render}: {render?: () => Promise<VNode>}): VNode {
 	const [contents, setContents] = useState<VNode | null>(null);

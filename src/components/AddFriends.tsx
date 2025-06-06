@@ -1,5 +1,4 @@
 import { VNode } from 'preact';
-import {Props} from './types';
 
 export default function AddFriends({close, add}: {close: () => void, add: () => void}): VNode {
 	return (

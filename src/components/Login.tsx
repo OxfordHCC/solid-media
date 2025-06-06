@@ -1,6 +1,5 @@
-import { Fragment, VNode } from 'preact';
+import { VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { Props } from './types';
 import { useSession } from '../contexts/SessionContext';
 import Form from './Form';
 import logo from '../assets/logo.png';

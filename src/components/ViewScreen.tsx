@@ -1,10 +1,9 @@
 import { VNode } from 'preact';
-import {Props} from './types';
 import Loading from './Loading';
-import {loadData} from '../media';
-import {useLocation} from 'wouter-preact';
+import { loadData } from '../media';
+import { useLocation } from 'wouter-preact';
 
-import {HOMEPAGE} from '../env';
+import { HOMEPAGE } from '../env';
 
 export default function ViewScreen({url}: {url: string | null}): VNode {
 	const [location, setLocation] = useLocation();

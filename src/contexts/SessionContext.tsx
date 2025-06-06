@@ -1,5 +1,5 @@
 import { createContext } from 'preact';
-import { useContext, useEffect, useState } from 'preact/hooks';
+import { useContext, useState } from 'preact/hooks';
 import { Session } from '@inrupt/solid-client-authn-browser';
 import { useLocation } from 'wouter-preact';
 import { ComponentChildren } from 'preact';
@@ -63,7 +63,7 @@ export function useAuthenticatedSession(redirect: true): Session;
 export function useAuthenticatedSession(redirect: boolean = true): Session | null {
 	const { session, isLoggedIn } = useSession();
 	const [location, setLocation] = useLocation();
-	
+
 	if (isLoggedIn) {
 		return session;
 	} else {

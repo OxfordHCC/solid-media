@@ -1,6 +1,5 @@
-import { VNode, createRef } from 'preact';
+import { VNode } from 'preact';
 import { useState, useRef } from 'preact/hooks';
-import {Props} from './types';
 import Loading from './Loading';
 import {search, MediaData} from '../media';
 
