@@ -47,7 +47,6 @@ export type State = {
   friendLiked?: string[],
   recommendedDict?: string[],
   movies?: { [key: string]: MovieData },
-  loading?: boolean,
 };
 
 export interface PersonInfo {

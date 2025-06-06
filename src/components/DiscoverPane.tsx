@@ -31,6 +31,11 @@ export default function DiscoverPane() {
   const [addPopup, setAddPopup] = useState(false);
   const [addFriends, setAddFriends] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [loadingState, setLoadingState] = useState({
+    isLoading: false,
+    hasLoaded: false,
+    error: null as string | null
+  });
 
   const session = useAuthenticatedSession();
   if (!session) return <div />; // Guard against rendering when not logged in
@@ -40,14 +45,23 @@ export default function DiscoverPane() {
   const parts = webID.split('/');
   const pod = parts.slice(0, parts.length - 2).join('/');
 
+  const retryLoad = () => {
+    setLoadingState(prev => ({
+      ...prev,
+      hasLoaded: false,
+      error: null
+    }));
+  };
+
   useEffect(() => {
-    if (!giantState.loading) {
+    if (!loadingState.hasLoaded && !loadingState.isLoading) {
       loadApplicationData();
     }
-  }, [giantState.loading, session, pod, webID]);
+  }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
 
   async function loadApplicationData() {
     try {
+      setLoadingState(prev => ({ ...prev, isLoading: true, error: null }));
       const loadingStart = (new Date()).getTime();
 
       // Initialize movies container
@@ -67,7 +81,6 @@ export default function DiscoverPane() {
         ...prevState,
         ...categorizedMovies,
         movies: movieDict,
-        loading: true,
       }));
 
       const loadingEnd = (new Date()).getTime();
@@ -76,8 +89,15 @@ export default function DiscoverPane() {
       // Fetch and save recommendations
       await handleRecommendations(movieDict);
 
+      setLoadingState(prev => ({ ...prev, hasLoaded: true }));
     } catch (error) {
       console.error('Error loading application data:', error);
+      setLoadingState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to load data'
+      }));
+    } finally {
+      setLoadingState(prev => ({ ...prev, isLoading: false }));
     }
   }
 
@@ -261,20 +281,27 @@ export default function DiscoverPane() {
         <button class='add-button' onClick={() => { setShowLogout(true); logout(); }}>👋 Logout</button>
       </div>
 
-      {!giantState.friendWatched && (
+      {loadingState.isLoading && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <div class="loader__filmstrip"></div>
           <p class="loader__text">loading</p>
         </div>
       )}
 
-      {isDataEmpty() && (
+      {loadingState.error && (
+        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+          <p>Error loading data: {loadingState.error}</p>
+          <button onClick={retryLoad}>Retry</button>
+        </div>
+      )}
+
+      {!loadingState.isLoading && !loadingState.error && isDataEmpty() && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
       )}
 
-      {renderCarouselSections(giantState, createCarouselElement)}
+      {!loadingState.isLoading && !loadingState.error && renderCarouselSections(giantState, createCarouselElement)}
 
       {addPopup && (
         <AddPopup
