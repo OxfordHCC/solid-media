@@ -26,11 +26,11 @@ import {
 } from './DiscoverPane/carouselUtils';
 import { addNewFriendToProfile } from './DiscoverPane/friendsUtils';
 
+type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
+
 export default function DiscoverPane() {
   const [giantState, setGiantState] = useState<State>({});
-  const [addPopup, setAddPopup] = useState(false);
-  const [addFriends, setAddFriends] = useState(false);
-  const [showLogout, setShowLogout] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
     hasLoaded: false,
@@ -276,9 +276,9 @@ export default function DiscoverPane() {
       </div>
 
       <div class='add-button-wrapper'>
-        <button class='add-button' onClick={() => setAddPopup(true)}>➕ Add movies</button>
-        <button class='add-button' onClick={() => setAddFriends(true)}>👥 Add friends</button>
-        <button class='add-button' onClick={() => { setShowLogout(true); logout(); }}>👋 Logout</button>
+        <button class='add-button' onClick={() => setActiveModal('add-movies')}>➕ Add movies</button>
+        <button class='add-button' onClick={() => setActiveModal('add-friends')}>👥 Add friends</button>
+        <button class='add-button' onClick={() => { setActiveModal('logout'); logout(); }}>👋 Logout</button>
       </div>
 
       {loadingState.isLoading && (
@@ -303,25 +303,25 @@ export default function DiscoverPane() {
 
       {!loadingState.isLoading && !loadingState.error && renderCarouselSections(giantState, createCarouselElement)}
 
-      {addPopup && (
+      {activeModal === 'add-movies' && (
         <AddPopup
-          close={() => setAddPopup(false)}
+          close={() => setActiveModal(null)}
           save={handleAddPopupSave}
           watch={handleAddPopupWatch}
         />
       )}
 
-      {addFriends && (
+      {activeModal === 'add-friends' && (
         <AddFriends
-          close={() => setAddFriends(false)}
+          close={() => setActiveModal(null)}
           add={() => {
             addNewFriendData();
-            setAddFriends(false);
+            setActiveModal(null);
           }}
         />
       )}
 
-      {showLogout && <Logout />}
+      {activeModal === 'logout' && <Logout />}
     </div>
   );
 }
