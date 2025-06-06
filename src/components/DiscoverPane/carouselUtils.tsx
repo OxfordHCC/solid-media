@@ -1,10 +1,56 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../Carousel';
 import Carousel from '../Carousel';
-import { deleteSolidDataset, getThingAll, getUrl, removeThing, createThing, setUrl, setInteger, setThing, setDatetime, asUrl, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
+import { SolidDataset, deleteSolidDataset, getThingAll, getUrl, removeThing, createThing, setUrl, setInteger, setThing, setDatetime, asUrl, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import { HOMEPAGE } from '../../env';
 import { MovieData, State, DATE_FORMAT } from './types';
+
+
+function removeFromDataset(dataset: SolidDataset, typeToRemove: string): SolidDataset {
+  for (const thing of getThingAll(dataset)) {
+    if (getUrl(thing, RDF.type) === typeToRemove) {
+      dataset = removeThing(dataset, thing);
+    }
+  }
+  return dataset;
+};
+
+function addRating(dataset: SolidDataset, datasetUrl: string, value: 1 | 2 | 3) {
+  let rating = createThing();
+  rating = setUrl(rating, RDF.type, 'https://schema.org/Rating');
+  rating = setInteger(rating, 'https://schema.org/worstRating', 1);
+  rating = setInteger(rating, 'https://schema.org/bestRating', 3);
+  rating = setInteger(rating, 'https://schema.org/ratingValue', value);
+  dataset = setThing(dataset, rating);
+
+  let review = createThing();
+  const time = new Date();
+  review = setUrl(review, RDF.type, 'https://schema.org/ReviewAction');
+  review = setUrl(review, 'https://schema.org/resultReview', asUrl(rating, datasetUrl));
+  review = setDatetime(review, DCTERMS.created, time);
+  review = setDatetime(review, SCHEMA_INRUPT.startTime, time);
+  review = setDatetime(review, SCHEMA_INRUPT.endTime, time);
+  review = setUrl(review, 'https://schema.org/object', `${datasetUrl}#it`);
+  dataset = setThing(dataset, review);
+
+  return dataset;
+};
+
+function setWatched(dataset: SolidDataset, datasetUrl: string, time: Date | undefined = undefined) {
+  let thing = createThing();
+  if (time === undefined) {
+    time = new Date();
+  }
+  thing = setUrl(thing, RDF.type, 'https://schema.org/WatchAction');
+  thing = setDatetime(thing, DCTERMS.created, time);
+  thing = setDatetime(thing, SCHEMA_INRUPT.startTime, time);
+  thing = setDatetime(thing, SCHEMA_INRUPT.endTime, time);
+  thing = setUrl(thing, 'https://schema.org/object', `${datasetUrl}#it`);
+  dataset = setThing(dataset, thing);
+
+  return dataset;
+}
 
 export function createCarouselElements(
   movies: { [key: string]: MovieData },
@@ -18,33 +64,6 @@ export function createCarouselElements(
     const { solidUrl, watched, liked, title, released, image } = movieData;
     let { dataset } = movieData;
 
-    const removeFromDataset = (typeToRemove: string) => {
-      for (const thing of getThingAll(dataset)) {
-        if (getUrl(thing, RDF.type) === typeToRemove) {
-          dataset = removeThing(dataset, thing);
-        }
-      }
-    };
-
-    const addRating = (value: 1 | 2 | 3) => {
-      let rating = createThing();
-      rating = setUrl(rating, RDF.type, 'https://schema.org/Rating');
-      rating = setInteger(rating, 'https://schema.org/worstRating', 1);
-      rating = setInteger(rating, 'https://schema.org/bestRating', 3);
-      rating = setInteger(rating, 'https://schema.org/ratingValue', value);
-      dataset = setThing(dataset, rating);
-
-      let review = createThing();
-      const time = new Date();
-      review = setUrl(review, RDF.type, 'https://schema.org/ReviewAction');
-      review = setUrl(review, 'https://schema.org/resultReview', asUrl(rating, solidUrl));
-      review = setDatetime(review, DCTERMS.created, time);
-      review = setDatetime(review, SCHEMA_INRUPT.startTime, time);
-      review = setDatetime(review, SCHEMA_INRUPT.endTime, time);
-      review = setUrl(review, 'https://schema.org/object', `${solidUrl}#it`);
-      dataset = setThing(dataset, review);
-    };
-
     if (type === 'me') {
       return createUserMovieElement({
         movieData,
@@ -56,8 +75,6 @@ export function createCarouselElements(
         liked,
         solidUrl,
         dataset,
-        removeFromDataset,
-        addRating,
         session,
         setState,
         globalState
@@ -90,8 +107,6 @@ interface UserMovieElementProps {
   liked: boolean | null;
   solidUrl: string;
   dataset: any;
-  removeFromDataset: (type: string) => void;
-  addRating: (value: 1 | 2 | 3) => void;
   session: any;
   setState: (updater: ((prevState: State) => Partial<State>) | Partial<State>) => void;
   globalState: { state: State };
@@ -107,8 +122,6 @@ function createUserMovieElement({
   liked,
   solidUrl,
   dataset,
-  removeFromDataset,
-  addRating,
   session,
   setState,
   globalState
@@ -123,8 +136,8 @@ function createUserMovieElement({
         cssClass: 'carousel-dislike',
         selected: liked === false,
         click: async () => {
-          removeFromDataset('https://schema.org/Rating');
-          removeFromDataset('https://schema.org/ReviewAction');
+          dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
+          dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
 
           if (liked === false) {
             await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
@@ -133,7 +146,7 @@ function createUserMovieElement({
               movies: { ...state.movies, [movie]: { ...movieData, liked: null, dataset } },
             }));
           } else {
-            addRating(1);
+            dataset = addRating(dataset, solidUrl, 1);
             await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
             setState(state => ({
               ...state,
@@ -148,8 +161,8 @@ function createUserMovieElement({
         cssClass: 'carousel-like',
         selected: liked === true,
         click: async () => {
-          removeFromDataset('https://schema.org/Rating');
-          removeFromDataset('https://schema.org/ReviewAction');
+          dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
+          dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
 
           if (liked === true) {
             await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
@@ -159,7 +172,7 @@ function createUserMovieElement({
               movies: { ...state.movies, [movie]: { ...movieData, liked: null, dataset } },
             }));
           } else {
-            addRating(3);
+            dataset = addRating(dataset, solidUrl, 3);
             await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
             setState(state => ({
               ...state,
@@ -179,7 +192,7 @@ function createUserMovieElement({
     selected: watched,
     click: async () => {
       if (watched) {
-        removeFromDataset('https://schema.org/WatchAction');
+        dataset = removeFromDataset(dataset, 'https://schema.org/WatchAction');
         await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
         setState(state => ({
           ...state,
@@ -188,14 +201,7 @@ function createUserMovieElement({
           movies: { ...state.movies, [movie]: { ...movieData, watched: false, dataset } },
         }));
       } else {
-        let thing = createThing();
-        const time = new Date();
-        thing = setUrl(thing, RDF.type, 'https://schema.org/WatchAction');
-        thing = setDatetime(thing, DCTERMS.created, time);
-        thing = setDatetime(thing, SCHEMA_INRUPT.startTime, time);
-        thing = setDatetime(thing, SCHEMA_INRUPT.endTime, time);
-        thing = setUrl(thing, 'https://schema.org/object', `${solidUrl}#it`);
-        dataset = setThing(dataset, thing);
+        dataset = setWatched(dataset, solidUrl);
 
         await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
         setState(state => ({
@@ -215,13 +221,13 @@ function createUserMovieElement({
     cssClass: 'carousel-remove',
     click: async () => {
       await deleteSolidDataset(solidUrl, { fetch: session.fetch });
-      
+
       setState(state => {
         const shouldRemoveFromDict = ![...state.friendWatched!, ...state.friendUnwatched!]
           .some(x => x === movie);
-          
+
         const { [movie]: deleted, ...remainingMovies } = state.movies!;
-          
+
         return {
           ...state,
           myUnwatched: state.myUnwatched!.filter(x => x !== movie),
@@ -284,7 +290,7 @@ function createFriendMovieElement({
           cssClass: 'carousel-save',
           click: async () => {
             const isAlreadyInUserMovies = globalState.state.myWatched?.includes(movie) || globalState.state.myUnwatched?.includes(movie);
-            
+
             if (!isAlreadyInUserMovies) {
               const datasetName = title
                 .replace(/[^a-zA-Z0-9-_ ]/g, '')
