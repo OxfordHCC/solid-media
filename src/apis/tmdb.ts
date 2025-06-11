@@ -4,14 +4,14 @@ if (!TMDB_API_KEY) {
 	throw new Error('VITE_TMDB_API_KEY environment variable is required. Please check your .env file.');
 }
 
-type TMBDConfig = {
+type TMDBConfig = {
 	base_url: string,
 	small_poster_size: string,
 	big_poster_size: string,
 	backdrop_size: string,
 };
 
-async function loadConfig(): Promise<TMBDConfig> {
+async function loadConfig(): Promise<TMDBConfig> {
 	const response = await fetch(`https://api.themoviedb.org/3/configuration?api_key=${TMDB_API_KEY}`);
 	const {images: {base_url}} = await response.json();
 	return {
