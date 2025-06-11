@@ -13,13 +13,13 @@ import {
   State
 } from './types';
 import {
-  initializeMoviesContainer,
-  manageFriendsDataset,
-  setupMoviesAcl,
   loadMoviesData,
-  fetchRecommendations,
   sampleUserMovies
 } from './dataLoaders';
+import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
+import { setupMoviesAcl } from '../../apis/solid/movies';
+import { initializeMoviesContainer } from '../../apis/solid/movies';
+import { manageFriendsDataset } from '../../apis/solid/friendsUtils';
 import {
   createCarouselElements,
   renderCarouselSections
