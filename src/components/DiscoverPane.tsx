@@ -3,7 +3,7 @@ import AddPopup from './AddMovies';
 import AddFriends from './AddFriends';
 import Logout from './Logout';
 import { useSession, useAuthenticatedSession } from '../contexts/SessionContext';
-import { MediaData, getIds, search } from '../media';
+import { MediaData, getIds, search } from '../apis/tmdb';
 import { createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import logo from '../assets/logo.png';

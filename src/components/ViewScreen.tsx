@@ -1,6 +1,6 @@
 import { VNode } from 'preact';
 import Loading from './Loading';
-import { loadData } from '../media';
+import { loadData } from '../apis/tmdb';
 import { useLocation } from 'wouter-preact';
 
 import { BASE_URL } from '../env';

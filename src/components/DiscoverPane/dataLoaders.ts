@@ -34,7 +34,7 @@ import {
   setThing
 } from '@inrupt/solid-client';
 import { RDF } from '@inrupt/vocab-common-rdf';
-import { loadData } from '../../media';
+import { loadData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, CategorizedMovies, NO_ACCESS, FULL_ACCESS, READ_ACCESS } from './types';
 
 export async function initializeMoviesContainer(
