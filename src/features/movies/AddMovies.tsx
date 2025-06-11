@@ -1,7 +1,7 @@
 import { VNode } from 'preact';
 import { useState, useRef } from 'preact/hooks';
-import Loading from './Loading';
-import {search, MediaData} from '../apis/tmdb';
+import Loading from '../../components/ui/Loading';
+import {search, MediaData} from '../../apis/tmdb';
 
 const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 	year: 'numeric',

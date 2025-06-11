@@ -1,5 +1,5 @@
 import { VNode } from 'preact';
-import Loading from './Loading';
+import Loading from '../components/ui/Loading';
 import { loadData } from '../apis/tmdb';
 import { useLocation } from 'wouter-preact';
 

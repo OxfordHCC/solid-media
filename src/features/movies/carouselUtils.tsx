@@ -1,6 +1,6 @@
 import { VNode } from 'preact';
-import { CarouselElement } from '../Carousel';
-import Carousel from '../Carousel';
+import { CarouselElement } from '../../components/Carousel';
+import Carousel from '../../components/Carousel';
 import { SolidDataset, deleteSolidDataset, getThingAll, getUrl, removeThing, createThing, setUrl, setInteger, setThing, setDatetime, asUrl, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import { BASE_URL } from '../../env';

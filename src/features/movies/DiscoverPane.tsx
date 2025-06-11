@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'preact/hooks';
 import AddPopup from './AddMovies';
-import AddFriends from './AddFriends';
-import Logout from './Logout';
-import { useSession, useAuthenticatedSession } from '../contexts/SessionContext';
-import { MediaData, getIds, search } from '../apis/tmdb';
+import AddFriends from '../../components/AddFriends';
+import Logout from '../../components/Logout';
+import { useSession, useAuthenticatedSession } from '../../contexts/SessionContext';
+import { MediaData, getIds, search } from '../../apis/tmdb';
 import { createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
-import logo from '../assets/logo.png';
+import logo from '../../assets/logo.png';
 
 import {
   MovieData,
   State
-} from './DiscoverPane/types';
+} from './types';
 import {
   initializeMoviesContainer,
   manageFriendsDataset,
@@ -19,12 +19,12 @@ import {
   loadMoviesData,
   fetchRecommendations,
   sampleUserMovies
-} from './DiscoverPane/dataLoaders';
+} from './dataLoaders';
 import {
   createCarouselElements,
   renderCarouselSections
-} from './DiscoverPane/carouselUtils';
-import { addNewFriendToProfile } from './DiscoverPane/friendsUtils';
+} from './carouselUtils';
+import { addNewFriendToProfile } from '../../apis/solid/friendsUtils';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 

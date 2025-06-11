@@ -2,7 +2,7 @@ import { VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Redirect } from 'wouter-preact';
 import { useSession } from '../contexts/SessionContext';
-import Loading from './Loading';
+import Loading from '../components/ui/Loading';
 
 import { BASE_URL } from '../env';
 

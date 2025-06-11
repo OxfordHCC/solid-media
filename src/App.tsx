@@ -1,13 +1,13 @@
 import { VNode } from 'preact';
 import { Router, Switch, Route, useLocation } from 'wouter-preact';
-import Login from './Login';
-import LoginCallback from './LoginCallback';
-import HomeScreen from './HomeScreen';
-import ViewScreen from './ViewScreen';
-import { getSearchParam } from '../utils/routing';
-import { SessionProvider } from '../contexts/SessionContext';
+import Login from './pages/Login';
+import LoginCallback from './pages/LoginCallback';
+import HomeScreen from './pages/HomeScreen';
+import ViewScreen from './pages/ViewScreen';
+import { getSearchParam } from './utils/routing';
+import { SessionProvider } from './contexts/SessionContext';
 
-import { BASE_URL } from '../env';
+import { BASE_URL } from './env';
 
 export default function App(): VNode {
 	const [location, setLocation] = useLocation();
