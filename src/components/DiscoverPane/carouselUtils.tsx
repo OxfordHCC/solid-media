@@ -3,7 +3,7 @@ import { CarouselElement } from '../Carousel';
 import Carousel from '../Carousel';
 import { SolidDataset, deleteSolidDataset, getThingAll, getUrl, removeThing, createThing, setUrl, setInteger, setThing, setDatetime, asUrl, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
-import { HOMEPAGE } from '../../env';
+import { BASE_URL } from '../../env';
 import { MovieData, State, DATE_FORMAT } from './types';
 
 
@@ -245,7 +245,7 @@ function createUserMovieElement({
       title={title}
       subtitle={released.toLocaleDateString('en-GB', DATE_FORMAT)}
       image={image}
-      redirect={`${HOMEPAGE}/view?url=${movie}`}
+      redirect={`${BASE_URL}view?url=${movie}`}
       buttons={buttons}
     />
   );
@@ -283,7 +283,7 @@ function createFriendMovieElement({
       title={title}
       subtitle={released.toLocaleDateString('en-GB', DATE_FORMAT)}
       image={image}
-      redirect={`${HOMEPAGE}/view?url=${movie}`}
+      redirect={`${BASE_URL}view?url=${movie}`}
       buttons={[
         {
           text: '➕',

@@ -4,7 +4,7 @@ import { Session } from '@inrupt/solid-client-authn-browser';
 import { useLocation } from 'wouter-preact';
 import { ComponentChildren } from 'preact';
 
-import { HOMEPAGE } from '../env';
+import { BASE_URL } from '../env';
 
 interface SessionContextType {
 	session: Session;
@@ -30,7 +30,7 @@ export function SessionProvider({ children }: { children: ComponentChildren }) {
 		try {
 			await globalSession.logout();
 			setIsLoggedIn(false);
-			window.location.href = `${HOMEPAGE}/login`; // Not a good implementation. Maybe replace with useLocation?
+			window.location.href = `${BASE_URL}login`; // Not a good implementation. Maybe replace with useLocation?
 		} catch (error) {
 			console.error('Logout failed:', error);
 		}
@@ -68,7 +68,7 @@ export function useAuthenticatedSession(redirect: boolean = true): Session | nul
 		return session;
 	} else {
 		if (redirect) {
-			setLocation(`${HOMEPAGE}/login?redirect=${encodeURIComponent(location)}`);
+			setLocation(`${BASE_URL}login?redirect=${encodeURIComponent(location)}`);
 		}
 		return null;
 	}

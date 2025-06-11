@@ -5,6 +5,16 @@ import { join } from 'path'
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
+// Calculate base path once and reuse
+const getBasePath = () => {
+  if (process.env.NODE_ENV === 'development') {
+    return '/'
+  }
+  return new URL(packageJson.homepage).pathname
+}
+
+const basePath = getBasePath()
+
 // Custom plugin to transform spaRedirect.html
 function spaRedirectPlugin() {
   let config: ResolvedConfig
@@ -18,10 +28,7 @@ function spaRedirectPlugin() {
       // Read the source file
       const sourceFile = readFileSync('./src/spaRedirect.html', 'utf-8')
 
-      // Calculate the homepage value based on environment
-      const homepage = process.env.NODE_ENV === 'development'
-        ? ''
-        : new URL(packageJson.homepage).pathname
+      const homepage = basePath.replace(/\/$/, '')
 
       // Replace the placeholder
       const transformedContent = sourceFile.replace('%HOMEPAGE%', homepage)
@@ -49,18 +56,11 @@ function spaRedirectPlugin() {
 export default defineConfig({
   plugins: [preact(), spaRedirectPlugin()],
 
-  base: process.env.NODE_ENV === 'development' ? '/' : '/solid-media/',
+  base: basePath,
 
   build: {
     outDir: 'build',
     sourcemap: true,
-  },
-
-  define: {
-    'import.meta.env.HOMEPAGE': JSON.stringify(
-      process.env.NODE_ENV === 'development' ? '' : new URL(packageJson.homepage).pathname
-    ),
-    'import.meta.env.VITE_TMDB_API_KEY': JSON.stringify(process.env.VITE_TMDB_API_KEY),
   },
 
   resolve: {

@@ -4,7 +4,7 @@ import { useSession } from '../contexts/SessionContext';
 import Form from './Form';
 import logo from '../assets/logo.png';
 
-import { HOMEPAGE } from '../env';
+import { BASE_URL } from '../env';
 
 const providers = [
 	// {title: "Inrupt Pod Spaces", url: 'https://start.inrupt.com/'},
@@ -20,7 +20,7 @@ export default function Login({redirect}: {redirect: string | null}): VNode {
 	const { session } = useSession();
 	const [provider, setProvider] = useState('');
 
-	const callbackUrl = `${window.location.origin}${HOMEPAGE}/callback${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`;
+	const callbackUrl = `${window.location.origin}${BASE_URL}callback${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`;
 
 	return (
 		<div class="login-page">

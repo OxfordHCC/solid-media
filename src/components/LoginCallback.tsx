@@ -4,7 +4,7 @@ import { Redirect } from 'wouter-preact';
 import { useSession } from '../contexts/SessionContext';
 import Loading from './Loading';
 
-import { HOMEPAGE } from '../env';
+import { BASE_URL } from '../env';
 
 export default function LoginCallback({redirect}: {redirect: string | null}): VNode {
     const [isLoading, setIsLoading] = useState(true);
@@ -34,9 +34,9 @@ export default function LoginCallback({redirect}: {redirect: string | null}): VN
 
 	// If login was successful, redirect to the intended page
 	if (isLoggedIn) {
-		return <Redirect to={redirect ?? `${HOMEPAGE}/`} />;
+		return <Redirect to={redirect ?? `${BASE_URL}`} />;
 	}
 
 	// If login failed or no login detected, redirect back to login page
-	return <Redirect to={`${HOMEPAGE}/login`} />;
+	return <Redirect to={`${BASE_URL}login`} />;
 }

@@ -1,1 +1,1 @@
-export const HOMEPAGE = import.meta.env.HOMEPAGE || '';
+export const BASE_URL = import.meta.env.BASE_URL || '/';

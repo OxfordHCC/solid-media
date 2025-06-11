@@ -3,7 +3,7 @@ import Loading from './Loading';
 import { loadData } from '../media';
 import { useLocation } from 'wouter-preact';
 
-import { HOMEPAGE } from '../env';
+import { BASE_URL } from '../env';
 
 export default function ViewScreen({url}: {url: string | null}): VNode {
 	const [location, setLocation] = useLocation();
@@ -20,7 +20,7 @@ export default function ViewScreen({url}: {url: string | null}): VNode {
 						<h1 class='view-title'>{title}</h1>
 						<p class='view-description'>{description}</p>
 					</div>
-					<button class='back-button' onClick={() => setLocation(`${HOMEPAGE}/`)}>◀</button>
+					<button class='back-button' onClick={() => setLocation(`${BASE_URL}`)}>◀</button>
 					<div class='view-background-colour'></div>
 				</div>
 			);
