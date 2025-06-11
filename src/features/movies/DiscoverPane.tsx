@@ -18,8 +18,8 @@ import {
 } from './dataLoaders';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
-import { initializeMoviesContainer } from '../../apis/solid/movies';
-import { manageFriendsDataset } from '../../apis/solid/friendsUtils';
+import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
+import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import {
   createCarouselElements,
   renderCarouselSections
@@ -64,10 +64,10 @@ export default function DiscoverPane() {
       const loadingStart = (new Date()).getTime();
 
       // Initialize movies container
-      const moviesAclDataset = await initializeMoviesContainer(pod, session.fetch);
+      const moviesAclDataset = await getOrCreateMoviesContainerWithAcl(pod, session.fetch);
 
       // Manage friends dataset and sync with profile
-      const { friendsDataset, friends } = await manageFriendsDataset(pod, webID, session.fetch);
+      const { friendsDataset, friends } = await synchronizeToFriendsDataset(pod, webID, session.fetch);
 
       // Setup ACL permissions for movies
       await setupMoviesAcl(moviesAclDataset, pod, webID, friends, session.fetch);
@@ -86,7 +86,7 @@ export default function DiscoverPane() {
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
 
       // Fetch and save recommendations
-      await handleRecommendations(movieDict);
+      await fetchAndSaveRecommendations(movieDict);
 
       setLoadingState(prev => ({ ...prev, hasLoaded: true }));
     } catch (error) {
@@ -100,7 +100,7 @@ export default function DiscoverPane() {
     }
   }
 
-  async function handleRecommendations(movieDict: { [key: string]: MovieData }) {
+  async function fetchAndSaveRecommendations(movieDict: { [key: string]: MovieData }) {
     try {
       const userMovies = Object.values(movieDict).filter(x => x.me && !x.recommended);
       const sampledTitles = sampleUserMovies(userMovies, 10);

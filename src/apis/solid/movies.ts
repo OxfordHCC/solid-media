@@ -19,7 +19,7 @@ import {
 } from "@inrupt/solid-client";
 import { READ_ACCESS, FULL_ACCESS } from "../../features/movies/types";
 
-export async function initializeMoviesContainer(
+export async function getOrCreateMoviesContainerWithAcl(
   pod: string,
   fetch: typeof window.fetch
 ): Promise<

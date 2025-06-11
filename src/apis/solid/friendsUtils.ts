@@ -80,7 +80,7 @@ function isAlreadyInGroup(groupThing: any, webID: string): boolean {
  * Updates `${pod}/friends` with WebID Profile's friends list.
  * @returns The updated friends dataset and list of friends.
  */
-export async function manageFriendsDataset(
+export async function synchronizeToFriendsDataset(
   pod: string,
   webID: string,
   fetch: typeof window.fetch
