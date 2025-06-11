@@ -24,7 +24,6 @@ import {
   createCarouselElements,
   renderCarouselSections
 } from './carouselUtils';
-import { addNewFriendToProfile } from '../../apis/solid/friendsUtils';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
@@ -116,21 +115,6 @@ export default function DiscoverPane() {
       }
     } catch (error) {
       console.error('Error handling recommendations:', error);
-    }
-  }
-
-  async function addNewFriendData() {
-    try {
-      const newFriendWebID = (document.getElementById("friend") as HTMLInputElement).value;
-      if (!newFriendWebID.length) return;
-
-      await addNewFriendToProfile(webID, newFriendWebID, session.fetch);
-
-      // TODO: Fetch newly added friend's movies dynamically instead of refreshing
-      window.location.reload();
-    } catch (error) {
-      console.error('Error adding friend:', error);
-      alert('Failed to add friend. Please try again.');
     }
   }
 
@@ -313,9 +297,12 @@ export default function DiscoverPane() {
 
       {activeModal === 'add-friends' && (
         <AddFriends
+          webID={webID}
+          authFetch={session.fetch}
           close={() => setActiveModal(null)}
-          add={() => {
-            addNewFriendData();
+          onFriendAdded={async (friendId) => {
+            // TODO: Fetch newly added friend's movies dynamically instead of refreshing
+            window.location.reload();
             setActiveModal(null);
           }}
         />

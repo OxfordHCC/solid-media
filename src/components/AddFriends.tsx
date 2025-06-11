@@ -1,6 +1,25 @@
 import { VNode } from 'preact';
+import { addNewFriendToProfile } from '../apis/solid/friendsUtils';
 
-export default function AddFriends({close, add}: {close: () => void, add: () => void}): VNode {
+export default function AddFriends({webID, authFetch, close, onFriendAdded}: {
+	webID: string,
+	authFetch: typeof fetch,
+	close: () => void, onFriendAdded: (friendId: string) => Promise<void>}): VNode {
+
+  async function handleAddFriend() {
+	try {
+	  const newFriendWebID = (document.getElementById("friend") as HTMLInputElement).value;
+	  if (!newFriendWebID.length) return;
+
+	  await addNewFriendToProfile(webID, newFriendWebID, authFetch);
+
+	  await onFriendAdded(newFriendWebID);
+	} catch (error) {
+	  console.error('Error adding friend:', error);
+	  alert('Failed to add friend. Please try again.');
+	}
+  }
+
 	return (
 		<div class='add-popup'>
 			<div class='add-logout-menu' style="height: 30vh">
@@ -12,7 +31,7 @@ export default function AddFriends({close, add}: {close: () => void, add: () => 
 					<input
 						class="btn-primary"
 						type='submit'
-						onClick={add}
+						onClick={handleAddFriend}
 						value='Add'
                     />
 				</div>
