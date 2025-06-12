@@ -110,7 +110,7 @@ export default function DiscoverPane() {
         const movies = await search(name);
         const movie = movies.find((x: any) => x.title === name);
         if (movie) {
-          await save(movie, true);
+          await saveMovie(movie, true);
         }
       }
     } catch (error) {
@@ -118,7 +118,7 @@ export default function DiscoverPane() {
     }
   }
 
-  async function save(media: MediaData, recommended: Boolean = false, watch: Boolean = false) {
+  async function saveMovie(media: MediaData, recommended: Boolean = false, watch: Boolean = false) {
     // ...existing save function logic...
     const ids = await getIds(media.tmdbUrl);
 
@@ -192,32 +192,6 @@ export default function DiscoverPane() {
     }
   }
 
-  async function watch(media: MovieData, date: Date = new Date()) {
-    // ...existing watch function logic...
-    let dataset = media.dataset;
-
-    let thing = createThing();
-
-    thing = setUrl(thing, RDF.type, 'https://schema.org/WatchAction');
-    thing = setDatetime(thing, DCTERMS.created, new Date());
-    thing = setDatetime(thing, SCHEMA_INRUPT.startTime, date);
-    thing = setDatetime(thing, SCHEMA_INRUPT.endTime, date);
-    thing = setUrl(thing, 'https://schema.org/object', `${media.movie}#it`);
-
-    dataset = setThing(dataset, thing);
-    await saveSolidDatasetAt(media.solidUrl, dataset, { fetch: session.fetch });
-
-    media.dataset = dataset;
-
-    setGiantState((state: State) => ({
-      ...state,
-      myUnwatched: state.myUnwatched!.filter((x: string) => x !== media.movie),
-      recommendedDict: state.myUnwatched!.filter((x: string) => x !== media.movie),
-      myWatched: [media.movie, ...state.myWatched!],
-      movies: { ...state.movies, [media.movie]: { ...media, watched: true, dataset } },
-    }));
-  }
-
   const createCarouselElement = createCarouselElements(
     giantState.movies!,
     pod,
@@ -234,7 +208,7 @@ export default function DiscoverPane() {
 
   const handleAddPopupSave = async (media: MediaData) => {
     if (!Object.values(giantState.movies!).some((x: MovieData) => x.title === media.title)) {
-      await save(media, false);
+      await saveMovie(media, false);
     }
   };
 
@@ -246,10 +220,10 @@ export default function DiscoverPane() {
       const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
 
       if (movieWebIDPod !== pod) {
-        data = await save(media, false, true);
+        data = await saveMovie(media, false, true);
       }
     } else {
-      data = await save(media, false, true);
+      data = await saveMovie(media, false, true);
     }
   };
 
