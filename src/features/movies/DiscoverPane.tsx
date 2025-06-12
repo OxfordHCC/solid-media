@@ -7,6 +7,9 @@ import { MediaData, getIds, search } from '../../apis/tmdb';
 import { createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import logo from '../../assets/logo.png';
+import { MovieCarouselElement } from './MovieCarouselElement';
+import Carousel from '../../components/Carousel';
+import { VNode } from 'preact';
 
 import {
   MovieData,
@@ -20,12 +23,23 @@ import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
 import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
-import {
-  createCarouselElements,
-  renderCarouselSections
-} from './carouselUtils';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
+
+// 合并 carouselUtils.tsx 的 sectionConfigs 和 renderCarouselSections
+const sectionConfigs: Array<{
+  title: string;
+  key: keyof State;
+  type: 'friend' | 'me';
+}> = [
+  { title: 'Recommended Movies', key: 'recommendedDict', type: 'me' },
+  { title: 'Friends Collection', key: 'friendWatched', type: 'friend' },
+  { title: 'Friends Wishlist', key: 'friendUnwatched', type: 'friend' },
+  { title: 'Friends enjoyed', key: 'friendLiked', type: 'friend' },
+  { title: 'Your Collection', key: 'myWatched', type: 'me' },
+  { title: 'Your Wishlist', key: 'myUnwatched', type: 'me' },
+  { title: 'You enjoyed', key: 'myLiked', type: 'me' },
+];
 
 export default function DiscoverPane() {
   const [giantState, setGiantState] = useState<State>({});
@@ -119,7 +133,6 @@ export default function DiscoverPane() {
   }
 
   async function saveMovie(media: MediaData, recommended: Boolean = false, watch: Boolean = false) {
-    // ...existing save function logic...
     const ids = await getIds(media.tmdbUrl);
 
     const datasetName = media.title
@@ -192,14 +205,6 @@ export default function DiscoverPane() {
     }
   }
 
-  const createCarouselElement = createCarouselElements(
-    giantState.movies!,
-    pod,
-    session,
-    setGiantState,
-    { state: giantState }
-  );
-
   const isDataEmpty = () => {
     const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = giantState;
     return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked]
@@ -259,7 +264,33 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!loadingState.isLoading && !loadingState.error && renderCarouselSections(giantState, createCarouselElement)}
+      {!loadingState.isLoading && !loadingState.error && (
+        sectionConfigs.map(({ title, key, type }) => {
+          const items = giantState[key] as string[] | undefined;
+          if (items?.length) {
+            return (
+              <div key={key}>
+                <h3 style="margin-left: 2%;">{title}</h3>
+                <Carousel>
+                  {items.map(movie => (
+                    <MovieCarouselElement
+                      key={movie}
+                      movieData={giantState.movies?.[movie]!}
+                      movie={movie}
+                      type={type}
+                      session={session}
+                      setState={setGiantState}
+                      globalState={{ state: giantState }}
+                      pod={pod}
+                    />
+                  ))}
+                </Carousel>
+              </div>
+            );
+          }
+          return null;
+        })
+      )}
 
       {activeModal === 'add-movies' && (
         <AddPopup
