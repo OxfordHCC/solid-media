@@ -32,67 +32,31 @@ export function renderCarouselSections(
 ): VNode[] {
   const sections = [];
 
-  if (state.recommendedDict?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Recommended Movies</h3>
-        <Carousel>{state.recommendedDict.map(x => createCarouselElement(x, 'me'))}</Carousel>
-      </div>
-    );
+  function renderSection(title: string, items: string[] | undefined, type: 'friend' | 'me') {
+    if (items?.length) {
+      return (
+        <div>
+          <h3 style="margin-left: 2%;">{title}</h3>
+          <Carousel>{items.map(x => createCarouselElement(x, type))}</Carousel>
+        </div>
+      );
+    }
+    return null;
   }
 
-  if (state.friendWatched?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Friends Collection</h3>
-        <Carousel>{state.friendWatched.map(x => createCarouselElement(x, 'friend'))}</Carousel>
-      </div>
-    );
-  }
+  const sectionConfigs = [
+    { title: 'Recommended Movies', items: state.recommendedDict, type: 'me' },
+    { title: 'Friends Collection', items: state.friendWatched, type: 'friend' },
+    { title: 'Friends Wishlist', items: state.friendUnwatched, type: 'friend' },
+    { title: 'Friends enjoyed', items: state.friendLiked, type: 'friend' },
+    { title: 'Your Collection', items: state.myWatched, type: 'me' },
+    { title: 'Your Wishlist', items: state.myUnwatched, type: 'me' },
+    { title: 'You enjoyed', items: state.myLiked, type: 'me' },
+  ];
 
-  if (state.friendUnwatched?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Friends Wishlist</h3>
-        <Carousel>{state.friendUnwatched.map(x => createCarouselElement(x, 'friend'))}</Carousel>
-      </div>
-    );
-  }
-
-  if (state.friendLiked?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Friends enjoyed</h3>
-        <Carousel>{state.friendLiked.map(x => createCarouselElement(x, 'friend'))}</Carousel>
-      </div>
-    );
-  }
-
-  if (state.myWatched?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Your Collection</h3>
-        <Carousel>{state.myWatched.map(x => createCarouselElement(x, 'me'))}</Carousel>
-      </div>
-    );
-  }
-
-  if (state.myUnwatched?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">Your Wishlist</h3>
-        <Carousel>{state.myUnwatched.map(x => createCarouselElement(x, 'me'))}</Carousel>
-      </div>
-    );
-  }
-
-  if (state.myLiked?.length) {
-    sections.push(
-      <div>
-        <h3 style="margin-left: 2%;">You enjoyed</h3>
-        <Carousel>{state.myLiked.map(x => createCarouselElement(x, 'me'))}</Carousel>
-      </div>
-    );
+  for (const { title, items, type } of sectionConfigs) {
+    const section = renderSection(title, items, type as 'friend' | 'me');
+    if (section) sections.push(section);
   }
 
   return sections;
