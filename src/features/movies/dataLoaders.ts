@@ -15,7 +15,7 @@ export async function loadMoviesData(
   webID: string,
   friends: string[],
   fetch: typeof window.fetch
-): Promise<{ movieDict: { [key: string]: MovieData }; categorizedMovies: CategorizedMovies }> {
+): Promise<{ movieDict: Map<string, MovieData>; categorizedMovies: CategorizedMovies }> {
   const people: PersonInfo[] = [
     { type: 'me', id: webID },
     ...friends.map(x => ({ type: 'friend' as const, id: x }))
@@ -97,48 +97,49 @@ function extractLikedStatus(things: any[], movieDataset: any): boolean | null {
   return null;
 }
 
-function categorizeMovies(movies: any[]): { movieDict: { [key: string]: MovieData }; categorizedMovies: CategorizedMovies } {
-  const movieDict: { [key: string]: MovieData } = {};
+function categorizeMovies(movies: any[]): { movieDict: Map<string, MovieData>; categorizedMovies: CategorizedMovies } {
+  const movieDict = new Map<string, MovieData>();
   const categorizedMovies: CategorizedMovies = {
-    myWatched: [],
-    myUnwatched: [],
-    myLiked: [],
-    friendWatched: [],
-    friendUnwatched: [],
-    friendLiked: [],
-    recommendedDict: [],
+    myWatched: new Set<string>(),
+    myUnwatched: new Set<string>(),
+    myLiked: new Set<string>(),
+    friendWatched: new Set<string>(),
+    friendUnwatched: new Set<string>(),
+    friendLiked: new Set<string>(),
+    recommendedDict: new Set<string>(),
   };
 
   for (const { type, ...movie } of movies) {
     if (type === 'me') {
-      movieDict[movie.movie] = { ...movie, me: true, friend: movieDict[movie.movie]?.friend || false };
+      movieDict.set(movie.movie, { ...movie, me: true, friend: movieDict.get(movie.movie)?.friend || false });
 
-      if (movie.watched && !categorizedMovies.myWatched.includes(movie.movie)) {
-        categorizedMovies.myWatched.push(movie.movie);
-      } else if (movie.recommended && !categorizedMovies.recommendedDict.includes(movie.movie)) {
-        categorizedMovies.recommendedDict.push(movie.movie);
-      } else if (!categorizedMovies.myUnwatched.includes(movie.movie)) {
-        categorizedMovies.myUnwatched.push(movie.movie);
+      if (movie.watched && !categorizedMovies.myWatched.has(movie.movie)) {
+        categorizedMovies.myWatched.add(movie.movie);
+      } else if (movie.recommended && !categorizedMovies.recommendedDict.has(movie.movie)) {
+        categorizedMovies.recommendedDict.add(movie.movie);
+      } else if (!categorizedMovies.myUnwatched.has(movie.movie)) {
+        categorizedMovies.myUnwatched.add(movie.movie);
       }
 
-      if (movie.liked && !categorizedMovies.myLiked.includes(movie.movie)) {
-        categorizedMovies.myLiked.push(movie.movie);
+      if (movie.liked && !categorizedMovies.myLiked.has(movie.movie)) {
+        categorizedMovies.myLiked.add(movie.movie);
       }
     } else if (type === 'friend') {
-      if (!(movie.movie in movieDict)) {
-        movieDict[movie.movie] = { ...movie, watched: false, liked: null, me: false, friend: true };
+      if (!movieDict.has(movie.movie)) {
+        movieDict.set(movie.movie, { ...movie, watched: false, liked: null, me: false, friend: true });
       } else {
-        movieDict[movie.movie].friend = true;
+        const existingMovie = movieDict.get(movie.movie)!;
+        movieDict.set(movie.movie, { ...existingMovie, friend: true });
       }
 
-      if (movie.watched && !categorizedMovies.friendWatched.includes(movie.movie)) {
-        categorizedMovies.friendWatched.push(movie.movie);
-      } else if (!categorizedMovies.friendUnwatched.includes(movie.movie)) {
-        categorizedMovies.friendUnwatched.push(movie.movie);
+      if (movie.watched && !categorizedMovies.friendWatched.has(movie.movie)) {
+        categorizedMovies.friendWatched.add(movie.movie);
+      } else if (!categorizedMovies.friendUnwatched.has(movie.movie)) {
+        categorizedMovies.friendUnwatched.add(movie.movie);
       }
 
-      if (movie.liked && !categorizedMovies.friendLiked.includes(movie.movie)) {
-        categorizedMovies.friendLiked.push(movie.movie);
+      if (movie.liked && !categorizedMovies.friendLiked.has(movie.movie)) {
+        categorizedMovies.friendLiked.add(movie.movie);
       }
     }
   }

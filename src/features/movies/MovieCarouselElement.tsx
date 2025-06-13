@@ -107,7 +107,7 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-remove',
       click: async () => {
         await deleteSolidDataset(solidUrl, { fetch: session.fetch });
-        const shouldRemoveFromDict = ![...globalState.state.friendWatched || [], ...globalState.state.friendUnwatched || []]
+        const shouldRemoveFromDict = ![...Array.from(globalState.state.friendWatched), ...Array.from(globalState.state.friendUnwatched)]
           .some(x => x === movie);
         dispatch({
           type: 'REMOVE_MOVIE',
@@ -120,7 +120,7 @@ export const MovieCarouselElement = ({
       text: '➕',
       cssClass: 'carousel-save',
       click: async () => {
-        const isAlreadyInUserMovies = globalState.state.myWatched?.includes(movie) || globalState.state.myUnwatched?.includes(movie);
+        const isAlreadyInUserMovies = globalState.state.myWatched.has(movie) || globalState.state.myUnwatched.has(movie);
         if (!isAlreadyInUserMovies && pod) {
           const datasetName = title
             .replace(/[^a-zA-Z0-9-_ ]/g, '')
@@ -134,8 +134,8 @@ export const MovieCarouselElement = ({
           await saveSolidDatasetAt(newUrl, movieDataset, { fetch: session.fetch });
           dispatch({
             type: 'ADD_TO_MY_COLLECTION',
-            payload: { 
-              tmdbUrl: movie, 
+            payload: {
+              tmdbUrl: movie,
               updates: { me: true, solidUrl: newUrl, dataset: movieDataset }
             }
           });

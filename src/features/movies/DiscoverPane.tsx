@@ -43,7 +43,16 @@ const sectionConfigs: Array<{
 ];
 
 export default function DiscoverPane() {
-  const [state, dispatch] = useReducer(moviesReducer, {});
+  const [state, dispatch] = useReducer(moviesReducer, {
+    myWatched: new Set<string>(),
+    myUnwatched: new Set<string>(),
+    myLiked: new Set<string>(),
+    friendWatched: new Set<string>(),
+    friendUnwatched: new Set<string>(),
+    friendLiked: new Set<string>(),
+    recommendedDict: new Set<string>(),
+    movies: new Map<string, MovieData>(),
+  });
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
@@ -114,9 +123,9 @@ export default function DiscoverPane() {
     }
   }
 
-  async function fetchAndSaveRecommendations(movieDict: { [key: string]: MovieData }) {
+  async function fetchAndSaveRecommendations(movieDict: Map<string, MovieData>) {
     try {
-      const userMovies = Object.values(movieDict).filter(x => x.me && !x.recommended);
+      const userMovies = Array.from(movieDict.values()).filter(x => x.me && !x.recommended);
       const sampledTitles = sampleUserMovies(userMovies, 10);
       const recommendedList = await fetchRecommendations(sampledTitles);
 
@@ -191,17 +200,17 @@ export default function DiscoverPane() {
   const isDataEmpty = () => {
     const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = state;
     return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked]
-      .every(arr => arr && !arr.length);
+      .every(set => set && set.size === 0);
   };
 
   const handleAddPopupSave = async (media: MediaData) => {
-    if (!Object.values(state.movies || {}).some((x: MovieData) => x.title === media.title)) {
+    if (!Array.from(state.movies.values()).some((x: MovieData) => x.title === media.title)) {
       await saveMovie(media, false);
     }
   };
 
   const handleAddPopupWatch = async (media: MediaData) => {
-    let data = Object.values(state.movies || {}).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
+    let data = Array.from(state.movies.values()).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -249,16 +258,16 @@ export default function DiscoverPane() {
 
       {!loadingState.isLoading && !loadingState.error && (
         sectionConfigs.map(({ title, key, type }) => {
-          const items = state[key] as string[] | undefined;
-          if (items?.length) {
+          const items = state[key] as Set<string>;
+          if (items && items.size > 0) {
             return (
               <div key={key}>
                 <h3 style="margin-left: 2%;">{title}</h3>
                 <Carousel>
-                  {items.map(movie => (
+                  {Array.from(items).map(movie => (
                     <MovieCarouselElement
                       key={movie}
-                      movieData={state.movies?.[movie]!}
+                      movieData={state.movies.get(movie)!}
                       movie={movie}
                       type={type}
                       session={session}

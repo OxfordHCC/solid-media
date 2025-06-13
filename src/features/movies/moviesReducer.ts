@@ -1,7 +1,7 @@
-import { MovieData, State } from './types';
+import { MovieData, State, CategorizedMovies } from './types';
 
 export type MoviesAction =
-  | { type: 'LOAD_DATA'; payload: { categorizedMovies: any; movieDict: { [key: string]: MovieData } } }
+  | { type: 'LOAD_DATA'; payload: { categorizedMovies: CategorizedMovies; movieDict: Map<string, MovieData> } }
   | { type: 'ADD_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
@@ -21,19 +21,22 @@ export function moviesReducer(state: State, action: MoviesAction): State {
 
     case 'ADD_MOVIE': {
       const { movieData, tmdbUrl } = action.payload;
-      const newState = { ...state, movies: { ...state.movies, [tmdbUrl]: movieData } };
+      const newMovies = new Map(state.movies);
+      newMovies.set(tmdbUrl, movieData);
+
+      const newState: State = {
+        ...state,
+        movies: newMovies,
+      };
 
       if (!movieData.recommended) {
         if (!movieData.watched) {
-          newState.myUnwatched = [tmdbUrl, ...(state.myUnwatched || [])];
+          newState.myUnwatched.add(tmdbUrl);
         } else {
-          newState.myWatched = [tmdbUrl, ...(state.myWatched || [])];
+          newState.myWatched.add(tmdbUrl);
         }
       } else {
-        newState.recommendedDict = [
-          tmdbUrl,
-          ...(state.recommendedDict || []).filter((x: string) => x !== tmdbUrl)
-        ];
+        newState.recommendedDict.add(tmdbUrl);
       }
 
       return newState;
@@ -41,94 +44,133 @@ export function moviesReducer(state: State, action: MoviesAction): State {
 
     case 'UPDATE_MOVIE': {
       const { tmdbUrl, updates } = action.payload;
+      const newMovies = new Map(state.movies);
+      const currentMovie = newMovies.get(tmdbUrl);
+      if (currentMovie) {
+        newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
+      }
       return {
         ...state,
-        movies: {
-          ...state.movies,
-          [tmdbUrl]: { ...state.movies![tmdbUrl], ...updates }
-        }
+        movies: newMovies
       };
     }
 
     case 'REMOVE_MOVIE': {
       const { tmdbUrl, removeFromDict } = action.payload;
-      const { [tmdbUrl]: deleted, ...remainingMovies } = state.movies!;
+      const newMovies = new Map(state.movies);
+      if (removeFromDict) {
+        newMovies.delete(tmdbUrl);
+      }
+
+      const newMyUnwatched = new Set(state.myUnwatched);
+      const newMyWatched = new Set(state.myWatched);
+      const newMyLiked = new Set(state.myLiked);
+      const newRecommendedDict = new Set(state.recommendedDict);
+
+      newMyUnwatched.delete(tmdbUrl);
+      newMyWatched.delete(tmdbUrl);
+      newMyLiked.delete(tmdbUrl);
+      newRecommendedDict.delete(tmdbUrl);
 
       return {
         ...state,
-        myUnwatched: (state.myUnwatched || []).filter(x => x !== tmdbUrl),
-        myWatched: (state.myWatched || []).filter(x => x !== tmdbUrl),
-        myLiked: (state.myLiked || []).filter(x => x !== tmdbUrl),
-        recommendedDict: (state.recommendedDict || []).filter(x => x !== tmdbUrl),
-        movies: removeFromDict ? remainingMovies : state.movies,
+        myUnwatched: newMyUnwatched,
+        myWatched: newMyWatched,
+        myLiked: newMyLiked,
+        recommendedDict: newRecommendedDict,
+        movies: newMovies,
       };
     }
 
     case 'TOGGLE_LIKE': {
       const { tmdbUrl, liked, dataset } = action.payload;
-      const newState = {
-        ...state,
-        movies: {
-          ...state.movies,
-          [tmdbUrl]: {
-            ...state.movies![tmdbUrl],
-            liked,
-            dataset
-          }
-        }
-      };
-
-      if (liked === true) {
-        newState.myLiked = [tmdbUrl, ...(state.myLiked || [])];
-      } else if (liked === false) {
-        newState.myLiked = (state.myLiked || []).filter(x => x !== tmdbUrl);
-      } else {
-        newState.myLiked = (state.myLiked || []).filter(x => x !== tmdbUrl);
+      const newMovies = new Map(state.movies);
+      const currentMovie = newMovies.get(tmdbUrl);
+      if (currentMovie) {
+        newMovies.set(tmdbUrl, {
+          ...currentMovie,
+          liked,
+          dataset
+        });
       }
 
-      return newState;
+      const newMyLiked = new Set(state.myLiked);
+      if (liked === true) {
+        newMyLiked.add(tmdbUrl);
+      } else {
+        newMyLiked.delete(tmdbUrl);
+      }
+
+      return {
+        ...state,
+        movies: newMovies,
+        myLiked: newMyLiked
+      };
     }
 
     case 'TOGGLE_WATCH': {
       const { tmdbUrl, watched, dataset } = action.payload;
-      const newState = {
-        ...state,
-        movies: {
-          ...state.movies,
-          [tmdbUrl]: {
-            ...state.movies![tmdbUrl],
-            watched,
-            dataset
-          }
-        }
-      };
-
-      if (watched) {
-        newState.myUnwatched = (state.myUnwatched || []).filter(x => x !== tmdbUrl);
-        newState.recommendedDict = (state.recommendedDict || []).filter(x => x !== tmdbUrl);
-        newState.myWatched = [tmdbUrl, ...(state.myWatched || [])];
-      } else {
-        newState.myWatched = (state.myWatched || []).filter(x => x !== tmdbUrl);
-        newState.myUnwatched = [tmdbUrl, ...(state.myUnwatched || [])];
+      const newMovies = new Map(state.movies);
+      const currentMovie = newMovies.get(tmdbUrl);
+      if (currentMovie) {
+        newMovies.set(tmdbUrl, {
+          ...currentMovie,
+          watched,
+          dataset
+        });
       }
 
-      return newState;
+      const newMyUnwatched = new Set(state.myUnwatched);
+      const newMyWatched = new Set(state.myWatched);
+      const newRecommendedDict = new Set(state.recommendedDict);
+
+      if (watched) {
+        newMyUnwatched.delete(tmdbUrl);
+        newRecommendedDict.delete(tmdbUrl);
+        newMyWatched.add(tmdbUrl);
+      } else {
+        newMyWatched.delete(tmdbUrl);
+        newMyUnwatched.add(tmdbUrl);
+      }
+
+      return {
+        ...state,
+        movies: newMovies,
+        myUnwatched: newMyUnwatched,
+        myWatched: newMyWatched,
+        recommendedDict: newRecommendedDict,
+      };
     }
 
     case 'ADD_TO_MY_COLLECTION': {
       const { tmdbUrl, updates } = action.payload;
+      const newMovies = new Map(state.movies);
+      const currentMovie = newMovies.get(tmdbUrl);
+      if (currentMovie) {
+        newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
+      }
+
+      const newMyUnwatched = new Set(state.myUnwatched);
+      newMyUnwatched.add(tmdbUrl);
+
       return {
         ...state,
-        myUnwatched: [tmdbUrl, ...(state.myUnwatched || [])],
-        movies: {
-          ...state.movies,
-          [tmdbUrl]: { ...state.movies![tmdbUrl], ...updates }
-        }
+        myUnwatched: newMyUnwatched,
+        movies: newMovies,
       };
     }
 
     case 'RESET_STATE':
-      return {};
+      return {
+        myWatched: new Set<string>(),
+        myUnwatched: new Set<string>(),
+        myLiked: new Set<string>(),
+        friendWatched: new Set<string>(),
+        friendUnwatched: new Set<string>(),
+        friendLiked: new Set<string>(),
+        recommendedDict: new Set<string>(),
+        movies: new Map<string, MovieData>(),
+      };
 
     default:
       return state;

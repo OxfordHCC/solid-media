@@ -39,14 +39,14 @@ export type MovieData = {
 };
 
 export type State = {
-  myWatched?: string[],
-  myUnwatched?: string[],
-  myLiked?: string[],
-  friendWatched?: string[],
-  friendUnwatched?: string[],
-  friendLiked?: string[],
-  recommendedDict?: string[],
-  movies?: { [key: string]: MovieData },
+  myWatched: Set<string>,
+  myUnwatched: Set<string>,
+  myLiked: Set<string>,
+  friendWatched: Set<string>,
+  friendUnwatched: Set<string>,
+  friendLiked: Set<string>,
+  recommendedDict: Set<string>,
+  movies: Map<string, MovieData>,
 };
 
 export interface PersonInfo {
@@ -59,11 +59,11 @@ export interface MovieListItem extends PersonInfo {
 }
 
 export interface CategorizedMovies {
-  myWatched: string[];
-  myUnwatched: string[];
-  myLiked: string[];
-  friendWatched: string[];
-  friendUnwatched: string[];
-  friendLiked: string[];
-  recommendedDict: string[];
+  myWatched: Set<string>;
+  myUnwatched: Set<string>;
+  myLiked: Set<string>;
+  friendWatched: Set<string>;
+  friendUnwatched: Set<string>;
+  friendLiked: Set<string>;
+  recommendedDict: Set<string>;
 }
