@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useReducer } from 'preact/hooks';
 import AddPopup from './AddMovies';
 import AddFriends from '../../components/AddFriends';
 import Logout from '../../components/Logout';
@@ -23,6 +23,7 @@ import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
 import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
+import { moviesReducer, MoviesAction } from './moviesReducer';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
@@ -42,7 +43,7 @@ const sectionConfigs: Array<{
 ];
 
 export default function DiscoverPane() {
-  const [giantState, setGiantState] = useState<State>({});
+  const [state, dispatch] = useReducer(moviesReducer, {});
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
@@ -90,11 +91,10 @@ export default function DiscoverPane() {
       const { movieDict, categorizedMovies } = await loadMoviesData(webID, friends, session.fetch);
 
       // Update state with loaded data
-      setGiantState(prevState => ({
-        ...prevState,
-        ...categorizedMovies,
-        movies: movieDict,
-      }));
+      dispatch({
+        type: 'LOAD_DATA',
+        payload: { categorizedMovies, movieDict }
+      });
 
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
@@ -182,43 +182,26 @@ export default function DiscoverPane() {
   }
 
   function updateStateAfterSave(movieData: MovieData, tmdbUrl: string) {
-    if (!movieData.recommended) {
-      if (!movieData.watched) {
-        setGiantState((state: State) => ({
-          ...state,
-          myUnwatched: [tmdbUrl, ...state.myUnwatched!],
-          movies: { ...state.movies, [tmdbUrl]: movieData },
-        }));
-      } else {
-        setGiantState((state: State) => ({
-          ...state,
-          myWatched: [tmdbUrl, ...state.myWatched!],
-          movies: { ...state.movies, [tmdbUrl]: movieData },
-        }));
-      }
-    } else {
-      setGiantState((state: State) => ({
-        ...state,
-        recommendedDict: [tmdbUrl, ...state.recommendedDict!.filter((x: string) => x !== tmdbUrl)],
-        movies: { ...state.movies, [tmdbUrl]: movieData },
-      }));
-    }
+    dispatch({
+      type: 'ADD_MOVIE',
+      payload: { movieData, tmdbUrl }
+    });
   }
 
   const isDataEmpty = () => {
-    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = giantState;
+    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = state;
     return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked]
       .every(arr => arr && !arr.length);
   };
 
   const handleAddPopupSave = async (media: MediaData) => {
-    if (!Object.values(giantState.movies!).some((x: MovieData) => x.title === media.title)) {
+    if (!Object.values(state.movies || {}).some((x: MovieData) => x.title === media.title)) {
       await saveMovie(media, false);
     }
   };
 
   const handleAddPopupWatch = async (media: MediaData) => {
-    let data = Object.values(giantState.movies!).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
+    let data = Object.values(state.movies || {}).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -266,7 +249,7 @@ export default function DiscoverPane() {
 
       {!loadingState.isLoading && !loadingState.error && (
         sectionConfigs.map(({ title, key, type }) => {
-          const items = giantState[key] as string[] | undefined;
+          const items = state[key] as string[] | undefined;
           if (items?.length) {
             return (
               <div key={key}>
@@ -275,12 +258,12 @@ export default function DiscoverPane() {
                   {items.map(movie => (
                     <MovieCarouselElement
                       key={movie}
-                      movieData={giantState.movies?.[movie]!}
+                      movieData={state.movies?.[movie]!}
                       movie={movie}
                       type={type}
                       session={session}
-                      setState={setGiantState}
-                      globalState={{ state: giantState }}
+                      dispatch={dispatch}
+                      globalState={{ state }}
                       pod={pod}
                     />
                   ))}
