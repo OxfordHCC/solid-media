@@ -9,13 +9,13 @@ import {
   getInteger} from '@inrupt/solid-client';
 import { RDF } from '@inrupt/vocab-common-rdf';
 import { loadData } from '../../apis/tmdb';
-import { MovieData, PersonInfo, MovieListItem, CategorizedMovies, NO_ACCESS } from './types';
+import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
 
 export async function loadMoviesData(
   webID: string,
   friends: string[],
   fetch: typeof window.fetch
-): Promise<{ movieDict: Map<string, MovieData>; categorizedMovies: CategorizedMovies }> {
+): Promise<State> {
   const people: PersonInfo[] = [
     { type: 'me', id: webID },
     ...friends.map(x => ({ type: 'friend' as const, id: x }))
@@ -97,9 +97,9 @@ function extractLikedStatus(things: any[], movieDataset: any): boolean | null {
   return null;
 }
 
-function categorizeMovies(movies: any[]): { movieDict: Map<string, MovieData>; categorizedMovies: CategorizedMovies } {
+function categorizeMovies(movies: any[]): State {
   const movieDict = new Map<string, MovieData>();
-  const categorizedMovies: CategorizedMovies = {
+  const state: State = {
     myWatched: new Set<string>(),
     myUnwatched: new Set<string>(),
     myLiked: new Set<string>(),
@@ -107,22 +107,23 @@ function categorizeMovies(movies: any[]): { movieDict: Map<string, MovieData>; c
     friendUnwatched: new Set<string>(),
     friendLiked: new Set<string>(),
     recommendedDict: new Set<string>(),
+    movies: movieDict,
   };
 
   for (const { type, ...movie } of movies) {
     if (type === 'me') {
       movieDict.set(movie.movie, { ...movie, me: true, friend: movieDict.get(movie.movie)?.friend || false });
 
-      if (movie.watched && !categorizedMovies.myWatched.has(movie.movie)) {
-        categorizedMovies.myWatched.add(movie.movie);
-      } else if (movie.recommended && !categorizedMovies.recommendedDict.has(movie.movie)) {
-        categorizedMovies.recommendedDict.add(movie.movie);
-      } else if (!categorizedMovies.myUnwatched.has(movie.movie)) {
-        categorizedMovies.myUnwatched.add(movie.movie);
+      if (movie.watched && !state.myWatched.has(movie.movie)) {
+        state.myWatched.add(movie.movie);
+      } else if (movie.recommended && !state.recommendedDict.has(movie.movie)) {
+        state.recommendedDict.add(movie.movie);
+      } else if (!state.myUnwatched.has(movie.movie)) {
+        state.myUnwatched.add(movie.movie);
       }
 
-      if (movie.liked && !categorizedMovies.myLiked.has(movie.movie)) {
-        categorizedMovies.myLiked.add(movie.movie);
+      if (movie.liked && !state.myLiked.has(movie.movie)) {
+        state.myLiked.add(movie.movie);
       }
     } else if (type === 'friend') {
       if (!movieDict.has(movie.movie)) {
@@ -132,19 +133,19 @@ function categorizeMovies(movies: any[]): { movieDict: Map<string, MovieData>; c
         movieDict.set(movie.movie, { ...existingMovie, friend: true });
       }
 
-      if (movie.watched && !categorizedMovies.friendWatched.has(movie.movie)) {
-        categorizedMovies.friendWatched.add(movie.movie);
-      } else if (!categorizedMovies.friendUnwatched.has(movie.movie)) {
-        categorizedMovies.friendUnwatched.add(movie.movie);
+      if (movie.watched && !state.friendWatched.has(movie.movie)) {
+        state.friendWatched.add(movie.movie);
+      } else if (!state.friendUnwatched.has(movie.movie)) {
+        state.friendUnwatched.add(movie.movie);
       }
 
-      if (movie.liked && !categorizedMovies.friendLiked.has(movie.movie)) {
-        categorizedMovies.friendLiked.add(movie.movie);
+      if (movie.liked && !state.friendLiked.has(movie.movie)) {
+        state.friendLiked.add(movie.movie);
       }
     }
   }
 
-  return { movieDict, categorizedMovies };
+  return state;
 }
 
 export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {

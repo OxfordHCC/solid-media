@@ -1,7 +1,7 @@
-import { MovieData, State, CategorizedMovies } from './types';
+import { MovieData, State } from './types';
 
 export type MoviesAction =
-  | { type: 'LOAD_DATA'; payload: { categorizedMovies: CategorizedMovies; movieDict: Map<string, MovieData> } }
+  | { type: 'LOAD_DATA'; payload: State }
   | { type: 'ADD_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
@@ -15,8 +15,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
     case 'LOAD_DATA':
       return {
         ...state,
-        ...action.payload.categorizedMovies,
-        movies: action.payload.movieDict,
+        ...action.payload,
       };
 
     case 'ADD_MOVIE': {

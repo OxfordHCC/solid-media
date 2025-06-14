@@ -57,13 +57,3 @@ export interface PersonInfo {
 export interface MovieListItem extends PersonInfo {
   url: string;
 }
-
-export interface CategorizedMovies {
-  myWatched: Set<string>;
-  myUnwatched: Set<string>;
-  myLiked: Set<string>;
-  friendWatched: Set<string>;
-  friendUnwatched: Set<string>;
-  friendLiked: Set<string>;
-  recommendedDict: Set<string>;
-}

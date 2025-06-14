@@ -97,19 +97,19 @@ export default function DiscoverPane() {
       await setupMoviesAcl(moviesAclDataset, pod, webID, friends, session.fetch);
 
       // Load all movies data (user + friends)
-      const { movieDict, categorizedMovies } = await loadMoviesData(webID, friends, session.fetch);
+      const loadedState = await loadMoviesData(webID, friends, session.fetch);
 
       // Update state with loaded data
       dispatch({
         type: 'LOAD_DATA',
-        payload: { categorizedMovies, movieDict }
+        payload: loadedState
       });
 
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
 
       // Fetch and save recommendations
-      await fetchAndSaveRecommendations(movieDict);
+      await fetchAndSaveRecommendations(loadedState.movies);
 
       setLoadingState(prev => ({ ...prev, hasLoaded: true }));
     } catch (error) {
