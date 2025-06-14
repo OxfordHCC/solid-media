@@ -53,6 +53,8 @@ export default function DiscoverPane() {
     recommendedDict: new Set<string>(),
     movies: new Map<string, MovieData>(),
   });
+  const [userMovieCollection, setUserMovieCollection] = useState<Set<string>>(new Set<string>());
+  const [friendMovieCollection, setFriendMovieCollection] = useState<Set<string>>(new Set<string>());
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
@@ -81,6 +83,26 @@ export default function DiscoverPane() {
       loadApplicationData();
     }
   }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
+
+  // Update user collection when user movies change
+  useEffect(() => {
+    const newUserCollection = new Set<string>([
+      ...Array.from(state.myWatched),
+      ...Array.from(state.myUnwatched),
+      ...Array.from(state.myLiked)
+    ]);
+    setUserMovieCollection(newUserCollection);
+  }, [state.myWatched, state.myUnwatched, state.myLiked]);
+
+  // Update friend collection when friend movies change
+  useEffect(() => {
+    const newFriendCollection = new Set<string>([
+      ...Array.from(state.friendWatched),
+      ...Array.from(state.friendUnwatched),
+      ...Array.from(state.friendLiked)
+    ]);
+    setFriendMovieCollection(newFriendCollection);
+  }, [state.friendWatched, state.friendUnwatched, state.friendLiked]);
 
   async function loadApplicationData() {
     try {
@@ -272,7 +294,8 @@ export default function DiscoverPane() {
                       type={type}
                       session={session}
                       dispatch={dispatch}
-                      globalState={{ state }}
+                      userCollection={userMovieCollection}
+                      friendsCollection={friendMovieCollection}
                       pod={pod}
                     />
                   ))}

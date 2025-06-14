@@ -2,7 +2,7 @@ import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
 import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { BASE_URL } from '../../env';
-import { MovieData, State, DATE_FORMAT } from './types';
+import { MovieData, DATE_FORMAT } from './types';
 import { addRating, removeFromDataset, setWatched } from './dataUtils';
 import { MoviesAction } from './moviesReducer';
 
@@ -12,7 +12,8 @@ export interface MovieCarouselElementProps {
   type: 'me' | 'friend';
   session: any;
   dispatch: (action: MoviesAction) => void;
-  globalState: { state: State };
+  userCollection: Set<string>;
+  friendsCollection: Set<string>;
   pod?: string;
 }
 
@@ -22,7 +23,8 @@ export const MovieCarouselElement = ({
   type,
   session,
   dispatch,
-  globalState,
+  userCollection,
+  friendsCollection,
   pod
 }: MovieCarouselElementProps): VNode => {
   const { solidUrl, watched, liked, title, released, image } = movieData;
@@ -107,8 +109,7 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-remove',
       click: async () => {
         await deleteSolidDataset(solidUrl, { fetch: session.fetch });
-        const shouldRemoveFromDict = ![...Array.from(globalState.state.friendWatched), ...Array.from(globalState.state.friendUnwatched)]
-          .some(x => x === movie);
+        const shouldRemoveFromDict = !friendsCollection.has(movie);
         dispatch({
           type: 'REMOVE_MOVIE',
           payload: { tmdbUrl: movie, removeFromDict: shouldRemoveFromDict }
@@ -120,7 +121,7 @@ export const MovieCarouselElement = ({
       text: '➕',
       cssClass: 'carousel-save',
       click: async () => {
-        const isAlreadyInUserMovies = globalState.state.myWatched.has(movie) || globalState.state.myUnwatched.has(movie);
+        const isAlreadyInUserMovies = userCollection.has(movie);
         if (!isAlreadyInUserMovies && pod) {
           const datasetName = title
             .replace(/[^a-zA-Z0-9-_ ]/g, '')
