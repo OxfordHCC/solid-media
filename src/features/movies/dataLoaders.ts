@@ -35,63 +35,64 @@ export async function loadMoviesData(
     ...friends.map(x => ({ type: 'friend' as const, id: x }))
   ];
 
-  const movieList = await loadMovieList(people, fetch);
-  const movieResults = await loadMovieDetails(movieList, fetch);
+  const allMovieResults: RawMovieData[] = [];
 
-  return categorizeMovies(movieResults);
-}
-
-async function loadMovieList(people: PersonInfo[], fetch: typeof window.fetch): Promise<MovieListItem[]> {
-  const movieLists = await Promise.all(
-    people.map(async (person): Promise<MovieListItem[]> => {
+  for (const person of people) {
+    const personMovieList = await loadMovieList(person, fetch);
+    for (const movieItem of personMovieList) {
       try {
-        const parts = person.id.split('/');
-        const pod = parts.slice(0, parts.length - 2).join('/');
-        const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch });
-        const movies = getContainedResourceUrlAll(moviesDataset);
-        return movies.map(url => ({ ...person, url }));
-      } catch {
-        return [];
+        const movieData = await loadMovieDetail(movieItem, fetch);
+        allMovieResults.push(movieData);
+      } catch (error) {
+        console.warn(`Failed to load movie data for ${movieItem.url}:`, error);
       }
-    })
-  );
+    }
+  }
 
-  return movieLists.flat();
+  return categorizeMovies(allMovieResults);
 }
 
-async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window.fetch): Promise<RawMovieData[]> {
-  const movieResults = await Promise.allSettled(
-    movieList.map(async ({ type, url }) => {
-      const movieDataset = await getSolidDataset(url, { fetch });
-      const movieThing = getThing(movieDataset, `${url}#it`)!;
-      const things = getThingAll(movieDataset);
+async function loadMovieList(person: PersonInfo, fetch: typeof window.fetch): Promise<MovieListItem[]> {
+  try {
+    const parts = person.id.split('/');
+    const pod = parts.slice(0, parts.length - 2).join('/');
+    const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch });
+    const movies = getContainedResourceUrlAll(moviesDataset);
+    return movies.map(url => ({ ...person, url }));
+  } catch {
+    return [];
+  }
+}
 
-      // Extract movie properties
-      const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
-      const liked = extractLikedStatus(things, movieDataset);
-      const recommended = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
+async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fetch): Promise<RawMovieData> {
+  const { type, url } = movieItem;
 
-      const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
-      const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
+  const movieDataset = await getSolidDataset(url, { fetch });
+  const movieThing = getThing(movieDataset, `${url}#it`)!;
+  const things = getThingAll(movieDataset);
 
-      const { title, released, icon } = await loadData(tmdbUrl);
+  // Extract movie properties
+  const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
+  const liked = extractLikedStatus(things, movieDataset);
+  const recommended = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
 
-      return {
-        tmdbUrl,
-        solidUrl: url,
-        type,
-        watched,
-        liked,
-        recommended,
-        title,
-        released,
-        image: icon,
-        dataset: movieDataset
-      };
-    })
-  );
+  const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
+  const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 
-  return movieResults.filter(x => x.status === 'fulfilled').map(x => (x as PromiseFulfilledResult<RawMovieData>).value);
+  const { title, released, icon } = await loadData(tmdbUrl);
+
+  return {
+    tmdbUrl,
+    solidUrl: url,
+    type,
+    watched,
+    liked,
+    recommended,
+    title,
+    released,
+    image: icon,
+    dataset: movieDataset
+  };
 }
 
 function extractLikedStatus(things: any[], movieDataset: SolidDataset): boolean | null {
