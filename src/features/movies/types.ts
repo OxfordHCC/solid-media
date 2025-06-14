@@ -48,7 +48,7 @@ export type State = {
   friendUnwatched: Set<string>,
   friendLiked: Set<string>,
   recommendedDict: Set<string>,
-  movies: Map<string, MovieData>,
+  movies: Map<string, MovieData>, // Throughout the code, we assume friends won't update their own movies.
 };
 
 export interface PersonInfo {
