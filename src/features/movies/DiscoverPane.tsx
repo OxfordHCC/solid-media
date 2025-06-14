@@ -147,7 +147,7 @@ export default function DiscoverPane() {
 
   async function fetchAndSaveRecommendations(movieDict: Map<string, MovieData>): Promise<void> {
     try {
-      const userMovies = Array.from(movieDict.values()).filter(x => x.me && !x.recommended);
+      const userMovies = Array.from(movieDict.values()).filter(x => x.type === 'me' && !x.recommended);
       const sampledTitles = sampleUserMovies(userMovies, 10);
       const recommendedList = await fetchRecommendations(sampledTitles);
 
@@ -204,8 +204,7 @@ export default function DiscoverPane() {
       released: media.released,
       image: media.image,
       dataset: movieDataset,
-      me: true,
-      friend: false,
+      type: 'me',
     };
 
     updateStateAfterSave(movieData, media.tmdbUrl);

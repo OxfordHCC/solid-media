@@ -127,7 +127,7 @@ function categorizeMovies(movies: RawMovieData[]): State {
 
   for (const { type, ...movie } of movies) {
     if (type === 'me') {
-      movieDict.set(movie.tmdbUrl, { ...movie, me: true, friend: movieDict.get(movie.tmdbUrl)?.friend || false });
+      movieDict.set(movie.tmdbUrl, { ...movie, type: 'me' });
 
       if (movie.watched && !state.myWatched.has(movie.tmdbUrl)) {
         state.myWatched.add(movie.tmdbUrl);
@@ -142,10 +142,10 @@ function categorizeMovies(movies: RawMovieData[]): State {
       }
     } else if (type === 'friend') {
       if (!movieDict.has(movie.tmdbUrl)) {
-        movieDict.set(movie.tmdbUrl, { ...movie, watched: false, liked: null, me: false, friend: true });
+        movieDict.set(movie.tmdbUrl, { ...movie, watched: false, liked: null, type: 'friend' });
       } else {
         const existingMovie = movieDict.get(movie.tmdbUrl)!;
-        movieDict.set(movie.tmdbUrl, { ...existingMovie, friend: true });
+        movieDict.set(movie.tmdbUrl, { ...existingMovie, type: 'friend' });
       }
 
       if (movie.watched && !state.friendWatched.has(movie.tmdbUrl)) {

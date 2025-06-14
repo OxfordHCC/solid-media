@@ -137,7 +137,7 @@ export const MovieCarouselElement = ({
             type: 'ADD_TO_MY_COLLECTION',
             payload: {
               tmdbUrl: movie,
-              updates: { me: true, solidUrl: newUrl, dataset: movieDataset }
+              updates: { type: 'me', solidUrl: newUrl, dataset: movieDataset }
             }
           });
         }

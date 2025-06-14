@@ -36,8 +36,7 @@ export type MovieData = {
   released: Date,
   image: string,
   dataset: SolidDataset,
-  me: boolean,
-  friend: boolean,
+  type: 'me' | 'friend',
 };
 
 export type State = {
