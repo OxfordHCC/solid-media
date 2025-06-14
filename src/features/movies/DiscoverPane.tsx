@@ -3,9 +3,7 @@ import AddPopup from './AddMovies';
 import AddFriends from '../../components/AddFriends';
 import Logout from '../../components/Logout';
 import { useSession, useAuthenticatedSession } from '../../contexts/SessionContext';
-import { MediaData, getIds, search } from '../../apis/tmdb';
-import { createThing, saveSolidDatasetAt, setUrl, addUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
-import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
+import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import { MovieCarouselElement } from './MovieCarouselElement';
 import Carousel from '../../components/Carousel';
@@ -17,7 +15,8 @@ import {
 } from './types';
 import {
   loadMoviesData,
-  sampleUserMovies
+  sampleUserMovies,
+  saveMovie
 } from './dataLoaders';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
@@ -154,60 +153,13 @@ export default function DiscoverPane() {
         const movies = await search(name);
         const movie = movies.find((x: any) => x.title === name);
         if (movie) {
-          await saveMovie(movie, true);
+          const savedMovie = await saveMovie(movie, pod, session.fetch, true);
+          updateStateAfterSave(savedMovie, movie.tmdbUrl);
         }
       }
     } catch (error) {
       console.error('Error handling recommendations:', error);
     }
-  }
-
-  async function saveMovie(media: MediaData, recommended: Boolean = false, watch: Boolean = false): Promise<MovieData> {
-    const ids = await getIds(media.tmdbUrl);
-
-    const datasetName = media.title
-      .replace(/[^a-zA-Z0-9-_ ]/g, '')
-      .replaceAll(' ', '-')
-      .toLowerCase();
-
-    const datasetUrl = `${pod}/movies/${datasetName}`;
-
-    let movieDataset = createSolidDataset();
-
-    let movie = createThing({ url: `${datasetUrl}#it` });
-
-    const time = new Date();
-
-    movie = setDatetime(movie, DCTERMS.created, time);
-    movie = setDatetime(movie, DCTERMS.modified, time);
-    movie = setUrl(movie, RDF.type, 'https://schema.org/Movie');
-    if (watch) movie = setUrl(movie, RDF.type, 'https://schema.org/WatchAction');
-    if (recommended) movie = setUrl(movie, RDF.type, 'https://schema.org/Recommendation');
-    movie = setStringNoLocale(movie, 'https://schema.org/name', media.title);
-    movie = setStringNoLocale(movie, 'https://schema.org/description', media.description);
-    movie = setStringNoLocale(movie, 'https://schema.org/image', media.image);
-    movie = setDatetime(movie, 'https://schema.org/datePublished', media.released);
-    for (const id of ids) movie = addStringNoLocale(movie, 'https://schema.org/sameAs', id);
-
-    movieDataset = setThing(movieDataset, movie);
-
-    await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch: session.fetch });
-
-    const movieData: MovieData = {
-      tmdbUrl: media.tmdbUrl,
-      solidUrl: datasetUrl,
-      watched: Boolean(watch),
-      liked: null,
-      recommended: Boolean(recommended),
-      title: media.title,
-      released: media.released,
-      image: media.image,
-      dataset: movieDataset,
-      type: 'me',
-    };
-
-    updateStateAfterSave(movieData, media.tmdbUrl);
-    return movieData;
   }
 
   function updateStateAfterSave(movieData: MovieData, tmdbUrl: string): void {
@@ -225,7 +177,8 @@ export default function DiscoverPane() {
 
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
     if (!Array.from(state.movies.values()).some(x => x.title === media.title)) {
-      await saveMovie(media, false);
+      const savedMovie = await saveMovie(media, pod, session.fetch, false);
+      updateStateAfterSave(savedMovie, media.tmdbUrl);
     }
   };
 
@@ -237,10 +190,12 @@ export default function DiscoverPane() {
       const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
 
       if (movieWebIDPod !== pod) {
-        data = await saveMovie(media, false, true);
+        data = await saveMovie(media, pod, session.fetch, false, true);
+        updateStateAfterSave(data, media.tmdbUrl);
       }
     } else {
-      data = await saveMovie(media, false, true);
+      data = await saveMovie(media, pod, session.fetch, false, true);
+      updateStateAfterSave(data, media.tmdbUrl);
     }
   };
 

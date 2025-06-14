@@ -4,6 +4,7 @@ import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolid
 import { BASE_URL } from '../../env';
 import { MovieData, DATE_FORMAT } from './types';
 import { addRating, removeFromDataset, setWatched } from './dataUtils';
+import { generateDatasetName } from './dataLoaders';
 import { MoviesAction } from './moviesReducer';
 
 export interface MovieCarouselElementProps {
@@ -123,10 +124,7 @@ export const MovieCarouselElement = ({
       click: async () => {
         const isAlreadyInUserMovies = userCollection.has(movie);
         if (!isAlreadyInUserMovies && pod) {
-          const datasetName = title
-            .replace(/[^a-zA-Z0-9-_ ]/g, '')
-            .replaceAll(' ', '-')
-            .toLowerCase();
+          const datasetName = generateDatasetName(title);
           let movieDataset = createSolidDataset();
           let thing = getThing(dataset, `${solidUrl}#it`)!;
           thing = Object.freeze({ ...thing, url: `${pod}/movies/${datasetName}#it` });

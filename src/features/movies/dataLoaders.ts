@@ -7,9 +7,19 @@ import {
   getThingAll,
   getResourceAcl,
   getInteger,
-  SolidDataset} from '@inrupt/solid-client';
-import { RDF } from '@inrupt/vocab-common-rdf';
-import { loadData } from '../../apis/tmdb';
+  SolidDataset,
+  createThing,
+  saveSolidDatasetAt,
+  setUrl,
+  addUrl,
+  setDatetime,
+  setThing,
+  createSolidDataset,
+  setStringNoLocale,
+  addStringNoLocale
+} from '@inrupt/solid-client';
+import { RDF, DCTERMS } from '@inrupt/vocab-common-rdf';
+import { loadData, getIds, MediaData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
 
 export async function loadMoviesData(
@@ -155,4 +165,59 @@ export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): s
 
   const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
   return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
+}
+
+export function generateDatasetName(title: string): string {
+  return title
+    .replace(/[^a-zA-Z0-9-_ ]/g, '')
+    .replaceAll(' ', '-')
+    .toLowerCase();
+}
+
+export async function saveMovie(
+  media: MediaData,
+  pod: string,
+  fetch: typeof window.fetch,
+  recommended: boolean = false,
+  watch: boolean = false
+): Promise<MovieData> {
+  const ids = await getIds(media.tmdbUrl);
+
+  const datasetName = generateDatasetName(media.title);
+  const datasetUrl = `${pod}/movies/${datasetName}`;
+
+  let movieDataset = createSolidDataset();
+  let movie = createThing({ url: `${datasetUrl}#it` });
+
+  const time = new Date();
+
+  movie = setDatetime(movie, DCTERMS.created, time);
+  movie = setDatetime(movie, DCTERMS.modified, time);
+  movie = setUrl(movie, RDF.type, 'https://schema.org/Movie');
+  if (watch) movie = addUrl(movie, RDF.type, 'https://schema.org/WatchAction');
+  if (recommended) movie = addUrl(movie, RDF.type, 'https://schema.org/Recommendation');
+  movie = setStringNoLocale(movie, 'https://schema.org/name', media.title);
+  movie = setStringNoLocale(movie, 'https://schema.org/description', media.description);
+  movie = setStringNoLocale(movie, 'https://schema.org/image', media.image);
+  movie = setDatetime(movie, 'https://schema.org/datePublished', media.released);
+  for (const id of ids) movie = addStringNoLocale(movie, 'https://schema.org/sameAs', id);
+
+  movieDataset = setThing(movieDataset, movie);
+
+  await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch });
+
+  const movieData: MovieData = {
+    tmdbUrl: media.tmdbUrl,
+    solidUrl: datasetUrl,
+    watched: Boolean(watch),
+    liked: null,
+    recommended: Boolean(recommended),
+    title: media.title,
+    released: media.released,
+    image: media.image,
+    dataset: movieDataset,
+    type: 'me',
+  };
+
+  return movieData;
 }
