@@ -17,7 +17,7 @@ import {
   loadMoviesData,
   sampleUserMovies,
   saveMovie
-} from './dataLoaders';
+} from './remoteMovieDataUtils';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
 import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';

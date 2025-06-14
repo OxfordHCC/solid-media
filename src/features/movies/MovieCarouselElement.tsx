@@ -3,8 +3,8 @@ import { CarouselElement } from '../../components/Carousel';
 import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { BASE_URL } from '../../env';
 import { MovieData, DATE_FORMAT } from './types';
-import { addRating, removeFromDataset, setWatched } from './dataUtils';
-import { generateDatasetName } from './dataLoaders';
+import { addRating, removeFromDataset, setWatched } from './datasetUtils';
+import { generateDatasetName } from './remoteMovieDataUtils';
 import { MoviesAction } from './moviesReducer';
 
 export interface MovieCarouselElementProps {
