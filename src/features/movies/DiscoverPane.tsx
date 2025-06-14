@@ -4,7 +4,7 @@ import AddFriends from '../../components/AddFriends';
 import Logout from '../../components/Logout';
 import { useSession, useAuthenticatedSession } from '../../contexts/SessionContext';
 import { MediaData, getIds, search } from '../../apis/tmdb';
-import { createThing, saveSolidDatasetAt, setUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
+import { createThing, saveSolidDatasetAt, setUrl, addUrl, setDatetime, setThing, createSolidDataset, setStringNoLocale, addStringNoLocale } from '@inrupt/solid-client';
 import { DCTERMS, RDF, SCHEMA_INRUPT } from '@inrupt/vocab-common-rdf';
 import logo from '../../assets/logo.png';
 import { MovieCarouselElement } from './MovieCarouselElement';
@@ -218,8 +218,8 @@ export default function DiscoverPane() {
   }
 
   const isDataEmpty = () => {
-    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked } = state;
-    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked]
+    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended } = state;
+    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended]
       .every(set => set && set.size === 0);
   };
 

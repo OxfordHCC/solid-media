@@ -24,22 +24,27 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       const newMovies = new Map(state.movies);
       newMovies.set(tmdbUrl, movieData);
 
-      const newState: State = {
-        ...state,
-        movies: newMovies,
-      };
+      const newMyUnwatched = new Set(state.myUnwatched);
+      const newMyWatched = new Set(state.myWatched);
+      const newRecommended = new Set(state.recommended);
 
       if (!movieData.recommended) {
         if (!movieData.watched) {
-          newState.myUnwatched.add(tmdbUrl);
+          newMyUnwatched.add(tmdbUrl);
         } else {
-          newState.myWatched.add(tmdbUrl);
+          newMyWatched.add(tmdbUrl);
         }
       } else {
-        newState.recommended.add(tmdbUrl);
+        newRecommended.add(tmdbUrl);
       }
 
-      return newState;
+      return {
+        ...state,
+        movies: newMovies,
+        myUnwatched: newMyUnwatched,
+        myWatched: newMyWatched,
+        recommended: newRecommended,
+      };
     }
 
     case 'UPDATE_MOVIE': {
