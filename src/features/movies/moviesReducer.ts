@@ -45,7 +45,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
     case 'UPDATE_MOVIE': {
       const { tmdbUrl, updates } = action.payload;
       const newMovies = new Map(state.movies);
-      const currentMovie = newMovies.get(tmdbUrl);
+      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
       }
@@ -85,7 +85,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
     case 'TOGGLE_LIKE': {
       const { tmdbUrl, liked, dataset } = action.payload;
       const newMovies = new Map(state.movies);
-      const currentMovie = newMovies.get(tmdbUrl);
+      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, {
           ...currentMovie,
@@ -111,7 +111,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
     case 'TOGGLE_WATCH': {
       const { tmdbUrl, watched, dataset } = action.payload;
       const newMovies = new Map(state.movies);
-      const currentMovie = newMovies.get(tmdbUrl);
+      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, {
           ...currentMovie,
@@ -145,7 +145,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
     case 'ADD_TO_MY_COLLECTION': {
       const { tmdbUrl, updates } = action.payload;
       const newMovies = new Map(state.movies);
-      const currentMovie = newMovies.get(tmdbUrl);
+      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
       }

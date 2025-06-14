@@ -6,10 +6,24 @@ import {
   getThing,
   getThingAll,
   getResourceAcl,
-  getInteger} from '@inrupt/solid-client';
+  getInteger,
+  SolidDataset} from '@inrupt/solid-client';
 import { RDF } from '@inrupt/vocab-common-rdf';
 import { loadData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
+
+type RawMovieData = {
+  movie: string;
+  solidUrl: string;
+  type: 'me' | 'friend';
+  watched: boolean;
+  liked: boolean | null;
+  recommended: boolean;
+  title: string;
+  released: Date;
+  image: string;
+  dataset: SolidDataset;
+};
 
 export async function loadMoviesData(
   webID: string,
@@ -45,7 +59,7 @@ async function loadMovieList(people: PersonInfo[], fetch: typeof window.fetch): 
   return movieLists.flat();
 }
 
-async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window.fetch) {
+async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window.fetch): Promise<RawMovieData[]> {
   const movieResults = await Promise.allSettled(
     movieList.map(async ({ type, url }) => {
       const movieDataset = await getSolidDataset(url, { fetch });
@@ -77,10 +91,10 @@ async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window
     })
   );
 
-  return movieResults.filter(x => x.status === 'fulfilled').map(x => (x as PromiseFulfilledResult<any>).value);
+  return movieResults.filter(x => x.status === 'fulfilled').map(x => (x as PromiseFulfilledResult<RawMovieData>).value);
 }
 
-function extractLikedStatus(things: any[], movieDataset: any): boolean | null {
+function extractLikedStatus(things: any[], movieDataset: SolidDataset): boolean | null {
   const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
 
   if (!review) return null;
@@ -97,7 +111,7 @@ function extractLikedStatus(things: any[], movieDataset: any): boolean | null {
   return null;
 }
 
-function categorizeMovies(movies: any[]): State {
+function categorizeMovies(movies: RawMovieData[]): State {
   const movieDict = new Map<string, MovieData>();
   const state: State = {
     myWatched: new Set<string>(),

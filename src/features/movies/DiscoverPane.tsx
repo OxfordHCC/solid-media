@@ -123,7 +123,7 @@ export default function DiscoverPane() {
     }
   }
 
-  async function fetchAndSaveRecommendations(movieDict: Map<string, MovieData>) {
+  async function fetchAndSaveRecommendations(movieDict: Map<string, MovieData>): Promise<void> {
     try {
       const userMovies = Array.from(movieDict.values()).filter(x => x.me && !x.recommended);
       const sampledTitles = sampleUserMovies(userMovies, 10);
@@ -141,7 +141,7 @@ export default function DiscoverPane() {
     }
   }
 
-  async function saveMovie(media: MediaData, recommended: Boolean = false, watch: Boolean = false) {
+  async function saveMovie(media: MediaData, recommended: Boolean = false, watch: Boolean = false): Promise<MovieData> {
     const ids = await getIds(media.tmdbUrl);
 
     const datasetName = media.title
@@ -172,7 +172,7 @@ export default function DiscoverPane() {
 
     await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch: session.fetch });
 
-    const movieData = {
+    const movieData: MovieData = {
       movie: media.tmdbUrl,
       solidUrl: datasetUrl,
       watched: Boolean(watch),
@@ -190,7 +190,7 @@ export default function DiscoverPane() {
     return movieData;
   }
 
-  function updateStateAfterSave(movieData: MovieData, tmdbUrl: string) {
+  function updateStateAfterSave(movieData: MovieData, tmdbUrl: string): void {
     dispatch({
       type: 'ADD_MOVIE',
       payload: { movieData, tmdbUrl }
@@ -203,14 +203,14 @@ export default function DiscoverPane() {
       .every(set => set && set.size === 0);
   };
 
-  const handleAddPopupSave = async (media: MediaData) => {
-    if (!Array.from(state.movies.values()).some((x: MovieData) => x.title === media.title)) {
+  const handleAddPopupSave = async (media: MediaData): Promise<void> => {
+    if (!Array.from(state.movies.values()).some(x => x.title === media.title)) {
       await saveMovie(media, false);
     }
   };
 
-  const handleAddPopupWatch = async (media: MediaData) => {
-    let data = Array.from(state.movies.values()).find((x: MovieData) => x.title === media.title) as MovieData | undefined;
+  const handleAddPopupWatch = async (media: MediaData): Promise<void> => {
+    let data = Array.from(state.movies.values()).find(x => x.title === media.title);
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
