@@ -1,12 +1,13 @@
 import { MovieData, State } from './types';
+import { SolidDataset } from '@inrupt/solid-client';
 
 export type MoviesAction =
   | { type: 'LOAD_DATA'; payload: State }
   | { type: 'ADD_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
-  | { type: 'TOGGLE_LIKE'; payload: { tmdbUrl: string; liked: boolean | null; dataset: MovieData } }
-  | { type: 'TOGGLE_WATCH'; payload: { tmdbUrl: string; watched: boolean; dataset: MovieData } }
+  | { type: 'TOGGLE_LIKE'; payload: { tmdbUrl: string; liked: boolean | null; dataset: SolidDataset } }
+  | { type: 'TOGGLE_WATCH'; payload: { tmdbUrl: string; watched: boolean; dataset: SolidDataset } }
   | { type: 'ADD_TO_MY_COLLECTION'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'RESET_STATE' };
 

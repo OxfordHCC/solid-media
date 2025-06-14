@@ -1,3 +1,5 @@
+import { SolidDataset } from "@inrupt/solid-client";
+
 export const DATE_FORMAT: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: 'long',
@@ -33,7 +35,7 @@ export type MovieData = {
   title: string,
   released: Date,
   image: string,
-  dataset: any,
+  dataset: SolidDataset,
   me: boolean,
   friend: boolean,
 };
