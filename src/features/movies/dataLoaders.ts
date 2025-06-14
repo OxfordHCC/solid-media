@@ -12,19 +12,6 @@ import { RDF } from '@inrupt/vocab-common-rdf';
 import { loadData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
 
-type RawMovieData = {
-  tmdbUrl: string;
-  solidUrl: string;
-  type: 'me' | 'friend';
-  watched: boolean;
-  liked: boolean | null;
-  recommended: boolean;
-  title: string;
-  released: Date;
-  image: string;
-  dataset: SolidDataset;
-};
-
 export async function loadMoviesData(
   webID: string,
   friends: string[],
@@ -35,7 +22,7 @@ export async function loadMoviesData(
     ...friends.map(x => ({ type: 'friend' as const, id: x }))
   ];
 
-  const allMovieResults: RawMovieData[] = [];
+  const allMovieResults: MovieData[] = [];
 
   for (const person of people) {
     const personMovieList = await loadMovieList(person, fetch);
@@ -64,7 +51,7 @@ async function loadMovieList(person: PersonInfo, fetch: typeof window.fetch): Pr
   }
 }
 
-async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fetch): Promise<RawMovieData> {
+async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fetch): Promise<MovieData> {
   const { type, url } = movieItem;
 
   const movieDataset = await getSolidDataset(url, { fetch });
@@ -112,7 +99,7 @@ function extractLikedStatus(things: any[], movieDataset: SolidDataset): boolean 
   return null;
 }
 
-function categorizeMovies(movies: RawMovieData[]): State {
+function categorizeMovies(movies: MovieData[]): State {
   const movieDict = new Map<string, MovieData>();
   const state: State = {
     myWatched: new Set<string>(),
@@ -125,36 +112,34 @@ function categorizeMovies(movies: RawMovieData[]): State {
     movies: movieDict,
   };
 
-  for (const { type, ...movie } of movies) {
-    if (type === 'me') {
-      movieDict.set(movie.tmdbUrl, { ...movie, type: 'me' });
+  for (const movie of movies) {
+    if (movie.type === 'me') {
+      movieDict.set(movie.tmdbUrl, movie);
 
-      if (movie.watched && !state.myWatched.has(movie.tmdbUrl)) {
+      if (movie.watched) {
         state.myWatched.add(movie.tmdbUrl);
-      } else if (movie.recommended && !state.recommendedDict.has(movie.tmdbUrl)) {
+      } else if (movie.recommended) {
         state.recommendedDict.add(movie.tmdbUrl);
-      } else if (!state.myUnwatched.has(movie.tmdbUrl)) {
+      } else {
         state.myUnwatched.add(movie.tmdbUrl);
       }
 
-      if (movie.liked && !state.myLiked.has(movie.tmdbUrl)) {
+      if (movie.liked) {
         state.myLiked.add(movie.tmdbUrl);
       }
-    } else if (type === 'friend') {
+    } else if (movie.type === 'friend') {
       if (!movieDict.has(movie.tmdbUrl)) {
-        movieDict.set(movie.tmdbUrl, { ...movie, watched: false, liked: null, type: 'friend' });
-      } else {
-        const existingMovie = movieDict.get(movie.tmdbUrl)!;
-        movieDict.set(movie.tmdbUrl, { ...existingMovie, type: 'friend' });
+        // Friend version is added only if no 'me' version exists
+        movieDict.set(movie.tmdbUrl, movie);
       }
 
-      if (movie.watched && !state.friendWatched.has(movie.tmdbUrl)) {
+      if (movie.watched) {
         state.friendWatched.add(movie.tmdbUrl);
-      } else if (!state.friendUnwatched.has(movie.tmdbUrl)) {
+      } else {
         state.friendUnwatched.add(movie.tmdbUrl);
       }
 
-      if (movie.liked && !state.friendLiked.has(movie.tmdbUrl)) {
+      if (movie.liked) {
         state.friendLiked.add(movie.tmdbUrl);
       }
     }
@@ -164,13 +149,10 @@ function categorizeMovies(movies: RawMovieData[]): State {
 }
 
 export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
-  const sampledTitles: string[] = [];
-
   if (userMovies.length <= maxSamples) {
     return userMovies.map(movie => movie.title);
   }
 
   const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-  const sampledMovies = shuffledMovies.slice(0, maxSamples);
-  return sampledMovies.map(movie => movie.title);
+  return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
 }

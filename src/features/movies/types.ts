@@ -28,15 +28,15 @@ export const READ_ACCESS = {
 
 export type MovieData = {
   tmdbUrl: string,
-  solidUrl: string,
   watched: boolean,
   liked: boolean | null,
   recommended: boolean,
   title: string,
   released: Date,
   image: string,
-  dataset: SolidDataset,
+  solidUrl: string,
   type: 'me' | 'friend',
+  dataset: SolidDataset,
 };
 
 export type State = {
@@ -48,6 +48,7 @@ export type State = {
   friendLiked: Set<string>,
   recommendedDict: Set<string>,
   movies: Map<string, MovieData>, // Throughout the code, we assume friends won't update their own movies.
+  // When two versions of the same movie exists, the 'me' version is always preferred.
 };
 
 export interface PersonInfo {
