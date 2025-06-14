@@ -108,7 +108,7 @@ function categorizeMovies(movies: MovieData[]): State {
     friendWatched: new Set<string>(),
     friendUnwatched: new Set<string>(),
     friendLiked: new Set<string>(),
-    recommendedDict: new Set<string>(),
+    recommended: new Set<string>(),
     movies: movieDict,
   };
 
@@ -119,7 +119,7 @@ function categorizeMovies(movies: MovieData[]): State {
       if (movie.watched) {
         state.myWatched.add(movie.tmdbUrl);
       } else if (movie.recommended) {
-        state.recommendedDict.add(movie.tmdbUrl);
+        state.recommended.add(movie.tmdbUrl);
       } else {
         state.myUnwatched.add(movie.tmdbUrl);
       }

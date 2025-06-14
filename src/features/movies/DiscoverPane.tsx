@@ -27,13 +27,12 @@ import { moviesReducer, MoviesAction } from './moviesReducer';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
-// 合并 carouselUtils.tsx 的 sectionConfigs 和 renderCarouselSections
 const sectionConfigs: Array<{
   title: string;
   key: keyof State;
   type: 'friend' | 'me';
 }> = [
-  { title: 'Recommended Movies', key: 'recommendedDict', type: 'me' },
+  { title: 'Recommended Movies', key: 'recommended', type: 'me' },
   { title: 'Friends Collection', key: 'friendWatched', type: 'friend' },
   { title: 'Friends Wishlist', key: 'friendUnwatched', type: 'friend' },
   { title: 'Friends enjoyed', key: 'friendLiked', type: 'friend' },
@@ -50,7 +49,7 @@ export default function DiscoverPane() {
     friendWatched: new Set<string>(),
     friendUnwatched: new Set<string>(),
     friendLiked: new Set<string>(),
-    recommendedDict: new Set<string>(),
+    recommended: new Set<string>(),
     movies: new Map<string, MovieData>(),
   });
   const [userMovieCollection, setUserMovieCollection] = useState<Set<string>>(new Set<string>());

@@ -36,7 +36,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
           newState.myWatched.add(tmdbUrl);
         }
       } else {
-        newState.recommendedDict.add(tmdbUrl);
+        newState.recommended.add(tmdbUrl);
       }
 
       return newState;
@@ -65,19 +65,19 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       const newMyUnwatched = new Set(state.myUnwatched);
       const newMyWatched = new Set(state.myWatched);
       const newMyLiked = new Set(state.myLiked);
-      const newRecommendedDict = new Set(state.recommendedDict);
+      const newRecommended = new Set(state.recommended);
 
       newMyUnwatched.delete(tmdbUrl);
       newMyWatched.delete(tmdbUrl);
       newMyLiked.delete(tmdbUrl);
-      newRecommendedDict.delete(tmdbUrl);
+      newRecommended.delete(tmdbUrl);
 
       return {
         ...state,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
         myLiked: newMyLiked,
-        recommendedDict: newRecommendedDict,
+        recommended: newRecommended,
         movies: newMovies,
       };
     }
@@ -122,11 +122,11 @@ export function moviesReducer(state: State, action: MoviesAction): State {
 
       const newMyUnwatched = new Set(state.myUnwatched);
       const newMyWatched = new Set(state.myWatched);
-      const newRecommendedDict = new Set(state.recommendedDict);
+      const newRecommended = new Set(state.recommended);
 
       if (watched) {
         newMyUnwatched.delete(tmdbUrl);
-        newRecommendedDict.delete(tmdbUrl);
+        newRecommended.delete(tmdbUrl);
         newMyWatched.add(tmdbUrl);
       } else {
         newMyWatched.delete(tmdbUrl);
@@ -138,7 +138,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
         movies: newMovies,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
-        recommendedDict: newRecommendedDict,
+        recommended: newRecommended,
       };
     }
 
@@ -168,7 +168,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
         friendWatched: new Set<string>(),
         friendUnwatched: new Set<string>(),
         friendLiked: new Set<string>(),
-        recommendedDict: new Set<string>(),
+        recommended: new Set<string>(),
         movies: new Map<string, MovieData>(),
       };
 

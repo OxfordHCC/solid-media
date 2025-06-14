@@ -46,7 +46,7 @@ export type State = {
   friendWatched: Set<string>,
   friendUnwatched: Set<string>,
   friendLiked: Set<string>,
-  recommendedDict: Set<string>,
+  recommended: Set<string>,
   movies: Map<string, MovieData>, // Throughout the code, we assume friends won't update their own movies.
   // When two versions of the same movie exists, the 'me' version is always preferred.
 };
