@@ -13,7 +13,7 @@ import { loadData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
 
 type RawMovieData = {
-  movie: string;
+  tmdbUrl: string;
   solidUrl: string;
   type: 'me' | 'friend';
   watched: boolean;
@@ -77,7 +77,7 @@ async function loadMovieDetails(movieList: MovieListItem[], fetch: typeof window
       const { title, released, icon } = await loadData(tmdbUrl);
 
       return {
-        movie: tmdbUrl,
+        tmdbUrl,
         solidUrl: url,
         type,
         watched,
@@ -126,35 +126,35 @@ function categorizeMovies(movies: RawMovieData[]): State {
 
   for (const { type, ...movie } of movies) {
     if (type === 'me') {
-      movieDict.set(movie.movie, { ...movie, me: true, friend: movieDict.get(movie.movie)?.friend || false });
+      movieDict.set(movie.tmdbUrl, { ...movie, me: true, friend: movieDict.get(movie.tmdbUrl)?.friend || false });
 
-      if (movie.watched && !state.myWatched.has(movie.movie)) {
-        state.myWatched.add(movie.movie);
-      } else if (movie.recommended && !state.recommendedDict.has(movie.movie)) {
-        state.recommendedDict.add(movie.movie);
-      } else if (!state.myUnwatched.has(movie.movie)) {
-        state.myUnwatched.add(movie.movie);
+      if (movie.watched && !state.myWatched.has(movie.tmdbUrl)) {
+        state.myWatched.add(movie.tmdbUrl);
+      } else if (movie.recommended && !state.recommendedDict.has(movie.tmdbUrl)) {
+        state.recommendedDict.add(movie.tmdbUrl);
+      } else if (!state.myUnwatched.has(movie.tmdbUrl)) {
+        state.myUnwatched.add(movie.tmdbUrl);
       }
 
-      if (movie.liked && !state.myLiked.has(movie.movie)) {
-        state.myLiked.add(movie.movie);
+      if (movie.liked && !state.myLiked.has(movie.tmdbUrl)) {
+        state.myLiked.add(movie.tmdbUrl);
       }
     } else if (type === 'friend') {
-      if (!movieDict.has(movie.movie)) {
-        movieDict.set(movie.movie, { ...movie, watched: false, liked: null, me: false, friend: true });
+      if (!movieDict.has(movie.tmdbUrl)) {
+        movieDict.set(movie.tmdbUrl, { ...movie, watched: false, liked: null, me: false, friend: true });
       } else {
-        const existingMovie = movieDict.get(movie.movie)!;
-        movieDict.set(movie.movie, { ...existingMovie, friend: true });
+        const existingMovie = movieDict.get(movie.tmdbUrl)!;
+        movieDict.set(movie.tmdbUrl, { ...existingMovie, friend: true });
       }
 
-      if (movie.watched && !state.friendWatched.has(movie.movie)) {
-        state.friendWatched.add(movie.movie);
-      } else if (!state.friendUnwatched.has(movie.movie)) {
-        state.friendUnwatched.add(movie.movie);
+      if (movie.watched && !state.friendWatched.has(movie.tmdbUrl)) {
+        state.friendWatched.add(movie.tmdbUrl);
+      } else if (!state.friendUnwatched.has(movie.tmdbUrl)) {
+        state.friendUnwatched.add(movie.tmdbUrl);
       }
 
-      if (movie.liked && !state.friendLiked.has(movie.movie)) {
-        state.friendLiked.add(movie.movie);
+      if (movie.liked && !state.friendLiked.has(movie.tmdbUrl)) {
+        state.friendLiked.add(movie.tmdbUrl);
       }
     }
   }

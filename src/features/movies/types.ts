@@ -27,7 +27,7 @@ export const READ_ACCESS = {
 };
 
 export type MovieData = {
-  movie: string,
+  tmdbUrl: string,
   solidUrl: string,
   watched: boolean,
   liked: boolean | null,

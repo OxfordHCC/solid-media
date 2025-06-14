@@ -173,7 +173,7 @@ export default function DiscoverPane() {
     await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch: session.fetch });
 
     const movieData: MovieData = {
-      movie: media.tmdbUrl,
+      tmdbUrl: media.tmdbUrl,
       solidUrl: datasetUrl,
       watched: Boolean(watch),
       liked: null,
