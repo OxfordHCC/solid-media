@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { MovieData, PersonInfo, MovieListItem } from './types';
-import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from './datasetUtils';
+import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from "./remoteMovieDataUtils";
 import { saveMovie } from './remoteMovieDataUtils';
 import { MediaData } from '../../apis/tmdb';
 
