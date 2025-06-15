@@ -1,26 +1,10 @@
 import {
   getSolidDataset,
   getContainedResourceUrlAll,
-  getUrl,
-  getStringNoLocaleAll,
-  getThing,
-  getThingAll,
-  getResourceAcl,
-  getInteger,
-  SolidDataset,
-  createThing,
-  saveSolidDatasetAt,
-  setUrl,
-  addUrl,
-  setDatetime,
-  setThing,
-  createSolidDataset,
-  setStringNoLocale,
-  addStringNoLocale
-} from '@inrupt/solid-client';
-import { RDF, DCTERMS } from '@inrupt/vocab-common-rdf';
-import { loadData, getIds, MediaData } from '../../apis/tmdb';
-import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
+  saveSolidDatasetAt} from '@inrupt/solid-client';
+import { getIds, MediaData } from '../../apis/tmdb';
+import { MovieData, PersonInfo, MovieListItem } from './types';
+import { datasetToMovieDataInfo, mediaDataToDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
 export async function loadMoviesData(
@@ -63,48 +47,8 @@ async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fe
   const { type, url } = movieItem;
 
   const movieDataset = await getSolidDataset(url, { fetch });
-  const movieThing = getThing(movieDataset, `${url}#it`)!;
-  const things = getThingAll(movieDataset);
 
-  // Extract movie properties
-  const watched = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/WatchAction');
-  const liked = extractLikedStatus(things, movieDataset);
-  const recommended = things.some(x => getUrl(x, RDF.type) === 'https://schema.org/Recommendation');
-
-  const urls = getStringNoLocaleAll(movieThing, 'https://schema.org/sameAs');
-  const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
-
-  const { title, released, icon } = await loadData(tmdbUrl);
-
-  return {
-    tmdbUrl,
-    solidUrl: url,
-    type,
-    watched,
-    liked,
-    recommended,
-    title,
-    released,
-    image: icon,
-    dataset: movieDataset
-  };
-}
-
-function extractLikedStatus(things: any[], movieDataset: SolidDataset): boolean | null {
-  const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
-
-  if (!review) return null;
-
-  const ratingUrl = getUrl(review, 'https://schema.org/resultReview')!;
-  const rating = getThing(movieDataset, ratingUrl)!;
-
-  const min = getInteger(rating, 'https://schema.org/worstRating');
-  const max = getInteger(rating, 'https://schema.org/bestRating');
-  const value = getInteger(rating, 'https://schema.org/ratingValue');
-
-  if (value === max) return true;
-  if (value === min) return false;
-  return null;
+  return datasetToMovieDataInfo(movieDataset, url, type);
 }
 
 export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
@@ -116,13 +60,6 @@ export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): s
   return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
 }
 
-export function generateDatasetName(title: string): string {
-  return title
-    .replace(/[^a-zA-Z0-9-_ ]/g, '')
-    .replaceAll(' ', '-')
-    .toLowerCase();
-}
-
 export async function saveMovie(
   media: MediaData,
   pod: string,
@@ -132,26 +69,13 @@ export async function saveMovie(
 ): Promise<MovieData> {
   const ids = await getIds(media.tmdbUrl);
 
-  const datasetName = generateDatasetName(media.title);
-  const datasetUrl = `${pod}/movies/${datasetName}`;
-
-  let movieDataset = createSolidDataset();
-  let movie = createThing({ url: `${datasetUrl}#it` });
-
-  const time = new Date();
-
-  movie = setDatetime(movie, DCTERMS.created, time);
-  movie = setDatetime(movie, DCTERMS.modified, time);
-  movie = setUrl(movie, RDF.type, 'https://schema.org/Movie');
-  if (watch) movie = addUrl(movie, RDF.type, 'https://schema.org/WatchAction');
-  if (recommended) movie = addUrl(movie, RDF.type, 'https://schema.org/Recommendation');
-  movie = setStringNoLocale(movie, 'https://schema.org/name', media.title);
-  movie = setStringNoLocale(movie, 'https://schema.org/description', media.description);
-  movie = setStringNoLocale(movie, 'https://schema.org/image', media.image);
-  movie = setDatetime(movie, 'https://schema.org/datePublished', media.released);
-  for (const id of ids) movie = addStringNoLocale(movie, 'https://schema.org/sameAs', id);
-
-  movieDataset = setThing(movieDataset, movie);
+  const { url: datasetUrl, dataset: movieDataset } = mediaDataToDataset(
+    media,
+    ids,
+    pod,
+    watch,
+    recommended
+  );
 
   await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch, prefixes: PREFIXES_MOVIE });
 

@@ -4,7 +4,7 @@ import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolid
 import { BASE_URL } from '../../env';
 import { MovieData, DATE_FORMAT } from './types';
 import { addRating, removeFromDataset, setWatched } from './datasetUtils';
-import { generateDatasetName } from './remoteMovieDataUtils';
+import { generateDatasetName } from './datasetUtils';
 import { MoviesAction } from './moviesReducer';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
