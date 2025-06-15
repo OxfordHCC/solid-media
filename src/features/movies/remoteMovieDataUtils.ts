@@ -107,55 +107,6 @@ function extractLikedStatus(things: any[], movieDataset: SolidDataset): boolean 
   return null;
 }
 
-function categorizeMovies(movies: MovieData[]): State {
-  const movieDict = new Map<string, MovieData>();
-  const state: State = {
-    myWatched: new Set<string>(),
-    myUnwatched: new Set<string>(),
-    myLiked: new Set<string>(),
-    friendWatched: new Set<string>(),
-    friendUnwatched: new Set<string>(),
-    friendLiked: new Set<string>(),
-    recommended: new Set<string>(),
-    movies: movieDict,
-  };
-
-  for (const movie of movies) {
-    if (movie.type === 'me') {
-      movieDict.set(movie.tmdbUrl, movie);
-
-      if (movie.watched) {
-        state.myWatched.add(movie.tmdbUrl);
-      } else if (movie.recommended) {
-        state.recommended.add(movie.tmdbUrl);
-      } else {
-        state.myUnwatched.add(movie.tmdbUrl);
-      }
-
-      if (movie.liked) {
-        state.myLiked.add(movie.tmdbUrl);
-      }
-    } else if (movie.type === 'friend') {
-      if (!movieDict.has(movie.tmdbUrl)) {
-        // Friend version is added only if no 'me' version exists
-        movieDict.set(movie.tmdbUrl, movie);
-      }
-
-      if (movie.watched) {
-        state.friendWatched.add(movie.tmdbUrl);
-      } else {
-        state.friendUnwatched.add(movie.tmdbUrl);
-      }
-
-      if (movie.liked) {
-        state.friendLiked.add(movie.tmdbUrl);
-      }
-    }
-  }
-
-  return state;
-}
-
 export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
   if (userMovies.length <= maxSamples) {
     return userMovies.map(movie => movie.title);

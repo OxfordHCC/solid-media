@@ -2,7 +2,6 @@ import { MovieData, State } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
 export type MoviesAction =
-  | { type: 'LOAD_DATA'; payload: State }
   | { type: 'LOAD_MOVIES'; payload: { movies: Set<MovieData> } }  // Incrementally load movies
   | { type: 'SET_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
@@ -14,11 +13,6 @@ export type MoviesAction =
 
 export function moviesReducer(state: State, action: MoviesAction): State {
   switch (action.type) {
-    case 'LOAD_DATA':
-      return {
-        ...state,
-        ...action.payload,
-      };
 
     // Incrementally load movies into the state
     // The movie can be from 'me' or a friend, and we need to handle the sets accordingly
