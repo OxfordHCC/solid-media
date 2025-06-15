@@ -12,3 +12,10 @@ export const PREFIXES_MOVIE = {
   'owl': 'http://www.w3.org/2002/07/owl#',
   'solid': 'http://www.w3.org/ns/solid/terms#',
 } as const;
+
+export const PREFIXES_PERSON = {
+  'foaf': 'http://xmlns.com/foaf/0.1/',
+  'vcard': 'http://www.w3.org/2006/vcard/ns#',
+  'schema': 'http://schema.org/',
+  'dcterms': 'http://purl.org/dc/terms/',
+} as const;

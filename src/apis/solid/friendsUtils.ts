@@ -13,6 +13,7 @@ import {
 } from '@inrupt/solid-client';
 import { RDF } from '@inrupt/vocab-common-rdf';
 import * as $rdf from "rdflib";
+import { PREFIXES_PERSON } from '../../utils/prefixes';
 
 export async function addNewFriendToProfile(
   webID: string,
@@ -67,7 +68,7 @@ export async function addFriendToGroup(
   if (!isAlreadyInGroup(groupThing, newFriendWebID)) {
     groupThing = addUrl(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember', newFriendWebID);
     friendsDataset = setThing(friendsDataset, groupThing);
-    await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch });
+    await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch, prefixes: PREFIXES_PERSON });
   }
 }
 
@@ -116,7 +117,7 @@ export async function synchronizeToFriendsDataset(
     }
 
     friendsDataset = setThing(friendsDataset, groupThing);
-    await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch });
+    await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch, prefixes: PREFIXES_PERSON });
   }
 
   const friends = getUrlAll(groupThing, 'http://www.w3.org/2006/vcard/ns#hasMember');
@@ -132,7 +133,7 @@ export async function createInitialFriendsDataset(pod: string, fetch: typeof win
   let groupThing = createThing({ url: `${pod}/friends#group` });
   groupThing = setUrl(groupThing, RDF.type, 'http://www.w3.org/2006/vcard/ns#Group');
   friendsDataset = setThing(friendsDataset, groupThing);
-  await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch });
+  await saveSolidDatasetAt(`${pod}/friends`, friendsDataset, { fetch, prefixes: PREFIXES_PERSON });
   return friendsDataset;
 }
 
