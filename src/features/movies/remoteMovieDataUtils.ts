@@ -26,28 +26,25 @@ import { PREFIXES_MOVIE } from '../../utils/prefixes';
 export async function loadMoviesData(
   webID: string,
   friends: string[],
-  fetch: typeof window.fetch
-): Promise<State> {
+  fetch: typeof window.fetch,
+  dispatch: (action: any) => void
+): Promise<void> {
   const people: PersonInfo[] = [
     { type: 'me', id: webID },
     ...friends.map(x => ({ type: 'friend' as const, id: x }))
   ];
-
-  const allMovieResults: MovieData[] = [];
 
   for (const person of people) {
     const personMovieList = await loadMovieList(person, fetch);
     for (const movieItem of personMovieList) {
       try {
         const movieData = await loadMovieDetail(movieItem, fetch);
-        allMovieResults.push(movieData);
+        dispatch({ type: 'LOAD_MOVIES', payload: { movies: new Set([movieData]) } });
       } catch (error) {
         console.warn(`Failed to load movie data for ${movieItem.url}:`, error);
       }
     }
   }
-
-  return categorizeMovies(allMovieResults);
 }
 
 async function loadMovieList(person: PersonInfo, fetch: typeof window.fetch): Promise<MovieListItem[]> {

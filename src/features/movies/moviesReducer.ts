@@ -3,6 +3,7 @@ import { SolidDataset } from '@inrupt/solid-client';
 
 export type MoviesAction =
   | { type: 'LOAD_DATA'; payload: State }
+  | { type: 'LOAD_MOVIES'; payload: { movies: Set<MovieData> } }  // Incrementally load movies
   | { type: 'SET_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
@@ -18,6 +19,71 @@ export function moviesReducer(state: State, action: MoviesAction): State {
         ...state,
         ...action.payload,
       };
+
+    // Incrementally load movies into the state
+    // The movie can be from 'me' or a friend, and we need to handle the sets accordingly
+    case 'LOAD_MOVIES': {
+      const { movies } = action.payload;
+      let newMovies = new Map(state.movies);
+      let newMyUnwatched = new Set(state.myUnwatched);
+      let newMyWatched = new Set(state.myWatched);
+      let newMyLiked = new Set(state.myLiked);
+      let newFriendUnwatched = new Set(state.friendUnwatched);
+      let newFriendWatched = new Set(state.friendWatched);
+      let newFriendLiked = new Set(state.friendLiked);
+      let newRecommended = new Set(state.recommended);
+
+      for (const movie of movies) {
+        const tmdbUrl = movie.tmdbUrl;
+        const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+        if (currentMovie) {
+          // If the movie already exists, check if it's from 'me'. Only override if it's not from 'me'.
+          if (currentMovie.type !== 'me') {
+            newMovies.set(tmdbUrl, movie);
+          }
+        }
+        else {
+          newMovies.set(tmdbUrl, movie);
+        }
+
+        if (movie.type === 'me') {
+          if (movie.recommended) {
+            newRecommended.add(tmdbUrl);
+          } else {
+            if (!movie.watched) {
+              newMyUnwatched.add(tmdbUrl);
+            } else {
+              newMyWatched.add(tmdbUrl);
+            }
+            if (movie.liked) {
+              newMyLiked.add(tmdbUrl);
+            }
+          }
+        }
+        else if (movie.type === 'friend') {
+          if (!movie.watched) {
+            newFriendUnwatched.add(tmdbUrl);
+          } else {
+            newFriendWatched.add(tmdbUrl);
+          }
+          if (movie.liked) {
+            newFriendLiked.add(tmdbUrl);
+          }
+        }
+      }
+
+      return {
+        ...state,
+        movies: newMovies,
+        myUnwatched: newMyUnwatched,
+        myWatched: newMyWatched,
+        myLiked: newMyLiked,
+        friendUnwatched: newFriendUnwatched,
+        friendWatched: newFriendWatched,
+        friendLiked: newFriendLiked,
+        recommended: newRecommended,
+      };
+    }
 
     case 'SET_MOVIE': {
       const { movieData, tmdbUrl } = action.payload;

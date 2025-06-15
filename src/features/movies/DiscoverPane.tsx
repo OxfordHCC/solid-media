@@ -82,6 +82,12 @@ export default function DiscoverPane() {
     }
   }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
 
+  useEffect(() => {
+    if (loadingState.hasLoaded) {
+      fetchAndSaveRecommendations(state.movies);
+    }
+  }, [loadingState.hasLoaded]);
+
   // Update user collection when user movies change
   useEffect(() => {
     const newUserCollection = new Set<string>([
@@ -117,19 +123,10 @@ export default function DiscoverPane() {
       await setupMoviesAcl(moviesAclDataset, pod, webID, friends, session.fetch);
 
       // Load all movies data (user + friends)
-      const loadedState = await loadMoviesData(webID, friends, session.fetch);
-
-      // Update state with loaded data
-      dispatch({
-        type: 'LOAD_DATA',
-        payload: loadedState
-      });
+      await loadMoviesData(webID, friends, session.fetch, dispatch);
 
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
-
-      // Fetch and save recommendations
-      await fetchAndSaveRecommendations(loadedState.movies);
 
       setLoadingState(prev => ({ ...prev, hasLoaded: true }));
     } catch (error) {
@@ -225,13 +222,13 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!loadingState.isLoading && !loadingState.error && isDataEmpty() && (
+      {!loadingState.error && isDataEmpty() && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
       )}
 
-      {!loadingState.isLoading && !loadingState.error && (
+      {!loadingState.error && (
         sectionConfigs.map(({ title, key, type }) => {
           const items = state[key] as Set<string>;
           if (items && items.size > 0) {
