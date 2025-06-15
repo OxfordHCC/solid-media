@@ -6,6 +6,7 @@ import { MovieData, DATE_FORMAT } from './types';
 import { addRating, removeFromDataset, setWatched } from './datasetUtils';
 import { generateDatasetName } from './remoteMovieDataUtils';
 import { MoviesAction } from './moviesReducer';
+import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
 export interface MovieCarouselElementProps {
   movieData: MovieData;
@@ -43,14 +44,14 @@ export const MovieCarouselElement = ({
             dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
             dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
             if (liked === false) {
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: null, dataset }
               });
             } else {
               dataset = addRating(dataset, solidUrl, 1);
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: false, dataset }
@@ -66,14 +67,14 @@ export const MovieCarouselElement = ({
             dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
             dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
             if (liked === true) {
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: null, dataset }
               });
             } else {
               dataset = addRating(dataset, solidUrl, 3);
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: true, dataset }
@@ -90,14 +91,14 @@ export const MovieCarouselElement = ({
       click: async () => {
         if (watched) {
           dataset = removeFromDataset(dataset, 'https://schema.org/WatchAction');
-          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
           dispatch({
             type: 'TOGGLE_WATCH',
             payload: { tmdbUrl: movie, watched: false, dataset }
           });
         } else {
           dataset = setWatched(dataset, solidUrl);
-          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch });
+          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
           dispatch({
             type: 'TOGGLE_WATCH',
             payload: { tmdbUrl: movie, watched: true, dataset }
@@ -130,7 +131,7 @@ export const MovieCarouselElement = ({
           thing = Object.freeze({ ...thing, url: `${pod}/movies/${datasetName}#it` });
           movieDataset = setThing(movieDataset, thing);
           const newUrl = `${pod}/movies/${datasetName}`;
-          await saveSolidDatasetAt(newUrl, movieDataset, { fetch: session.fetch });
+          await saveSolidDatasetAt(newUrl, movieDataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
           dispatch({
             type: 'ADD_TO_MY_COLLECTION',
             payload: {

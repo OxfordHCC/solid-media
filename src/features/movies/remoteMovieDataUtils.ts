@@ -21,6 +21,7 @@ import {
 import { RDF, DCTERMS } from '@inrupt/vocab-common-rdf';
 import { loadData, getIds, MediaData } from '../../apis/tmdb';
 import { MovieData, PersonInfo, MovieListItem, State, NO_ACCESS } from './types';
+import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
 export async function loadMoviesData(
   webID: string,
@@ -204,7 +205,7 @@ export async function saveMovie(
 
   movieDataset = setThing(movieDataset, movie);
 
-  await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch });
+  await saveSolidDatasetAt(datasetUrl, movieDataset, { fetch, prefixes: PREFIXES_MOVIE });
 
   const movieData: MovieData = {
     tmdbUrl: media.tmdbUrl,
