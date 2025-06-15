@@ -1,6 +1,6 @@
-import { SolidDataset, createThing, setUrl, setInteger, setThing, asUrl, setDatetime, getThingAll, getUrl, removeThing, getThing, Thing, getInteger, getStringNoLocaleAll, createSolidDataset, setStringNoLocale, addUrl, addStringNoLocale } from "@inrupt/solid-client";
+import { SolidDataset, createThing, setUrl, setInteger, setThing, asUrl, setDatetime, getThingAll, getUrl, removeThing, getThing, Thing, getInteger, getStringNoLocaleAll, createSolidDataset, setStringNoLocale, addUrl, addStringNoLocale, getSolidDataset, getContainedResourceUrlAll, saveSolidDatasetAt, deleteSolidDataset } from "@inrupt/solid-client";
 import { RDF, DCTERMS, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
-import { MovieData } from "./types";
+import { MovieData, PersonInfo, MovieListItem } from "./types";
 import { MediaData } from "../../apis/tmdb";
 
 
@@ -151,4 +151,39 @@ export function mediaDataToDataset(media: MediaData, ids: string[], pod: string,
     dataset: movieDataset,
     url: datasetUrl
   };
+}
+
+// React Query compatible dataset operations
+export async function loadMovieList(person: PersonInfo, fetch: typeof window.fetch): Promise<MovieListItem[]> {
+  try {
+    const parts = person.id.split('/');
+    const pod = parts.slice(0, parts.length - 2).join('/');
+    const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch });
+    const movies = getContainedResourceUrlAll(moviesDataset);
+    return movies.map(url => ({ ...person, url }));
+  } catch {
+    return [];
+  }
+}
+
+export async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fetch): Promise<MovieData> {
+  const { type, url } = movieItem;
+  const movieDataset = await getSolidDataset(url, { fetch });
+  return datasetToMovieDataInfo(movieDataset, url, type);
+}
+
+export async function saveMovieDataset(
+  datasetUrl: string,
+  dataset: SolidDataset,
+  fetch: typeof window.fetch,
+  prefixes?: any
+): Promise<void> {
+  await saveSolidDatasetAt(datasetUrl, dataset, { fetch, prefixes });
+}
+
+export async function deleteMovieDataset(
+  datasetUrl: string,
+  fetch: typeof window.fetch
+): Promise<void> {
+  await deleteSolidDataset(datasetUrl, { fetch });
 }

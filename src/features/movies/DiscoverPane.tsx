@@ -14,15 +14,14 @@ import {
   State
 } from './types';
 import {
-  loadMoviesData,
-  sampleUserMovies,
-  saveMovie
+  sampleUserMovies
 } from './remoteMovieDataUtils';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
 import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { moviesReducer, MoviesAction } from './moviesReducer';
+import { useAllMovies, useSaveMovie } from './movieQueries';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
@@ -59,6 +58,7 @@ export default function DiscoverPane() {
     hasLoaded: false,
     error: null as string | null
   });
+  const [friends, setFriends] = useState<string[]>([]);
 
   const session = useAuthenticatedSession();
   if (!session) return <div />; // Guard against rendering when not logged in
@@ -67,6 +67,16 @@ export default function DiscoverPane() {
   const webID = session.info.webId!;
   const parts = webID.split('/');
   const pod = parts.slice(0, parts.length - 2).join('/');
+
+  // React Query for movie data - only enabled after setup is complete
+  const {
+    data: moviesData,
+    isLoading: moviesLoading,
+    refetch: refetchMovies
+  } = useAllMovies(webID, friends, session.fetch, loadingState.hasLoaded);
+
+  // React Query mutation for saving movies
+  const saveMovieMutation = useSaveMovie(pod, session.fetch);
 
   const retryLoad = () => {
     setLoadingState(prev => ({
@@ -81,6 +91,16 @@ export default function DiscoverPane() {
       loadApplicationData();
     }
   }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
+
+  // Sync React Query movie data with reducer state
+  useEffect(() => {
+    if (moviesData && moviesData.length > 0) {
+      dispatch({
+        type: 'LOAD_MOVIES',
+        payload: { movies: new Set(moviesData) }
+      });
+    }
+  }, [moviesData]);
 
   useEffect(() => {
     if (loadingState.hasLoaded) {
@@ -117,13 +137,13 @@ export default function DiscoverPane() {
       const moviesAclDataset = await getOrCreateMoviesContainerWithAcl(pod, session.fetch);
 
       // Manage friends dataset and sync with profile
-      const { friendsDataset, friends } = await synchronizeToFriendsDataset(pod, webID, session.fetch);
+      const { friendsDataset, friends: friendsList } = await synchronizeToFriendsDataset(pod, webID, session.fetch);
 
       // Setup ACL permissions for movies
-      await setupMoviesAcl(moviesAclDataset, pod, webID, friends, session.fetch);
+      await setupMoviesAcl(moviesAclDataset, pod, webID, friendsList, session.fetch);
 
-      // Load all movies data (user + friends)
-      await loadMoviesData(webID, friends, session.fetch, dispatch);
+      // Set friends to trigger React Query data loading
+      setFriends(friendsList);
 
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
@@ -150,7 +170,15 @@ export default function DiscoverPane() {
         const movies = await search(name);
         const movie = movies.find((x: any) => x.title === name);
         if (movie) {
-          const savedMovie = await saveMovie(movie, pod, session.fetch, true);
+          const savedMovie = await new Promise<MovieData>((resolve, reject) => {
+            saveMovieMutation.mutate(
+              { media: movie, recommended: true },
+              {
+                onSuccess: resolve,
+                onError: reject
+              }
+            );
+          });
           updateStateAfterSave(savedMovie, movie.tmdbUrl);
         }
       }
@@ -174,7 +202,15 @@ export default function DiscoverPane() {
 
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
     if (!Array.from(state.movies.values()).some(x => x.title === media.title)) {
-      const savedMovie = await saveMovie(media, pod, session.fetch, false);
+      const savedMovie = await new Promise<MovieData>((resolve, reject) => {
+        saveMovieMutation.mutate(
+          { media, recommended: false },
+          {
+            onSuccess: resolve,
+            onError: reject
+          }
+        );
+      });
       updateStateAfterSave(savedMovie, media.tmdbUrl);
     }
   };
@@ -187,11 +223,27 @@ export default function DiscoverPane() {
       const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
 
       if (movieWebIDPod !== pod) {
-        data = await saveMovie(media, pod, session.fetch, false, true);
+        data = await new Promise<MovieData>((resolve, reject) => {
+          saveMovieMutation.mutate(
+            { media, recommended: false, watch: true },
+            {
+              onSuccess: resolve,
+              onError: reject
+            }
+          );
+        });
         updateStateAfterSave(data, media.tmdbUrl);
       }
     } else {
-      data = await saveMovie(media, pod, session.fetch, false, true);
+      data = await new Promise<MovieData>((resolve, reject) => {
+        saveMovieMutation.mutate(
+          { media, recommended: false, watch: true },
+          {
+            onSuccess: resolve,
+            onError: reject
+          }
+        );
+      });
       updateStateAfterSave(data, media.tmdbUrl);
     }
   };
@@ -208,7 +260,7 @@ export default function DiscoverPane() {
         <button class='add-button' onClick={() => { setActiveModal('logout'); logout(); }}>👋 Logout</button>
       </div>
 
-      {loadingState.isLoading && (
+      {(loadingState.isLoading || moviesLoading) && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <div class="loader__filmstrip"></div>
           <p class="loader__text">loading</p>
@@ -218,7 +270,10 @@ export default function DiscoverPane() {
       {loadingState.error && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
           <p>Error loading data: {loadingState.error}</p>
-          <button onClick={retryLoad}>Retry</button>
+          <button onClick={() => {
+            retryLoad();
+            refetchMovies();
+          }}>Retry</button>
         </div>
       )}
 

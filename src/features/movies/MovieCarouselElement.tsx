@@ -1,12 +1,13 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
-import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
+import { setThing, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { BASE_URL } from '../../env';
 import { MovieData, DATE_FORMAT } from './types';
-import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
+import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched, saveMovieDataset } from './datasetUtils';
 import { generateDatasetName } from './datasetUtils';
 import { MoviesAction } from './moviesReducer';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
+import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie } from './movieQueries';
 
 export interface MovieCarouselElementProps {
   movieData: MovieData;
@@ -31,6 +32,11 @@ export const MovieCarouselElement = ({
 }: MovieCarouselElementProps): VNode => {
   const { solidUrl, watched, liked, title, released, image } = movieData;
   let { dataset } = movieData;
+
+  const updateMovieDataset = useUpdateMovieDataset(session.fetch);
+  const deleteMovie = useDeleteMovie(session.fetch);
+  const saveMovie = useSaveMovie(pod || '', session.fetch);
+
   const buttons = [];
 
   if (type === 'me') {
@@ -44,14 +50,22 @@ export const MovieCarouselElement = ({
             dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
             dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
             if (liked === false) {
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+              updateMovieDataset.mutate({
+                datasetUrl: solidUrl,
+                dataset,
+                prefixes: PREFIXES_MOVIE
+              });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: null, dataset }
               });
             } else {
               dataset = addRating(dataset, solidUrl, 1);
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+              updateMovieDataset.mutate({
+                datasetUrl: solidUrl,
+                dataset,
+                prefixes: PREFIXES_MOVIE
+              });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: false, dataset }
@@ -67,14 +81,22 @@ export const MovieCarouselElement = ({
             dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
             dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
             if (liked === true) {
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+              updateMovieDataset.mutate({
+                datasetUrl: solidUrl,
+                dataset,
+                prefixes: PREFIXES_MOVIE
+              });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: null, dataset }
               });
             } else {
               dataset = addRating(dataset, solidUrl, 3);
-              await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+              updateMovieDataset.mutate({
+                datasetUrl: solidUrl,
+                dataset,
+                prefixes: PREFIXES_MOVIE
+              });
               dispatch({
                 type: 'TOGGLE_LIKE',
                 payload: { tmdbUrl: movie, liked: true, dataset }
@@ -91,14 +113,22 @@ export const MovieCarouselElement = ({
       click: async () => {
         if (watched) {
           dataset = removeFromDataset(dataset, 'https://schema.org/WatchAction');
-          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+          updateMovieDataset.mutate({
+            datasetUrl: solidUrl,
+            dataset,
+            prefixes: PREFIXES_MOVIE
+          });
           dispatch({
             type: 'TOGGLE_WATCH',
             payload: { tmdbUrl: movie, watched: false, dataset }
           });
         } else {
           dataset = setWatched(dataset, solidUrl);
-          await saveSolidDatasetAt(solidUrl, dataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+          updateMovieDataset.mutate({
+            datasetUrl: solidUrl,
+            dataset,
+            prefixes: PREFIXES_MOVIE
+          });
           dispatch({
             type: 'TOGGLE_WATCH',
             payload: { tmdbUrl: movie, watched: true, dataset }
@@ -110,7 +140,7 @@ export const MovieCarouselElement = ({
       text: '❌',
       cssClass: 'carousel-remove',
       click: async () => {
-        await deleteSolidDataset(solidUrl, { fetch: session.fetch });
+        deleteMovie.mutate(solidUrl);
         const shouldRemoveFromDict = !friendsCollection.has(movie);
         dispatch({
           type: 'REMOVE_MOVIE',
@@ -132,7 +162,11 @@ export const MovieCarouselElement = ({
             title
           );
           const newUrl = `${pod}/movies/${datasetName}`;
-          await saveSolidDatasetAt(newUrl, movieDataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
+          updateMovieDataset.mutate({
+            datasetUrl: newUrl,
+            dataset: movieDataset,
+            prefixes: PREFIXES_MOVIE
+          });
           dispatch({
             type: 'ADD_TO_MY_COLLECTION',
             payload: {
