@@ -49,6 +49,24 @@ export function setWatched(dataset: SolidDataset, datasetUrl: string, time: Date
   return dataset;
 }
 
+export function fromFriendToMeDataset(dataset: SolidDataset, solidUrl: string, pod: string, title: string, datasetName?: string): {
+  dataset: SolidDataset,
+  datasetName: string
+} {
+  if (!datasetName) {
+    datasetName = generateDatasetName(title);
+  }
+  let movieDataset = createSolidDataset();
+  let thing = getThing(dataset, `${solidUrl}#it`)!;
+  thing = Object.freeze({ ...thing, url: `${pod}/movies/${datasetName}#it` });
+  movieDataset = setThing(movieDataset, thing);
+
+  return {
+    dataset: movieDataset,
+    datasetName
+  };
+}
+
 function extractLikedStatus(things: Thing[], movieDataset: SolidDataset): boolean | null {
   const review = things.find(x => getUrl(x, RDF.type) === 'https://schema.org/ReviewAction');
 

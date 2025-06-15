@@ -3,7 +3,7 @@ import { CarouselElement } from '../../components/Carousel';
 import { deleteSolidDataset, setThing, saveSolidDatasetAt, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { BASE_URL } from '../../env';
 import { MovieData, DATE_FORMAT } from './types';
-import { addRating, removeFromDataset, setWatched } from './datasetUtils';
+import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
 import { generateDatasetName } from './datasetUtils';
 import { MoviesAction } from './moviesReducer';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
@@ -125,11 +125,12 @@ export const MovieCarouselElement = ({
       click: async () => {
         const isAlreadyInUserMovies = userCollection.has(movie);
         if (!isAlreadyInUserMovies && pod) {
-          const datasetName = generateDatasetName(title);
-          let movieDataset = createSolidDataset();
-          let thing = getThing(dataset, `${solidUrl}#it`)!;
-          thing = Object.freeze({ ...thing, url: `${pod}/movies/${datasetName}#it` });
-          movieDataset = setThing(movieDataset, thing);
+          const { dataset: movieDataset, datasetName } = fromFriendToMeDataset(
+            dataset,
+            solidUrl,
+            pod,
+            title
+          );
           const newUrl = `${pod}/movies/${datasetName}`;
           await saveSolidDatasetAt(newUrl, movieDataset, { fetch: session.fetch, prefixes: PREFIXES_MOVIE });
           dispatch({
