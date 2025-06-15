@@ -13,9 +13,6 @@ import {
   MovieData,
   State
 } from './types';
-import {
-  sampleUserMovies
-} from './remoteMovieDataUtils';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { setupMoviesAcl } from '../../apis/solid/movies';
 import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
@@ -38,6 +35,15 @@ const sectionConfigs: Array<{
   { title: 'Your Wishlist', key: 'myUnwatched', type: 'me' },
   { title: 'You enjoyed', key: 'myLiked', type: 'me' },
 ];
+
+function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
+  if (userMovies.length <= maxSamples) {
+    return userMovies.map(movie => movie.title);
+  }
+
+  const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
+  return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
+}
 
 export default function DiscoverPane() {
   const [state, dispatch] = useReducer(moviesReducer, {

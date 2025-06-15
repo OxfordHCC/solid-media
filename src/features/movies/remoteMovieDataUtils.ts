@@ -5,15 +5,6 @@ import { MovieData } from './types';
 import { mediaDataToDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
-export function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
-  if (userMovies.length <= maxSamples) {
-    return userMovies.map(movie => movie.title);
-  }
-
-  const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-  return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
-}
-
 export async function saveMovie(
   media: MediaData,
   pod: string,
