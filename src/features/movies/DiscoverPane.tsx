@@ -164,7 +164,7 @@ export default function DiscoverPane() {
 
   function updateStateAfterSave(movieData: MovieData, tmdbUrl: string): void {
     dispatch({
-      type: 'ADD_MOVIE',
+      type: 'SET_MOVIE',
       payload: { movieData, tmdbUrl }
     });
   }

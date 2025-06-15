@@ -3,7 +3,7 @@ import { SolidDataset } from '@inrupt/solid-client';
 
 export type MoviesAction =
   | { type: 'LOAD_DATA'; payload: State }
-  | { type: 'ADD_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
+  | { type: 'SET_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
   | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
   | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
   | { type: 'TOGGLE_LIKE'; payload: { tmdbUrl: string; liked: boolean | null; dataset: SolidDataset } }
@@ -19,7 +19,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
         ...action.payload,
       };
 
-    case 'ADD_MOVIE': {
+    case 'SET_MOVIE': {
       const { movieData, tmdbUrl } = action.payload;
       const newMovies = new Map(state.movies);
       newMovies.set(tmdbUrl, movieData);
