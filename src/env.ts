@@ -1,1 +1,5 @@
-export const BASE_URL = import.meta.env.BASE_URL || '/';
+function ensureEndingSlash(path: string): string {
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
+export const BASE_URL = ensureEndingSlash(import.meta.env.BASE_URL) || '/';
