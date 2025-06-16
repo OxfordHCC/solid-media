@@ -1,25 +1,21 @@
-import { useState, useEffect, useReducer } from 'preact/hooks';
-import AddPopup from './AddMovies';
-import AddFriends from '../../components/AddFriends';
-import Logout from '../../components/Logout';
-import { useSession, useAuthenticatedSession } from '../../contexts/SessionContext';
+import { useEffect, useReducer, useState } from 'preact/hooks';
 import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
-import { MovieCarouselElement } from './MovieCarouselElement';
-import Carousel from '../../components/Carousel';
-import { VNode } from 'preact';
+import AddFriends from '../../components/AddFriends';
+import Logout from '../../components/Logout';
+import { useAuthenticatedSession, useSession } from '../../contexts/SessionContext';
+import AddPopup from './AddMovies';
 import MovieCarouselSection from './MovieCarouselSection';
 
+import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
+import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
+import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
+import { useAllMovies, useSaveMovie } from './movieQueries';
+import { moviesReducer } from './moviesReducer';
 import {
   MovieData,
   State
 } from './types';
-import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { setupMoviesAcl } from '../../apis/solid/movies';
-import { getOrCreateMoviesContainerWithAcl } from '../../apis/solid/movies';
-import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
-import { moviesReducer, MoviesAction } from './moviesReducer';
-import { useAllMovies, useSaveMovie } from './movieQueries';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 

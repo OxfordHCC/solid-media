@@ -1,14 +1,11 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
-import { setThing, getThing, createSolidDataset } from '@inrupt/solid-client';
 import { BASE_URL } from '../../env';
-import { MovieData, DATE_FORMAT } from './types';
-import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
-import { saveMovieDataset } from "./remoteMovieDataUtils";
-import { generateDatasetName } from './datasetUtils';
-import { MoviesAction } from './moviesReducer';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
-import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie } from './movieQueries';
+import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
+import { useDeleteMovie, useSaveMovie, useUpdateMovieDataset } from './movieQueries';
+import { MoviesAction } from './moviesReducer';
+import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
   movieData: MovieData;
