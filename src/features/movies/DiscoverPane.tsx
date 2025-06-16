@@ -43,9 +43,8 @@ function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[]
 }
 
 export default function DiscoverPane() {
-  // Use Zustand store like the original reducer pattern
-  const state = useMovieStore();
-  const { loadMovies, setMovie, removeMovie } = state;
+  const movieStore = useMovieStore();
+  const { loadMovies, setMovie, removeMovie } = movieStore;
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
@@ -134,7 +133,7 @@ export default function DiscoverPane() {
 
   useEffect(() => {
     if (loadingState.hasLoaded) {
-      fetchAndSaveRecommendations(state.movies);
+      fetchAndSaveRecommendations(movieStore.movies);
     }
   }, [loadingState.hasLoaded]);
 
@@ -202,7 +201,7 @@ export default function DiscoverPane() {
   }
 
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
-    if (!Array.from(state.movies.values()).some((x: MovieData) => x.title === media.title)) {
+    if (!Array.from(movieStore.movies.values()).some((x: MovieData) => x.title === media.title)) {
       const savedMovie = await new Promise<MovieData>((resolve, reject) => {
         saveMovieMutation.mutate(
           { media, recommended: false },
@@ -217,7 +216,7 @@ export default function DiscoverPane() {
   };
 
   const handleAddPopupWatch = async (media: MediaData): Promise<void> => {
-    let data = Array.from(state.movies.values()).find((x: MovieData) => x.title === media.title);
+    let data = Array.from(movieStore.movies.values()).find((x: MovieData) => x.title === media.title);
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -278,7 +277,7 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!loadingState.error && state.isDataEmpty() && (
+      {!loadingState.error && movieStore.isDataEmpty() && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
@@ -289,8 +288,8 @@ export default function DiscoverPane() {
           <MovieCarouselSection
             key={key}
             title={title}
-            items={state[key] as Set<string>}
-            movies={state.movies}
+            items={movieStore[key] as Set<string>}
+            movies={movieStore.movies}
             type={type}
             session={session}
             pod={pod}
