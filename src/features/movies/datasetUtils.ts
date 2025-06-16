@@ -137,8 +137,6 @@ export function mediaDataToDataset(media: MediaData, ids: string[], pod: string,
   movie = setDatetime(movie, DCTERMS.created, time);
   movie = setDatetime(movie, DCTERMS.modified, time);
   movie = setUrl(movie, RDF.type, 'https://schema.org/Movie');
-  if (watched) movie = addUrl(movie, RDF.type, 'https://schema.org/WatchAction');
-  if (recommended) movie = addUrl(movie, RDF.type, 'https://schema.org/Recommendation');
   movie = setStringNoLocale(movie, 'https://schema.org/name', media.title);
   movie = setStringNoLocale(movie, 'https://schema.org/description', media.description);
   movie = setStringNoLocale(movie, 'https://schema.org/image', media.image);
@@ -146,6 +144,22 @@ export function mediaDataToDataset(media: MediaData, ids: string[], pod: string,
   for (const id of ids) movie = addStringNoLocale(movie, 'https://schema.org/sameAs', id);
 
   movieDataset = setThing(movieDataset, movie);
+
+  // Add WatchAction as a separate entity if watched
+  if (watched) {
+    movieDataset = setWatched(movieDataset, datasetUrl, time);
+  }
+
+  // Add Recommendation as a separate entity if recommended
+  if (recommended) {
+    let recommendation = createThing();
+    recommendation = setUrl(recommendation, RDF.type, 'https://schema.org/Recommendation');
+    recommendation = setDatetime(recommendation, DCTERMS.created, time);
+    recommendation = setDatetime(recommendation, SCHEMA_INRUPT.startTime, time);
+    recommendation = setDatetime(recommendation, SCHEMA_INRUPT.endTime, time);
+    recommendation = setUrl(recommendation, 'https://schema.org/object', `${datasetUrl}#it`);
+    movieDataset = setThing(movieDataset, recommendation);
+  }
 
   return {
     dataset: movieDataset,
