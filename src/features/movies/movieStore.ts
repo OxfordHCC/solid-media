@@ -1,42 +1,69 @@
-import { MovieData, State } from './types';
+import { create } from 'zustand';
+import { MovieData } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
-export type MoviesAction =
-  | { type: 'LOAD_MOVIES'; payload: { movies: Set<MovieData> } }  // Incrementally load movies
-  | { type: 'SET_MOVIE'; payload: { movieData: MovieData; tmdbUrl: string } }
-  | { type: 'UPDATE_MOVIE'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
-  | { type: 'REMOVE_MOVIE'; payload: { tmdbUrl: string; removeFromDict: boolean } }
-  | { type: 'TOGGLE_LIKE'; payload: { tmdbUrl: string; liked: boolean | null; dataset: SolidDataset } }
-  | { type: 'TOGGLE_WATCH'; payload: { tmdbUrl: string; watched: boolean; dataset: SolidDataset } }
-  | { type: 'ADD_TO_MY_COLLECTION'; payload: { tmdbUrl: string; updates: Partial<MovieData> } }
-  | { type: 'RESET_STATE' };
+interface MovieState {
+  // State
+  myWatched: Set<string>;
+  myUnwatched: Set<string>;
+  myLiked: Set<string>;
+  friendWatched: Set<string>;
+  friendUnwatched: Set<string>;
+  friendLiked: Set<string>;
+  recommended: Set<string>;
+  movies: Map<string, MovieData>;
 
-export function moviesReducer(state: State, action: MoviesAction): State {
-  switch (action.type) {
+  // Actions
+  loadMovies: (movies: Set<MovieData>) => void;
+  setMovie: (movieData: MovieData, tmdbUrl: string) => void;
+  updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => void;
+  removeMovie: (tmdbUrl: string, removeFromDict: boolean) => void;
+  toggleLike: (tmdbUrl: string, liked: boolean | null, dataset: SolidDataset) => void;
+  toggleWatch: (tmdbUrl: string, watched: boolean, dataset: SolidDataset) => void;
+  addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => void;
+  resetState: () => void;
 
-    // Incrementally load movies into the state
-    // The movie can be from 'me' or a friend, and we need to handle the sets accordingly
-    case 'LOAD_MOVIES': {
-      const { movies } = action.payload;
-      let newMovies = new Map(state.movies);
-      let newMyUnwatched = new Set(state.myUnwatched);
-      let newMyWatched = new Set(state.myWatched);
-      let newMyLiked = new Set(state.myLiked);
-      let newFriendUnwatched = new Set(state.friendUnwatched);
-      let newFriendWatched = new Set(state.friendWatched);
-      let newFriendLiked = new Set(state.friendLiked);
-      let newRecommended = new Set(state.recommended);
+  // Selectors/computed values
+  getUserMovieCollection: () => Set<string>;
+  getFriendMovieCollection: () => Set<string>;
+  isDataEmpty: () => boolean;
+}
+
+const initialState = {
+  myWatched: new Set<string>(),
+  myUnwatched: new Set<string>(),
+  myLiked: new Set<string>(),
+  friendWatched: new Set<string>(),
+  friendUnwatched: new Set<string>(),
+  friendLiked: new Set<string>(),
+  recommended: new Set<string>(),
+  movies: new Map<string, MovieData>(),
+};
+
+export const useMovieStore = create<MovieState>((set, get) => ({
+  ...initialState,
+
+  loadMovies: (movies: Set<MovieData>) => {
+    set((state) => {
+      const newMovies = new Map(state.movies);
+      const newMyUnwatched = new Set(state.myUnwatched);
+      const newMyWatched = new Set(state.myWatched);
+      const newMyLiked = new Set(state.myLiked);
+      const newFriendUnwatched = new Set(state.friendUnwatched);
+      const newFriendWatched = new Set(state.friendWatched);
+      const newFriendLiked = new Set(state.friendLiked);
+      const newRecommended = new Set(state.recommended);
 
       for (const movie of movies) {
         const tmdbUrl = movie.tmdbUrl;
-        const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+        const currentMovie = newMovies.get(tmdbUrl);
+
         if (currentMovie) {
-          // If the movie already exists, check if it's from 'me'. Only override if it's not from 'me'.
+          // Only override if it's not from 'me'
           if (currentMovie.type !== 'me') {
             newMovies.set(tmdbUrl, movie);
           }
-        }
-        else {
+        } else {
           newMovies.set(tmdbUrl, movie);
         }
 
@@ -53,8 +80,7 @@ export function moviesReducer(state: State, action: MoviesAction): State {
               newMyLiked.add(tmdbUrl);
             }
           }
-        }
-        else if (movie.type === 'friend') {
+        } else if (movie.type === 'friend') {
           if (!movie.watched) {
             newFriendUnwatched.add(tmdbUrl);
           } else {
@@ -67,7 +93,6 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       }
 
       return {
-        ...state,
         movies: newMovies,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
@@ -77,10 +102,11 @@ export function moviesReducer(state: State, action: MoviesAction): State {
         friendLiked: newFriendLiked,
         recommended: newRecommended,
       };
-    }
+    });
+  },
 
-    case 'SET_MOVIE': {
-      const { movieData, tmdbUrl } = action.payload;
+  setMovie: (movieData: MovieData, tmdbUrl: string) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
       newMovies.set(tmdbUrl, movieData);
 
@@ -99,29 +125,27 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       }
 
       return {
-        ...state,
         movies: newMovies,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
         recommended: newRecommended,
       };
-    }
+    });
+  },
 
-    case 'UPDATE_MOVIE': {
-      const { tmdbUrl, updates } = action.payload;
+  updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
-      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+      const currentMovie = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
       }
-      return {
-        ...state,
-        movies: newMovies
-      };
-    }
+      return { movies: newMovies };
+    });
+  },
 
-    case 'REMOVE_MOVIE': {
-      const { tmdbUrl, removeFromDict } = action.payload;
+  removeMovie: (tmdbUrl: string, removeFromDict: boolean) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
       if (removeFromDict) {
         newMovies.delete(tmdbUrl);
@@ -138,19 +162,19 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       newRecommended.delete(tmdbUrl);
 
       return {
-        ...state,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
         myLiked: newMyLiked,
         recommended: newRecommended,
         movies: newMovies,
       };
-    }
+    });
+  },
 
-    case 'TOGGLE_LIKE': {
-      const { tmdbUrl, liked, dataset } = action.payload;
+  toggleLike: (tmdbUrl: string, liked: boolean | null, dataset: SolidDataset) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
-      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+      const currentMovie = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, {
           ...currentMovie,
@@ -167,16 +191,16 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       }
 
       return {
-        ...state,
         movies: newMovies,
         myLiked: newMyLiked
       };
-    }
+    });
+  },
 
-    case 'TOGGLE_WATCH': {
-      const { tmdbUrl, watched, dataset } = action.payload;
+  toggleWatch: (tmdbUrl: string, watched: boolean, dataset: SolidDataset) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
-      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+      const currentMovie = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, {
           ...currentMovie,
@@ -199,18 +223,18 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       }
 
       return {
-        ...state,
         movies: newMovies,
         myUnwatched: newMyUnwatched,
         myWatched: newMyWatched,
         recommended: newRecommended,
       };
-    }
+    });
+  },
 
-    case 'ADD_TO_MY_COLLECTION': {
-      const { tmdbUrl, updates } = action.payload;
+  addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => {
+    set((state) => {
       const newMovies = new Map(state.movies);
-      const currentMovie: MovieData | undefined = newMovies.get(tmdbUrl);
+      const currentMovie = newMovies.get(tmdbUrl);
       if (currentMovie) {
         newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
       }
@@ -219,25 +243,39 @@ export function moviesReducer(state: State, action: MoviesAction): State {
       newMyUnwatched.add(tmdbUrl);
 
       return {
-        ...state,
         myUnwatched: newMyUnwatched,
         movies: newMovies,
       };
-    }
+    });
+  },
 
-    case 'RESET_STATE':
-      return {
-        myWatched: new Set<string>(),
-        myUnwatched: new Set<string>(),
-        myLiked: new Set<string>(),
-        friendWatched: new Set<string>(),
-        friendUnwatched: new Set<string>(),
-        friendLiked: new Set<string>(),
-        recommended: new Set<string>(),
-        movies: new Map<string, MovieData>(),
-      };
+  resetState: () => {
+    set(initialState);
+  },
 
-    default:
-      return state;
-  }
-}
+  // Computed values
+  getUserMovieCollection: () => {
+    const state = get();
+    return new Set<string>([
+      ...Array.from(state.myWatched),
+      ...Array.from(state.myUnwatched),
+      ...Array.from(state.myLiked)
+    ]);
+  },
+
+  getFriendMovieCollection: () => {
+    const state = get();
+    return new Set<string>([
+      ...Array.from(state.friendWatched),
+      ...Array.from(state.friendUnwatched),
+      ...Array.from(state.friendLiked)
+    ]);
+  },
+
+  isDataEmpty: () => {
+    const state = get();
+    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended } = state;
+    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended]
+      .every(set => set && set.size === 0);
+  },
+}));

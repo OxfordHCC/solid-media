@@ -1,7 +1,6 @@
 import { VNode } from 'preact';
 import Carousel from '../../components/Carousel';
 import { MovieCarouselElement } from './MovieCarouselElement';
-import { MoviesAction } from './moviesReducer';
 import { MovieData } from './types';
 
 export interface MovieSectionProps {
@@ -10,9 +9,6 @@ export interface MovieSectionProps {
   movies: Map<string, MovieData>;
   type: 'friend' | 'me';
   session: any;
-  dispatch: (action: MoviesAction) => void;
-  userCollection: Set<string>;
-  friendsCollection: Set<string>;
   pod: string;
 }
 
@@ -22,9 +18,6 @@ export default function MovieCarouselSection({
   movies,
   type,
   session,
-  dispatch,
-  userCollection,
-  friendsCollection,
   pod
 }: MovieSectionProps): VNode | null {
   if (!items || items.size === 0) {
@@ -42,9 +35,6 @@ export default function MovieCarouselSection({
             movie={movie}
             type={type}
             session={session}
-            dispatch={dispatch}
-            userCollection={userCollection}
-            friendsCollection={friendsCollection}
             pod={pod}
           />
         ))}

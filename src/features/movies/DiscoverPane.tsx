@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState, useRef, useMemo } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
@@ -11,7 +11,7 @@ import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { useAllMovies, useSaveMovie } from './movieQueries';
-import { moviesReducer } from './moviesReducer';
+import { useMovieStore } from './movieStore';
 import {
   MovieData,
   State
@@ -43,16 +43,10 @@ function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[]
 }
 
 export default function DiscoverPane() {
-  const [state, dispatch] = useReducer(moviesReducer, {
-    myWatched: new Set<string>(),
-    myUnwatched: new Set<string>(),
-    myLiked: new Set<string>(),
-    friendWatched: new Set<string>(),
-    friendUnwatched: new Set<string>(),
-    friendLiked: new Set<string>(),
-    recommended: new Set<string>(),
-    movies: new Map<string, MovieData>(),
-  });
+  // Use Zustand store like the original reducer pattern
+  const state = useMovieStore();
+  const { loadMovies, setMovie, removeMovie } = state;
+
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
@@ -60,21 +54,6 @@ export default function DiscoverPane() {
     error: null as string | null
   });
   const [friends, setFriends] = useState<string[]>([]);
-
-  const userMovieCollection = useMemo(() => {
-    return new Set<string>([
-      ...Array.from(state.myWatched),
-      ...Array.from(state.myUnwatched),
-      ...Array.from(state.myLiked)
-    ]);
-  }, [state.myWatched, state.myUnwatched, state.myLiked]);
-  const friendMovieCollection = useMemo(() => {
-    return new Set<string>([
-      ...Array.from(state.friendWatched),
-      ...Array.from(state.friendUnwatched),
-      ...Array.from(state.friendLiked)
-    ]);
-  }, [state.friendWatched, state.friendUnwatched, state.friendLiked]);
 
   const loadedMoviesRef = useRef<Set<string>>(new Set());
 
@@ -136,10 +115,7 @@ export default function DiscoverPane() {
       // Dispatch deleted movies for cleanup
       if (deletedMovieUrls.length > 0) {
         deletedMovieUrls.forEach(tmdbUrl => {
-          dispatch({
-            type: 'REMOVE_MOVIE',
-            payload: { tmdbUrl, removeFromDict: true }
-          });  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
+          removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
         });
       }
 
@@ -151,10 +127,7 @@ export default function DiscoverPane() {
         });
 
         // Dispatch only the new movies for incremental loading
-        dispatch({
-          type: 'LOAD_MOVIES',
-          payload: { movies: new Set(newMovies) }
-        });
+        loadMovies(new Set(newMovies));
       }
     }
   }, [moviesData]);
@@ -225,20 +198,11 @@ export default function DiscoverPane() {
   }
 
   function updateStateAfterSave(movieData: MovieData, tmdbUrl: string): void {
-    dispatch({
-      type: 'SET_MOVIE',
-      payload: { movieData, tmdbUrl }
-    });
+    setMovie(movieData, tmdbUrl);
   }
 
-  const isDataEmpty = () => {
-    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended } = state;
-    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended]
-      .every(set => set && set.size === 0);
-  };
-
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
-    if (!Array.from(state.movies.values()).some(x => x.title === media.title)) {
+    if (!Array.from(state.movies.values()).some((x: MovieData) => x.title === media.title)) {
       const savedMovie = await new Promise<MovieData>((resolve, reject) => {
         saveMovieMutation.mutate(
           { media, recommended: false },
@@ -253,7 +217,7 @@ export default function DiscoverPane() {
   };
 
   const handleAddPopupWatch = async (media: MediaData): Promise<void> => {
-    let data = Array.from(state.movies.values()).find(x => x.title === media.title);
+    let data = Array.from(state.movies.values()).find((x: MovieData) => x.title === media.title);
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -314,7 +278,7 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!loadingState.error && isDataEmpty() && (
+      {!loadingState.error && state.isDataEmpty() && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
@@ -329,9 +293,6 @@ export default function DiscoverPane() {
             movies={state.movies}
             type={type}
             session={session}
-            dispatch={dispatch}
-            userCollection={userMovieCollection}
-            friendsCollection={friendMovieCollection}
             pod={pod}
           />
         ))

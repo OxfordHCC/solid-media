@@ -4,7 +4,7 @@ import { BASE_URL } from '../../env';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
 import { useDeleteMovie, useSaveMovie, useUpdateMovieDataset } from './movieQueries';
-import { MoviesAction } from './moviesReducer';
+import { useMovieStore } from './movieStore';
 import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
@@ -12,9 +12,6 @@ export interface MovieCarouselElementProps {
   movie: string;
   type: 'me' | 'friend';
   session: any;
-  dispatch: (action: MoviesAction) => void;
-  userCollection: Set<string>;
-  friendsCollection: Set<string>;
   pod?: string;
 }
 
@@ -23,13 +20,23 @@ export const MovieCarouselElement = ({
   movie,
   type,
   session,
-  dispatch,
-  userCollection,
-  friendsCollection,
   pod
 }: MovieCarouselElementProps): VNode => {
   const { solidUrl, watched, liked, title, released, image } = movieData;
   let { dataset } = movieData;
+
+  // Get store actions and computed values directly
+  const {
+    toggleLike,
+    toggleWatch,
+    removeMovie,
+    addToMyCollection,
+    getUserMovieCollection,
+    getFriendMovieCollection
+  } = useMovieStore();
+
+  const userCollection = getUserMovieCollection();
+  const friendsCollection = getFriendMovieCollection();
 
   const updateMovieDataset = useUpdateMovieDataset(session.fetch);
   const deleteMovie = useDeleteMovie(session.fetch);
@@ -53,10 +60,7 @@ export const MovieCarouselElement = ({
                 dataset,
                 prefixes: PREFIXES_MOVIE
               });
-              dispatch({
-                type: 'TOGGLE_LIKE',
-                payload: { tmdbUrl: movie, liked: null, dataset }
-              });
+              toggleLike(movie, null, dataset);
             } else {
               dataset = addRating(dataset, solidUrl, 1);
               updateMovieDataset.mutate({
@@ -64,10 +68,7 @@ export const MovieCarouselElement = ({
                 dataset,
                 prefixes: PREFIXES_MOVIE
               });
-              dispatch({
-                type: 'TOGGLE_LIKE',
-                payload: { tmdbUrl: movie, liked: false, dataset }
-              });
+              toggleLike(movie, false, dataset);
             }
           }
         },
@@ -84,10 +85,7 @@ export const MovieCarouselElement = ({
                 dataset,
                 prefixes: PREFIXES_MOVIE
               });
-              dispatch({
-                type: 'TOGGLE_LIKE',
-                payload: { tmdbUrl: movie, liked: null, dataset }
-              });
+              toggleLike(movie, null, dataset);
             } else {
               dataset = addRating(dataset, solidUrl, 3);
               updateMovieDataset.mutate({
@@ -95,10 +93,7 @@ export const MovieCarouselElement = ({
                 dataset,
                 prefixes: PREFIXES_MOVIE
               });
-              dispatch({
-                type: 'TOGGLE_LIKE',
-                payload: { tmdbUrl: movie, liked: true, dataset }
-              });
+              toggleLike(movie, true, dataset);
             }
           }
         }
@@ -116,10 +111,7 @@ export const MovieCarouselElement = ({
             dataset,
             prefixes: PREFIXES_MOVIE
           });
-          dispatch({
-            type: 'TOGGLE_WATCH',
-            payload: { tmdbUrl: movie, watched: false, dataset }
-          });
+          toggleWatch(movie, false, dataset);
         } else {
           dataset = setWatched(dataset, solidUrl);
           updateMovieDataset.mutate({
@@ -127,10 +119,7 @@ export const MovieCarouselElement = ({
             dataset,
             prefixes: PREFIXES_MOVIE
           });
-          dispatch({
-            type: 'TOGGLE_WATCH',
-            payload: { tmdbUrl: movie, watched: true, dataset }
-          });
+          toggleWatch(movie, true, dataset);
         }
       }
     });
@@ -140,10 +129,7 @@ export const MovieCarouselElement = ({
       click: async () => {
         deleteMovie.mutate(solidUrl);
         const shouldRemoveFromDict = !friendsCollection.has(movie);
-        dispatch({
-          type: 'REMOVE_MOVIE',
-          payload: { tmdbUrl: movie, removeFromDict: shouldRemoveFromDict }
-        });
+        removeMovie(movie, shouldRemoveFromDict);
       }
     });
   } else if (type === 'friend') {
@@ -165,13 +151,7 @@ export const MovieCarouselElement = ({
             dataset: movieDataset,
             prefixes: PREFIXES_MOVIE
           });
-          dispatch({
-            type: 'ADD_TO_MY_COLLECTION',
-            payload: {
-              tmdbUrl: movie,
-              updates: { type: 'me', solidUrl: newUrl, dataset: movieDataset }
-            }
-          });
+          addToMyCollection(movie, { type: 'me', solidUrl: newUrl, dataset: movieDataset });
         }
       }
     });
