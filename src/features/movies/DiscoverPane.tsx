@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState, useRef } from 'preact/hooks';
+import { useEffect, useReducer, useState, useRef, useMemo } from 'preact/hooks';
 import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
@@ -53,8 +53,6 @@ export default function DiscoverPane() {
     recommended: new Set<string>(),
     movies: new Map<string, MovieData>(),
   });
-  const [userMovieCollection, setUserMovieCollection] = useState<Set<string>>(new Set<string>());
-  const [friendMovieCollection, setFriendMovieCollection] = useState<Set<string>>(new Set<string>());
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [loadingState, setLoadingState] = useState({
     isLoading: false,
@@ -62,6 +60,22 @@ export default function DiscoverPane() {
     error: null as string | null
   });
   const [friends, setFriends] = useState<string[]>([]);
+
+  const userMovieCollection = useMemo(() => {
+    return new Set<string>([
+      ...Array.from(state.myWatched),
+      ...Array.from(state.myUnwatched),
+      ...Array.from(state.myLiked)
+    ]);
+  }, [state.myWatched, state.myUnwatched, state.myLiked]);
+  const friendMovieCollection = useMemo(() => {
+    return new Set<string>([
+      ...Array.from(state.friendWatched),
+      ...Array.from(state.friendUnwatched),
+      ...Array.from(state.friendLiked)
+    ]);
+  }, [state.friendWatched, state.friendUnwatched, state.friendLiked]);
+
   const loadedMoviesRef = useRef<Set<string>>(new Set());
 
   const session = useAuthenticatedSession();
@@ -150,26 +164,6 @@ export default function DiscoverPane() {
       fetchAndSaveRecommendations(state.movies);
     }
   }, [loadingState.hasLoaded]);
-
-  // Update user collection when user movies change
-  useEffect(() => {
-    const newUserCollection = new Set<string>([
-      ...Array.from(state.myWatched),
-      ...Array.from(state.myUnwatched),
-      ...Array.from(state.myLiked)
-    ]);
-    setUserMovieCollection(newUserCollection);
-  }, [state.myWatched, state.myUnwatched, state.myLiked]);
-
-  // Update friend collection when friend movies change
-  useEffect(() => {
-    const newFriendCollection = new Set<string>([
-      ...Array.from(state.friendWatched),
-      ...Array.from(state.friendUnwatched),
-      ...Array.from(state.friendLiked)
-    ]);
-    setFriendMovieCollection(newFriendCollection);
-  }, [state.friendWatched, state.friendUnwatched, state.friendLiked]);
 
   async function loadApplicationData() {
     try {
