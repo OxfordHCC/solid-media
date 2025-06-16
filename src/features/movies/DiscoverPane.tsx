@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'preact/hooks';
+import { useEffect, useReducer, useState, useRef } from 'preact/hooks';
 import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
@@ -62,6 +62,7 @@ export default function DiscoverPane() {
     error: null as string | null
   });
   const [friends, setFriends] = useState<string[]>([]);
+  const loadedMoviesRef = useRef<Set<string>>(new Set());
 
   const session = useAuthenticatedSession();
   if (!session) return <div />; // Guard against rendering when not logged in
@@ -87,6 +88,8 @@ export default function DiscoverPane() {
       hasLoaded: false,
       error: null
     }));
+    // Clear the loaded movies ref to force reload
+    loadedMoviesRef.current.clear();
   };
 
   useEffect(() => {
@@ -95,13 +98,50 @@ export default function DiscoverPane() {
     }
   }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
 
-  // Sync React Query movie data with reducer state
+  // Incrementally sync React Query movie data with reducer state
   useEffect(() => {
     if (moviesData && moviesData.length > 0) {
-      dispatch({
-        type: 'LOAD_MOVIES',
-        payload: { movies: new Set(moviesData) }
+      // Get current movie URLs from the latest data
+      const currentMovieUrls = new Set(moviesData.map(movie => movie.tmdbUrl));
+
+      // Find new movies that haven't been loaded yet
+      const newMovies = moviesData.filter(movie =>
+        !loadedMoviesRef.current.has(movie.tmdbUrl)
+      );
+
+      // Find movies that were loaded before but are no longer in the data (deleted)
+      const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
+        !currentMovieUrls.has(tmdbUrl)
+      );
+
+      // Remove deleted movies from tracking
+      deletedMovieUrls.forEach(tmdbUrl => {
+        loadedMoviesRef.current.delete(tmdbUrl);
       });
+
+      // Dispatch deleted movies for cleanup
+      if (deletedMovieUrls.length > 0) {
+        deletedMovieUrls.forEach(tmdbUrl => {
+          dispatch({
+            type: 'REMOVE_MOVIE',
+            payload: { tmdbUrl, removeFromDict: true }
+          });  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
+        });
+      }
+
+      // Add and dispatch new movies
+      if (newMovies.length > 0) {
+        // Update the ref to track loaded movies
+        newMovies.forEach(movie => {
+          loadedMoviesRef.current.add(movie.tmdbUrl);
+        });
+
+        // Dispatch only the new movies for incremental loading
+        dispatch({
+          type: 'LOAD_MOVIES',
+          payload: { movies: new Set(newMovies) }
+        });
+      }
     }
   }, [moviesData]);
 
