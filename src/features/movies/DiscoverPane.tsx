@@ -8,6 +8,7 @@ import logo from '../../assets/logo.png';
 import { MovieCarouselElement } from './MovieCarouselElement';
 import Carousel from '../../components/Carousel';
 import { VNode } from 'preact';
+import MovieCarouselSection from './MovieCarouselSection';
 
 import {
   MovieData,
@@ -290,32 +291,20 @@ export default function DiscoverPane() {
       )}
 
       {!loadingState.error && (
-        sectionConfigs.map(({ title, key, type }) => {
-          const items = state[key] as Set<string>;
-          if (items && items.size > 0) {
-            return (
-              <div key={key}>
-                <h3 style="margin-left: 2%;">{title}</h3>
-                <Carousel>
-                  {Array.from(items).map(movie => (
-                    <MovieCarouselElement
-                      key={movie}
-                      movieData={state.movies.get(movie)!}
-                      movie={movie}
-                      type={type}
-                      session={session}
-                      dispatch={dispatch}
-                      userCollection={userMovieCollection}
-                      friendsCollection={friendMovieCollection}
-                      pod={pod}
-                    />
-                  ))}
-                </Carousel>
-              </div>
-            );
-          }
-          return null;
-        })
+        sectionConfigs.map(({ title, key, type }) => (
+          <MovieCarouselSection
+            key={key}
+            title={title}
+            items={state[key] as Set<string>}
+            movies={state.movies}
+            type={type}
+            session={session}
+            dispatch={dispatch}
+            userCollection={userMovieCollection}
+            friendsCollection={friendMovieCollection}
+            pod={pod}
+          />
+        ))
       )}
 
       {activeModal === 'add-movies' && (
