@@ -45,16 +45,16 @@ function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[]
 }
 
 export default function DiscoverPane() {
-  const movieStore = useMovieStore();
-  const { loadMovies, setMovie, removeMovie } = movieStore;
-
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [hasBasicLoaded, setHasBasicLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
+
   const [friends, setFriends] = useState<string[]>([]);
 
   const loadedMoviesRef = useRef<Set<string>>(new Set());
+  const movieStore = useMovieStore();
+  const { loadMovies, setMovie, removeMovie } = movieStore;
 
   const session = useAuthenticatedSession();
   if (!session) return <div />; // Guard against rendering when not logged in
