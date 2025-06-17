@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'preact/hooks';
+import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
 import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
@@ -16,6 +16,8 @@ import {
   MovieData,
   State
 } from './types';
+
+const MAX_RECOMMENDATIONS = 10;
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
@@ -47,11 +49,9 @@ export default function DiscoverPane() {
   const { loadMovies, setMovie, removeMovie } = movieStore;
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [loadingState, setLoadingState] = useState({
-    isLoading: false,
-    hasLoaded: false,
-    error: null as string | null
-  });
+  const [hasBasicLoaded, setHasBasicLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
   const [friends, setFriends] = useState<string[]>([]);
 
   const loadedMoviesRef = useRef<Set<string>>(new Set());
@@ -64,82 +64,49 @@ export default function DiscoverPane() {
   const parts = webID.split('/');
   const pod = parts.slice(0, parts.length - 2).join('/');
 
-  // React Query for movie data - only enabled after setup is complete
+  // React Query for movie data
   const {
     data: moviesData,
     isLoading: moviesLoading,
     refetch: refetchMovies
-  } = useAllMovies(webID, friends, session.fetch, loadingState.hasLoaded);
+  } = useAllMovies(webID, friends, session.fetch, hasBasicLoaded);
 
   // React Query mutation for saving movies
   const saveMovieMutation = useSaveMovie(pod, session.fetch);
 
   const retryLoad = () => {
-    setLoadingState(prev => ({
-      ...prev,
-      hasLoaded: false,
-      error: null
-    }));
+    setHasBasicLoaded(false);
+    setError(null);
     // Clear the loaded movies ref to force reload
     loadedMoviesRef.current.clear();
   };
 
+  const isLoading = useMemo(() => {
+    return !hasBasicLoaded || moviesLoading || isRecommendationLoading;
+  }, [hasBasicLoaded, moviesLoading]);
+
   useEffect(() => {
-    if (!loadingState.hasLoaded && !loadingState.isLoading) {
+    if (!hasBasicLoaded) {
       loadApplicationData();
     }
-  }, [loadingState.hasLoaded, loadingState.isLoading, session, pod, webID]);
+  }, [hasBasicLoaded, session, pod, webID]);
 
   // Incrementally sync React Query movie data with reducer state
   useEffect(() => {
     if (moviesData && moviesData.length > 0) {
-      // Get current movie URLs from the latest data
-      const currentMovieUrls = new Set(moviesData.map(movie => movie.tmdbUrl));
-
-      // Find new movies that haven't been loaded yet
-      const newMovies = moviesData.filter(movie =>
-        !loadedMoviesRef.current.has(movie.tmdbUrl)
-      );
-
-      // Find movies that were loaded before but are no longer in the data (deleted)
-      const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
-        !currentMovieUrls.has(tmdbUrl)
-      );
-
-      // Remove deleted movies from tracking
-      deletedMovieUrls.forEach(tmdbUrl => {
-        loadedMoviesRef.current.delete(tmdbUrl);
-      });
-
-      // Dispatch deleted movies for cleanup
-      if (deletedMovieUrls.length > 0) {
-        deletedMovieUrls.forEach(tmdbUrl => {
-          removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
-        });
-      }
-
-      // Add and dispatch new movies
-      if (newMovies.length > 0) {
-        // Update the ref to track loaded movies
-        newMovies.forEach(movie => {
-          loadedMoviesRef.current.add(movie.tmdbUrl);
-        });
-
-        // Dispatch only the new movies for incremental loading
-        loadMovies(new Set(newMovies));
-      }
+      mergeLoadedMovies(moviesData);
     }
   }, [moviesData]);
 
   useEffect(() => {
-    if (loadingState.hasLoaded) {
-      fetchAndSaveRecommendations(movieStore.movies);
+    if (hasBasicLoaded && !moviesLoading && !isRecommendationLoading) {
+      fetchAndSaveMoreRecommendations(movieStore.movies);
     }
-  }, [loadingState.hasLoaded]);
+  }, [hasBasicLoaded, moviesLoading, isRecommendationLoading, movieStore.movies]);
 
   async function loadApplicationData() {
     try {
-      setLoadingState(prev => ({ ...prev, isLoading: true, error: null }));
+      setHasBasicLoaded(false);
       const loadingStart = (new Date()).getTime();
 
       // Initialize movies container
@@ -157,20 +124,65 @@ export default function DiscoverPane() {
       const loadingEnd = (new Date()).getTime();
       console.log(`Loaded movies in ${(loadingEnd - loadingStart) / 1000} seconds`);
 
-      setLoadingState(prev => ({ ...prev, hasLoaded: true }));
+      setHasBasicLoaded(true);
     } catch (error) {
       console.error('Error loading application data:', error);
-      setLoadingState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load data'
-      }));
-    } finally {
-      setLoadingState(prev => ({ ...prev, isLoading: false }));
+      setError(
+        error instanceof Error ? error.message : 'Failed to load data'
+      );
     }
   }
 
-  async function fetchAndSaveRecommendations(movieDict: Map<string, MovieData>): Promise<void> {
+  /**
+   * Incrementally merge loaded movies into the movie store state.
+   */
+  async function mergeLoadedMovies(
+    movies: MovieData[]
+  ): Promise<void> {
+    // Get current movie URLs from the latest data
+    const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
+
+    // Find new movies that haven't been loaded yet
+    const newMovies = movies.filter(movie =>
+      !loadedMoviesRef.current.has(movie.tmdbUrl)
+    );
+
+    // Find movies that were loaded before but are no longer in the data (deleted)
+    const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
+      !currentMovieUrls.has(tmdbUrl)
+    );
+
+    // Remove deleted movies from tracking
+    deletedMovieUrls.forEach(tmdbUrl => {
+      loadedMoviesRef.current.delete(tmdbUrl);
+    });
+
+    // Dispatch deleted movies for cleanup
+    if (deletedMovieUrls.length > 0) {
+      deletedMovieUrls.forEach(tmdbUrl => {
+        removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
+      });
+    }
+
+    // Add and dispatch new movies
+    if (newMovies.length > 0) {
+      // Update the ref to track loaded movies
+      newMovies.forEach(movie => {
+        loadedMoviesRef.current.add(movie.tmdbUrl);
+      });
+
+      // Dispatch only the new movies for incremental loading
+      loadMovies(new Set(newMovies));
+    }
+  }
+
+  async function fetchAndSaveMoreRecommendations(movieDict: Map<string, MovieData>): Promise<void> {
     try {
+      setIsRecommendationLoading(true);
+      if (movieStore.recommended.size >= MAX_RECOMMENDATIONS) {
+        console.log('Enough recommendations already loaded, skipping loading more...');
+        return;
+      }
       const userMovies = Array.from(movieDict.values()).filter(x => x.type === 'me' && !x.recommended);
       const sampledTitles = sampleUserMovies(userMovies, 10);
       const recommendedList = await fetchRecommendations(sampledTitles);
@@ -193,6 +205,8 @@ export default function DiscoverPane() {
       }
     } catch (error) {
       console.error('Error handling recommendations:', error);
+    } finally {
+      setIsRecommendationLoading(false);
     }
   }
 
@@ -260,16 +274,16 @@ export default function DiscoverPane() {
         <button class='add-button' onClick={() => { setActiveModal('logout'); logout(); }}>👋 Logout</button>
       </div>
 
-      {(loadingState.isLoading || moviesLoading) && (
+      {(isLoading) && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
           <div class="loader__filmstrip"></div>
           <p class="loader__text">loading</p>
         </div>
       )}
 
-      {loadingState.error && (
+      {error && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-          <p>Error loading data: {loadingState.error}</p>
+          <p>Error loading data: {error}</p>
           <button onClick={() => {
             retryLoad();
             refetchMovies();
@@ -277,13 +291,13 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!loadingState.error && movieStore.isDataEmpty() && (
+      {!error && movieStore.isDataEmpty() && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
       )}
 
-      {!loadingState.error && (
+      {!error && (
         sectionConfigs.map(({ title, key, type }) => (
           <MovieCarouselSection
             key={key}
