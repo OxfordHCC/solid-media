@@ -1,4 +1,4 @@
-import { SolidDataset, createThing, setUrl, setInteger, setThing, asUrl, setDatetime, getThingAll, getUrl, removeThing, getThing, Thing, getInteger, getStringNoLocaleAll, createSolidDataset, setStringNoLocale, addUrl, addStringNoLocale } from "@inrupt/solid-client";
+import { SolidDataset, createThing, setUrl, setInteger, setThing, asUrl, setDatetime, getThingAll, getUrl, removeThing, getThing, Thing, getInteger, getStringNoLocaleAll, createSolidDataset, setStringNoLocale, addUrl, addStringNoLocale, getDatetime } from "@inrupt/solid-client";
 import { RDF, DCTERMS, SCHEMA_INRUPT } from "@inrupt/vocab-common-rdf";
 import { MovieData } from "./types";
 import { MediaData } from "../../apis/tmdb";
@@ -97,8 +97,7 @@ export function datasetToMovieDataInfo(movieDataset: SolidDataset, url: string, 
   const [tmdbUrl] = urls.filter(x => x.startsWith('https://www.themoviedb.org/'));
 
   const title = getStringNoLocaleAll(movieThing, 'https://schema.org/name')[0]!;
-  const releasedString = getStringNoLocaleAll(movieThing, 'https://schema.org/datePublished')[0]!;
-  const released = new Date(releasedString);
+  const released = getDatetime(movieThing, 'https://schema.org/datePublished')!;
   const icon = getStringNoLocaleAll(movieThing, 'https://schema.org/image')[0]!;
 
   return {
