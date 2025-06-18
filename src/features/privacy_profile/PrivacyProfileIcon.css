@@ -58,6 +58,17 @@
 	}
 }
 
+.privacy-profile-heading {
+	font-size: 12px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.8);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	padding: 4px 12px 8px 12px;
+	margin-bottom: 4px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .privacy-profile-option {
 	display: flex;
 	align-items: center;
@@ -104,17 +115,17 @@
 		top: 15px;
 		left: 15px;
 	}
-	
+
 	.privacy-profile-button {
 		width: 45px;
 		height: 45px;
 		font-size: 18px;
 	}
-	
+
 	.privacy-profile-dropdown {
 		min-width: 140px;
 	}
-	
+
 	.profile-label {
 		font-size: 13px;
 	}

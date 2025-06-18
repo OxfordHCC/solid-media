@@ -92,6 +92,7 @@ export default function PrivacyProfileIcon({ currentProfile, onProfileChange }: 
 
       {isDropdownOpen && (
         <div class="privacy-profile-dropdown">
+          <div class="privacy-profile-heading">Privacy Profile</div>
           {Object.values(PrivacyProfile).map((profile) => (
             <button
               key={profile}
