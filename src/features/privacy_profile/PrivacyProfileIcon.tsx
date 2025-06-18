@@ -21,14 +21,16 @@ interface PrivacyProfileIconProps {
   onProfileChange: (profile: PrivacyProfile) => Promise<void>;
 }
 
-const privacyIcons = {
+const privacyIcons: Record<PrivacyProfile | 'null', string> = {
+  'null': '❓',
   [PrivacyProfile.LOCAL]: '🔒',
   [PrivacyProfile.ACCURACY]: '🎯',
   [PrivacyProfile.FUNCTION]: '⚙️',
   [PrivacyProfile.FULL]: '🌐',
 };
 
-const privacyLabels = {
+const privacyLabels: Record<PrivacyProfile | 'null', string> = {
+  'null': 'Not Set',
   [PrivacyProfile.LOCAL]: 'Local',
   [PrivacyProfile.ACCURACY]: 'Accuracy',
   [PrivacyProfile.FUNCTION]: 'Function',
@@ -74,8 +76,8 @@ export default function PrivacyProfileIcon({ currentProfile, onProfileChange }: 
     }
   };
 
-  const currentIcon = currentProfile ? privacyIcons[currentProfile] : '🔒';
-  const currentLabel = currentProfile ? privacyLabels[currentProfile] : 'Local';
+  const currentIcon = privacyIcons[currentProfile ?? 'null'];
+  const currentLabel = privacyLabels[currentProfile ?? 'null'];
 
   return (
     <div class="privacy-profile-icon" ref={dropdownRef}>
