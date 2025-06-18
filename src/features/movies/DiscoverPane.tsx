@@ -16,6 +16,9 @@ import {
   MovieData,
   State
 } from './types';
+import { PrivacyProfile, UIElement } from '../privacy_profile/enums';
+import { PrivacyProfileUIElements } from '../privacy_profile/privacyProfileUI';
+import { getPrivacyProfileFromWebIdProfile } from '../privacy_profile/utils';
 
 const MAX_RECOMMENDATIONS = 10;
 
@@ -63,6 +66,20 @@ export default function DiscoverPane() {
   const webID = session.info.webId!;
   const parts = webID.split('/');
   const pod = parts.slice(0, parts.length - 2).join('/');
+
+  const [privacyProfile, setPrivacyProfile] = useState<PrivacyProfile | null>(null);
+  const enabledUIElements = useMemo<UIElement[]>(() => privacyProfile ? PrivacyProfileUIElements[privacyProfile] : PrivacyProfileUIElements.null, [privacyProfile]);
+
+  useEffect(() => {
+    // Load privacy profile from webID
+    getPrivacyProfileFromWebIdProfile(webID, session.fetch)
+      .then(profile => {
+        setPrivacyProfile(profile);
+      })
+      .catch(error => {
+        console.error('Error loading privacy profile:', error);
+      });
+  }, [webID, session.fetch]);
 
   // React Query for movie data
   const {
@@ -298,17 +315,30 @@ export default function DiscoverPane() {
       )}
 
       {!error && (
-        sectionConfigs.map(({ title, key, type }) => (
-          <MovieCarouselSection
-            key={key}
-            title={title}
-            items={movieStore[key] as Set<string>}
-            movies={movieStore.movies}
-            type={type}
-            session={session}
-            pod={pod}
-          />
-        ))
+        sectionConfigs
+          .filter(({ title, key, type }) => {
+            if (type === 'friend') {
+              return enabledUIElements.includes(UIElement.FRIEND_MOVIE);
+            }
+            if (key == 'friendLiked') {
+              return enabledUIElements.includes(UIElement.FRIEND_LIKED);
+            }
+            if (key == 'recommended') {
+              return enabledUIElements.includes(UIElement.RECOMMENDATION);
+            }
+            return true;
+          })
+          .map(({ title, key, type }) => (
+            <MovieCarouselSection
+              key={key}
+              title={title}
+              items={movieStore[key] as Set<string>}
+              movies={movieStore.movies}
+              type={type}
+              session={session}
+              pod={pod}
+            />
+          ))
       )}
 
       {activeModal === 'add-movies' && (
