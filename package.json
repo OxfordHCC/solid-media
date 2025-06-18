@@ -30,7 +30,7 @@
     "@tanstack/react-query": "^5.80.7",
     "preact": "^10.7.1",
     "rdflib": "^2.2.19",
-    "wouter-preact": "^2.7.5",
+    "wouter-preact": "^3.7.1",
     "zustand": "^5.0.5"
   },
   "devDependencies": {
