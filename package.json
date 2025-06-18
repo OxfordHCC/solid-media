@@ -28,6 +28,7 @@
     "@inrupt/solid-client-authn-browser": "^1.11.7",
     "@inrupt/vocab-common-rdf": "^1.0.3",
     "@tanstack/react-query": "^5.80.7",
+    "p-limit": "^6.2.0",
     "preact": "^10.7.1",
     "rdflib": "^2.2.19",
     "wouter-preact": "^3.7.1",

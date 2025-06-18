@@ -1,3 +1,4 @@
+import pLimit from 'p-limit';
 import {
   deleteSolidDataset,
   getContainedResourceUrlAll,
@@ -9,13 +10,15 @@ import { MovieData, MovieListItem, PersonInfo } from './types';
 import { datasetToMovieDataInfo, mediaDataToDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 
+const limit = pLimit(5);
+
 // React Query compatible dataset operations
 
 export async function loadMovieList(person: PersonInfo, fetch: typeof window.fetch): Promise<MovieListItem[]> {
   try {
     const parts = person.id.split('/');
     const pod = parts.slice(0, parts.length - 2).join('/');
-    const moviesDataset = await getSolidDataset(`${pod}/movies/`, { fetch });
+    const moviesDataset = await limit(() => getSolidDataset(`${pod}/movies/`, { fetch }));
     const movies = getContainedResourceUrlAll(moviesDataset);
     return movies.map(url => ({ ...person, url }));
   } catch {
@@ -25,7 +28,7 @@ export async function loadMovieList(person: PersonInfo, fetch: typeof window.fet
 
 export async function loadMovieDetail(movieItem: MovieListItem, fetch: typeof window.fetch): Promise<MovieData> {
   const { type, url } = movieItem;
-  const movieDataset = await getSolidDataset(url, { fetch });
+  const movieDataset = await limit(() => getSolidDataset(url, { fetch }));
   return datasetToMovieDataInfo(movieDataset, url, type);
 }
 

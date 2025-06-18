@@ -42,6 +42,7 @@ export function useMovieDetail(
     enabled,
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
+    retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500, // add delay between retries
   });
 }
 
