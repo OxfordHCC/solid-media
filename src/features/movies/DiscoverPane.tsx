@@ -334,10 +334,10 @@ export default function DiscoverPane() {
         sectionConfigs
           .filter(({ title, key, type }) => {
             if (type === 'friend') {
+              if (key == 'friendLiked') {
+                return enabledUIElements.includes(UIElement.FRIEND_LIKED);
+              }
               return enabledUIElements.includes(UIElement.FRIEND_MOVIE);
-            }
-            if (key == 'friendLiked') {
-              return enabledUIElements.includes(UIElement.FRIEND_LIKED);
             }
             if (key == 'recommended') {
               return enabledUIElements.includes(UIElement.RECOMMENDATION);
