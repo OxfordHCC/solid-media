@@ -19,7 +19,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "predeploy": "npm run build && ncp ./src/.nojekyll ./build/.nojekyll",
+    "predeploy": "npm run build && cp ./src/.nojekyll ./build/.nojekyll",
     "deploy": "gh-pages -d build -t true"
   },
   "author": "OxfordHCC",
@@ -28,7 +28,6 @@
     "@inrupt/solid-client-authn-browser": "^1.11.7",
     "@inrupt/vocab-common-rdf": "^1.0.3",
     "@tanstack/react-query": "^5.80.7",
-    "node-gyp": "^9.3.1",
     "preact": "^10.7.1",
     "rdflib": "^2.2.19",
     "wouter-preact": "^2.7.5",
@@ -36,8 +35,6 @@
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
-    "gh-pages": "^3.2.3",
-    "ncp": "^2.0.0",
     "npm-force-resolutions": "^0.0.10",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
