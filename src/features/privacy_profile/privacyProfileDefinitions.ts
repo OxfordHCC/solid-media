@@ -27,3 +27,20 @@ export function enumIsValid<T extends Record<string, string>>(
 ): value is T[keyof T] {
     return Object.values(enumObject).includes(value as T[keyof T]);
 }
+export const PrivacyProfileUIElements = {
+    null: [
+        UIElement.FRIEND_MOVIE,
+        UIElement.RECOMMENDATION,
+    ],
+    [PrivacyProfile.LOCAL]: [],
+    [PrivacyProfile.ACCURACY]: [UIElement.RECOMMENDATION],
+    [PrivacyProfile.FUNCTION]: [
+        UIElement.FRIEND_MOVIE,
+        UIElement.RECOMMENDATION,
+    ],
+    [PrivacyProfile.FULL]: [
+        UIElement.FRIEND_MOVIE,
+        UIElement.FRIEND_LIKED,
+        UIElement.RECOMMENDATION,
+    ],
+};

@@ -17,8 +17,8 @@ import {
   MovieData,
   State
 } from './types';
-import { PrivacyProfile, UIElement } from '../privacy_profile/enums';
-import { PrivacyProfileUIElements } from '../privacy_profile/privacyProfileUI';
+import { PrivacyProfile, UIElement } from '../privacy_profile/privacyProfileDefinitions';
+import { PrivacyProfileUIElements } from '../privacy_profile/privacyProfileDefinitions';
 import { getPrivacyProfileFromWebIdProfile, savePrivacyProfileToWebIdProfile } from '../privacy_profile/utils';
 
 const MAX_RECOMMENDATIONS = 10;

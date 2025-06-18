@@ -1,6 +1,6 @@
 import { SolidDataset, getSolidDataset, getStringNoLocale, getThing, getUrl, setStringNoLocale, saveSolidDatasetAt, setThing, setUrl, getResourceInfo, createSolidDataset, createThing } from '@inrupt/solid-client';
 import { Namespace } from 'rdflib';
-import { PrivacyProfile, enumFromString } from './enums';
+import { PrivacyProfile, enumFromString } from './privacyProfileDefinitions';
 
 const NS_CHAIMEDIA = Namespace('urn:podtok:core#');
 

@@ -1,6 +1,6 @@
 import { VNode } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { PrivacyProfile } from './enums';
+import { PrivacyProfile } from './privacyProfileDefinitions';
 import './PrivacyProfileIcon.css';
 
 /**
