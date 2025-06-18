@@ -3,6 +3,7 @@ import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
 import Logout from '../../components/Logout';
+import PrivacyProfileIcon from '../privacy_profile/PrivacyProfileIcon';
 import { useSessionContext } from '../../contexts/SessionContext';
 import AddPopup from './AddMovies';
 import MovieCarouselSection from './MovieCarouselSection';
@@ -18,7 +19,7 @@ import {
 } from './types';
 import { PrivacyProfile, UIElement } from '../privacy_profile/enums';
 import { PrivacyProfileUIElements } from '../privacy_profile/privacyProfileUI';
-import { getPrivacyProfileFromWebIdProfile } from '../privacy_profile/utils';
+import { getPrivacyProfileFromWebIdProfile, savePrivacyProfileToWebIdProfile } from '../privacy_profile/utils';
 
 const MAX_RECOMMENDATIONS = 10;
 
@@ -80,6 +81,16 @@ export default function DiscoverPane() {
         console.error('Error loading privacy profile:', error);
       });
   }, [webID, session.fetch]);
+
+  const handlePrivacyProfileChange = async (newProfile: PrivacyProfile): Promise<void> => {
+    try {
+      await savePrivacyProfileToWebIdProfile(webID, newProfile, session.fetch);
+      setPrivacyProfile(newProfile);
+    } catch (error) {
+      console.error('Failed to save privacy profile:', error);
+      throw error;
+    }
+  };
 
   // React Query for movie data
   const {
@@ -284,6 +295,11 @@ export default function DiscoverPane() {
       <div class="logo-container">
         <img src={logo} alt="Logo"></img>
       </div>
+
+      <PrivacyProfileIcon
+        currentProfile={privacyProfile}
+        onProfileChange={handlePrivacyProfileChange}
+      />
 
       <div class='add-button-wrapper'>
         <button class='add-button' onClick={() => setActiveModal('add-movies')}>➕ Add movies</button>

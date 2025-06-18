@@ -1,0 +1,121 @@
+/* Privacy Profile Icon Component Styles */
+
+.privacy-profile-icon {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	z-index: 10;
+}
+
+.privacy-profile-button {
+	background: rgba(0, 0, 0, 0.7);
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	font-size: 20px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease-in-out;
+	color: white;
+}
+
+.privacy-profile-button:hover {
+	background: rgba(0, 0, 0, 0.9);
+	border-color: rgba(255, 255, 255, 0.6);
+	transform: scale(1.05);
+}
+
+.privacy-profile-button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.privacy-profile-dropdown {
+	position: absolute;
+	top: 60px;
+	left: 0;
+	background: rgba(0, 0, 0, 0.9);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: 8px;
+	padding: 8px;
+	min-width: 150px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+	animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.privacy-profile-option {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 12px;
+	background: none;
+	border: none;
+	color: white;
+	cursor: pointer;
+	border-radius: 4px;
+	transition: background-color 0.2s ease-in-out;
+	text-align: left;
+	font-family: inherit;
+}
+
+.privacy-profile-option:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.privacy-profile-option.selected {
+	background: rgba(87, 101, 255, 0.3);
+}
+
+.privacy-profile-option:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.profile-icon {
+	font-size: 16px;
+	flex-shrink: 0;
+}
+
+.profile-label {
+	font-size: 14px;
+	font-weight: 500;
+	flex-grow: 1;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+	.privacy-profile-icon {
+		top: 15px;
+		left: 15px;
+	}
+	
+	.privacy-profile-button {
+		width: 45px;
+		height: 45px;
+		font-size: 18px;
+	}
+	
+	.privacy-profile-dropdown {
+		min-width: 140px;
+	}
+	
+	.profile-label {
+		font-size: 13px;
+	}
+}
