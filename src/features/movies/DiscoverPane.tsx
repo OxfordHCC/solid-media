@@ -3,7 +3,7 @@ import { MediaData, search } from '../../apis/tmdb';
 import logo from '../../assets/logo.png';
 import AddFriends from '../../components/AddFriends';
 import Logout from '../../components/Logout';
-import { useAuthenticatedSession, useSession } from '../../contexts/SessionContext';
+import { useSessionContext } from '../../contexts/SessionContext';
 import AddPopup from './AddMovies';
 import MovieCarouselSection from './MovieCarouselSection';
 
@@ -56,9 +56,9 @@ export default function DiscoverPane() {
   const movieStore = useMovieStore();
   const { loadMovies, setMovie, removeMovie } = movieStore;
 
-  const session = useAuthenticatedSession();
-  if (!session) return <div />; // Guard against rendering when not logged in
-  const { logout } = useSession();
+  const sessionContext = useSessionContext(true);
+  if (!sessionContext) return <div />; // Guard against rendering when not logged in
+  const { session, logout } = sessionContext;
 
   const webID = session.info.webId!;
   const parts = webID.split('/');

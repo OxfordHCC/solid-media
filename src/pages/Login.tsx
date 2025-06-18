@@ -1,6 +1,6 @@
 import { VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { useSession } from '../contexts/SessionContext';
+import { useSessionContext } from '../contexts/SessionContext';
 import Form from '../components/ui/Form';
 import logo from '../assets/logo.png';
 
@@ -17,7 +17,7 @@ const providers = [
 ];
 
 export default function Login({redirect}: {redirect: string | null}): VNode {
-	const { session } = useSession();
+	const { session } = useSessionContext();
 	const [provider, setProvider] = useState('');
 
 	const callbackUrl = `${window.location.origin}${BASE_URL}callback${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`;

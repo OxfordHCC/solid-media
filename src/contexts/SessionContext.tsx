@@ -50,26 +50,21 @@ export function SessionProvider({ children }: { children: ComponentChildren }) {
 	);
 }
 
-export function useSession(): SessionContextType {
+export function useSessionContext(): SessionContextType;
+export function useSessionContext(requireAuth: true): SessionContextType | null;
+export function useSessionContext(requireAuth: boolean): SessionContextType | null;
+export function useSessionContext(requireAuth: boolean = false): SessionContextType | null {
 	const context = useContext(SessionContext) as SessionContextType;
 	if (context === undefined) {
 		throw new Error('useSession must be used within a SessionProvider');
 	}
-	return context;
-}
 
-export function useAuthenticatedSession(): Session;
-export function useAuthenticatedSession(redirect: true): Session;
-export function useAuthenticatedSession(redirect: boolean = true): Session | null {
-	const { session, isLoggedIn } = useSession();
 	const [location, setLocation] = useLocation();
 
-	if (isLoggedIn) {
-		return session;
-	} else {
-		if (redirect) {
-			setLocation(`${BASE_URL}login?redirect=${encodeURIComponent(location)}`);
-		}
+	if (requireAuth && !context.isLoggedIn) {
+		setLocation(`${BASE_URL}login?redirect=${encodeURIComponent(location)}`);
 		return null;
 	}
+
+	return context;
 }
