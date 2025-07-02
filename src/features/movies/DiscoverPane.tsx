@@ -64,9 +64,11 @@ export default function DiscoverPane() {
   if (!sessionContext) return <div />; // Guard against rendering when not logged in
   const { session, logout } = sessionContext;
 
-  const webID = session.info.webId!;
-  const parts = webID.split('/');
-  const pod = parts.slice(0, parts.length - 2).join('/');
+  const webID = useMemo(() => session.info.webId!, [session.info.webId]);
+  const pod = useMemo(() => {
+    const parts = webID.split('/');
+    return parts.slice(0, parts.length - 2).join('/');
+  }, [webID]);
 
   // Use coordinated actions for movie operations
   const { saveMovie, syncMovieData } = useCoordinatedMovieActions(session, pod);
