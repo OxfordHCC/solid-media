@@ -104,16 +104,16 @@ export default function DiscoverPane() {
     refetch: refetchMovies
   } = useAllMovies(webID, friends, session.fetch, hasBasicLoaded);
 
+  const isLoading = useMemo(() => {
+    return !hasBasicLoaded || moviesLoading || isRecommendationLoading;
+  }, [hasBasicLoaded, moviesLoading]);
+
   const retryLoad = () => {
     setHasBasicLoaded(false);
     setError(null);
     // Clear the loaded movies ref to force reload
     loadedMoviesRef.current.clear();
   };
-
-  const isLoading = useMemo(() => {
-    return !hasBasicLoaded || moviesLoading || isRecommendationLoading;
-  }, [hasBasicLoaded, moviesLoading]);
 
   useEffect(() => {
     if (!hasBasicLoaded) {
