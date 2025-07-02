@@ -1,10 +1,7 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
 import { BASE_URL } from '../../env';
-import { PREFIXES_MOVIE } from '../../utils/prefixes';
-import { addRating, fromFriendToMeDataset, removeFromDataset, setWatched } from './datasetUtils';
-import { useDeleteMovie, useSaveMovie, useUpdateMovieDataset } from './movieQueries';
-import { useMovieStore } from './movieStore';
+import { useCoordinatedMovieActions } from './useCoordinatedMovieActions';
 import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
@@ -23,48 +20,30 @@ export const MovieCarouselElement = ({
   pod
 }: MovieCarouselElementProps): VNode => {
   const { solidUrl, watched, liked, title, released, image } = movieData;
-  let { dataset } = movieData;
 
-  // Get store actions and computed values directly
+  // Use coordinated actions instead of separate hooks
   const {
     toggleLike,
     toggleWatch,
     removeMovie,
-    addToMyCollection,
+    addFriendMovieToMyCollection,
     getUserMovieCollection,
-    getFriendMovieCollection
-  } = useMovieStore();
+    getFriendMovieCollection,
+  } = useCoordinatedMovieActions(session, pod);
 
   const userCollection = getUserMovieCollection();
   const friendsCollection = getFriendMovieCollection();
 
-  const updateMovieDataset = useUpdateMovieDataset(session.fetch);
-  const deleteMovie = useDeleteMovie(session.fetch);
-  const saveMovie = useSaveMovie(pod || '', session.fetch);
-
   const buttons = [];
 
+  // Simplified like toggle with automatic state coordination
   const myToggleLike = async (like: boolean | null) => {
-    dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
-    dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
-    switch (like) {
-      case true:
-        dataset = addRating(dataset, solidUrl, 3);
-        break;
-      case false:
-        dataset = addRating(dataset, solidUrl, 1);
-        break;
-      case null:
-        break;
-      default:
-        throw new Error('Invalid like value');
+    try {
+      await toggleLike(movieData, like);
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+      // Error handling - the coordinated action already rolled back the state
     }
-    updateMovieDataset.mutate({
-      datasetUrl: solidUrl,
-      dataset,
-      prefixes: PREFIXES_MOVIE
-    });
-    toggleLike(movie, like, dataset);
   };
 
   if (type === 'me') {
@@ -89,22 +68,10 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-watch',
       selected: watched,
       click: async () => {
-        if (watched) {
-          dataset = removeFromDataset(dataset, 'https://schema.org/WatchAction');
-          updateMovieDataset.mutate({
-            datasetUrl: solidUrl,
-            dataset,
-            prefixes: PREFIXES_MOVIE
-          });
-          toggleWatch(movie, false, dataset);
-        } else {
-          dataset = setWatched(dataset, solidUrl);
-          updateMovieDataset.mutate({
-            datasetUrl: solidUrl,
-            dataset,
-            prefixes: PREFIXES_MOVIE
-          });
-          toggleWatch(movie, true, dataset);
+        try {
+          await toggleWatch(movieData, !watched);
+        } catch (error) {
+          console.error('Failed to toggle watch:', error);
         }
       }
     });
@@ -112,9 +79,11 @@ export const MovieCarouselElement = ({
       text: '❌',
       cssClass: 'carousel-remove',
       click: async () => {
-        deleteMovie.mutate(solidUrl);
-        const shouldRemoveFromDict = !friendsCollection.has(movie);
-        removeMovie(movie, shouldRemoveFromDict);
+        try {
+          await removeMovie(movieData, friendsCollection);
+        } catch (error) {
+          console.error('Failed to remove movie:', error);
+        }
       }
     });
   } else if (type === 'friend') {
@@ -122,21 +91,10 @@ export const MovieCarouselElement = ({
       text: '➕',
       cssClass: 'carousel-save',
       click: async () => {
-        const isAlreadyInUserMovies = userCollection.has(movie);
-        if (!isAlreadyInUserMovies && pod) {
-          const { dataset: movieDataset, datasetName } = fromFriendToMeDataset(
-            dataset,
-            solidUrl,
-            pod,
-            title
-          );
-          const newUrl = `${pod}/movies/${datasetName}`;
-          updateMovieDataset.mutate({
-            datasetUrl: newUrl,
-            dataset: movieDataset,
-            prefixes: PREFIXES_MOVIE
-          });
-          addToMyCollection(movie, { type: 'me', solidUrl: newUrl, dataset: movieDataset });
+        try {
+          await addFriendMovieToMyCollection(movieData, userCollection);
+        } catch (error) {
+          console.error('Failed to add movie to collection:', error);
         }
       }
     });

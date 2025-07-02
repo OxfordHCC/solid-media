@@ -11,8 +11,9 @@ import MovieCarouselSection from './MovieCarouselSection';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { useAllMovies, useSaveMovie } from './movieQueries';
+import { useAllMovies } from './movieQueries';
 import { useMovieStore } from './movieStore';
+import { useCoordinatedMovieActions } from './useCoordinatedMovieActions';
 import {
   MovieData,
   State
@@ -58,7 +59,7 @@ export default function DiscoverPane() {
 
   const loadedMoviesRef = useRef<Set<string>>(new Set());
   const movieStore = useMovieStore();
-  const { loadMovies, setMovie, removeMovie } = movieStore;
+  const { loadMovies, removeMovie } = movieStore;
 
   const sessionContext = useSessionContext(true);
   if (!sessionContext) return <div />; // Guard against rendering when not logged in
@@ -67,6 +68,9 @@ export default function DiscoverPane() {
   const webID = session.info.webId!;
   const parts = webID.split('/');
   const pod = parts.slice(0, parts.length - 2).join('/');
+
+  // Use coordinated actions for movie operations
+  const { saveMovie } = useCoordinatedMovieActions(session, pod);
 
   const [privacyProfile, setPrivacyProfile] = useState<PrivacyProfile | null>(null);
   const enabledUIElements = useMemo<UIElement[]>(() => privacyProfile ? PrivacyProfileUIElements[privacyProfile] : PrivacyProfileUIElements.null, [privacyProfile]);
@@ -98,9 +102,6 @@ export default function DiscoverPane() {
     isLoading: moviesLoading,
     refetch: refetchMovies
   } = useAllMovies(webID, friends, session.fetch, hasBasicLoaded);
-
-  // React Query mutation for saving movies
-  const saveMovieMutation = useSaveMovie(pod, session.fetch);
 
   const retryLoad = () => {
     setHasBasicLoaded(false);
@@ -219,16 +220,11 @@ export default function DiscoverPane() {
         const movies = await search(name);
         const movie = movies.find((x: any) => x.title === name);
         if (movie) {
-          const savedMovie = await new Promise<MovieData>((resolve, reject) => {
-            saveMovieMutation.mutate(
-              { media: movie, recommended: true },
-              {
-                onSuccess: resolve,
-                onError: reject
-              }
-            );
-          });
-          updateStateAfterSave(savedMovie, movie.tmdbUrl);
+          try {
+            const savedMovie = await saveMovie(movie, true);
+          } catch (error) {
+            console.error('Failed to save recommendation:', error);
+          }
         }
       }
     } catch (error) {
@@ -238,22 +234,13 @@ export default function DiscoverPane() {
     }
   }
 
-  function updateStateAfterSave(movieData: MovieData, tmdbUrl: string): void {
-    setMovie(movieData, tmdbUrl);
-  }
-
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
     if (!Array.from(movieStore.movies.values()).some((x: MovieData) => x.title === media.title)) {
-      const savedMovie = await new Promise<MovieData>((resolve, reject) => {
-        saveMovieMutation.mutate(
-          { media, recommended: false },
-          {
-            onSuccess: resolve,
-            onError: reject
-          }
-        );
-      });
-      updateStateAfterSave(savedMovie, media.tmdbUrl);
+      try {
+        await saveMovie(media, false);
+      } catch (error) {
+        console.error('Failed to save movie:', error);
+      }
     }
   };
 
@@ -265,28 +252,18 @@ export default function DiscoverPane() {
       const movieWebIDPod = movieWebIDParts.slice(0, movieWebIDParts.length - 2).join('/');
 
       if (movieWebIDPod !== pod) {
-        data = await new Promise<MovieData>((resolve, reject) => {
-          saveMovieMutation.mutate(
-            { media, recommended: false, watch: true },
-            {
-              onSuccess: resolve,
-              onError: reject
-            }
-          );
-        });
-        updateStateAfterSave(data, media.tmdbUrl);
+        try {
+          data = await saveMovie(media, false, true);
+        } catch (error) {
+          console.error('Failed to save movie:', error);
+        }
       }
     } else {
-      data = await new Promise<MovieData>((resolve, reject) => {
-        saveMovieMutation.mutate(
-          { media, recommended: false, watch: true },
-          {
-            onSuccess: resolve,
-            onError: reject
-          }
-        );
-      });
-      updateStateAfterSave(data, media.tmdbUrl);
+      try {
+        data = await saveMovie(media, false, true);
+      } catch (error) {
+        console.error('Failed to save movie:', error);
+      }
     }
   };
 

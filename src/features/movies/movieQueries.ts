@@ -3,6 +3,7 @@ import { MovieData, PersonInfo, MovieListItem } from './types';
 import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from "./remoteMovieDataUtils";
 import { saveMovie } from './remoteMovieDataUtils';
 import { MediaData } from '../../apis/tmdb';
+import { SolidDataset } from '@inrupt/solid-client';
 
 // Query keys
 export const movieQueryKeys = {
