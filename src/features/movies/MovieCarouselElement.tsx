@@ -44,6 +44,29 @@ export const MovieCarouselElement = ({
 
   const buttons = [];
 
+  const myToggleLike = async (like: boolean | null) => {
+    dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
+    dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
+    switch (like) {
+      case true:
+        dataset = addRating(dataset, solidUrl, 3);
+        break;
+      case false:
+        dataset = addRating(dataset, solidUrl, 1);
+        break;
+      case null:
+        break;
+      default:
+        throw new Error('Invalid like value');
+    }
+    updateMovieDataset.mutate({
+      datasetUrl: solidUrl,
+      dataset,
+      prefixes: PREFIXES_MOVIE
+    });
+    toggleLike(movie, like, dataset);
+  };
+
   if (type === 'me') {
     if (watched) {
       buttons.push(
@@ -51,51 +74,13 @@ export const MovieCarouselElement = ({
           text: '👎',
           cssClass: 'carousel-dislike',
           selected: liked === false,
-          click: async () => {
-            dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
-            dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
-            if (liked === false) {
-              updateMovieDataset.mutate({
-                datasetUrl: solidUrl,
-                dataset,
-                prefixes: PREFIXES_MOVIE
-              });
-              toggleLike(movie, null, dataset);
-            } else {
-              dataset = addRating(dataset, solidUrl, 1);
-              updateMovieDataset.mutate({
-                datasetUrl: solidUrl,
-                dataset,
-                prefixes: PREFIXES_MOVIE
-              });
-              toggleLike(movie, false, dataset);
-            }
-          }
+          click: async () => await myToggleLike(liked === false ? null : false)
         },
         {
           text: '👍',
           cssClass: 'carousel-like',
           selected: liked === true,
-          click: async () => {
-            dataset = removeFromDataset(dataset, 'https://schema.org/Rating');
-            dataset = removeFromDataset(dataset, 'https://schema.org/ReviewAction');
-            if (liked === true) {
-              updateMovieDataset.mutate({
-                datasetUrl: solidUrl,
-                dataset,
-                prefixes: PREFIXES_MOVIE
-              });
-              toggleLike(movie, null, dataset);
-            } else {
-              dataset = addRating(dataset, solidUrl, 3);
-              updateMovieDataset.mutate({
-                datasetUrl: solidUrl,
-                dataset,
-                prefixes: PREFIXES_MOVIE
-              });
-              toggleLike(movie, true, dataset);
-            }
-          }
+          click: async () => await myToggleLike(liked === true ? null : true)
         }
       );
     }
