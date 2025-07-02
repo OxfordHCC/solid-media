@@ -18,9 +18,8 @@ import {
   MovieData,
   State
 } from './types';
-import { PrivacyProfile, UIElement } from '../privacy_profile/privacyProfileDefinitions';
-import { PrivacyProfileUIElements } from '../privacy_profile/privacyProfileDefinitions';
-import { getPrivacyProfileFromWebIdProfile, savePrivacyProfileToWebIdProfile } from '../privacy_profile/utils';
+import { UIElement } from '../privacy_profile/privacyProfileDefinitions';
+import { usePrivacyProfile } from '../privacy_profile/usePrivacyProfile';
 
 const MAX_RECOMMENDATIONS = 10;
 
@@ -73,29 +72,12 @@ export default function DiscoverPane() {
   // Use coordinated actions for movie operations
   const { saveMovie, syncMovieData } = useCoordinatedMovieActions(session, pod);
 
-  const [privacyProfile, setPrivacyProfile] = useState<PrivacyProfile | null>(null);
-  const enabledUIElements = useMemo<UIElement[]>(() => privacyProfile ? PrivacyProfileUIElements[privacyProfile] : PrivacyProfileUIElements.null, [privacyProfile]);
-
-  useEffect(() => {
-    // Load privacy profile from webID
-    getPrivacyProfileFromWebIdProfile(webID, session.fetch)
-      .then(profile => {
-        setPrivacyProfile(profile);
-      })
-      .catch(error => {
-        console.error('Error loading privacy profile:', error);
-      });
-  }, [webID, session.fetch]);
-
-  const handlePrivacyProfileChange = async (newProfile: PrivacyProfile): Promise<void> => {
-    try {
-      await savePrivacyProfileToWebIdProfile(webID, newProfile, session.fetch);
-      setPrivacyProfile(newProfile);
-    } catch (error) {
-      console.error('Failed to save privacy profile:', error);
-      throw error;
-    }
-  };
+  // Privacy profile management
+  const {
+    privacyProfile,
+    enabledUIElements,
+    updatePrivacyProfile: handlePrivacyProfileChange
+  } = usePrivacyProfile({ webID, authFetch: session.fetch });
 
   // React Query for movie data
   const {
