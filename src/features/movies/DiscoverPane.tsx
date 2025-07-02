@@ -59,7 +59,6 @@ export default function DiscoverPane() {
 
   const loadedMoviesRef = useRef<Set<string>>(new Set());
   const movieStore = useMovieStore();
-  const { loadMovies, removeMovie } = movieStore;
 
   const sessionContext = useSessionContext(true);
   if (!sessionContext) return <div />; // Guard against rendering when not logged in
@@ -70,7 +69,7 @@ export default function DiscoverPane() {
   const pod = parts.slice(0, parts.length - 2).join('/');
 
   // Use coordinated actions for movie operations
-  const { saveMovie } = useCoordinatedMovieActions(session, pod);
+  const { saveMovie, syncMovieData } = useCoordinatedMovieActions(session, pod);
 
   const [privacyProfile, setPrivacyProfile] = useState<PrivacyProfile | null>(null);
   const enabledUIElements = useMemo<UIElement[]>(() => privacyProfile ? PrivacyProfileUIElements[privacyProfile] : PrivacyProfileUIElements.null, [privacyProfile]);
@@ -123,9 +122,9 @@ export default function DiscoverPane() {
   // Incrementally sync React Query movie data with reducer state
   useEffect(() => {
     if (moviesData && moviesData.length > 0) {
-      mergeLoadedMovies(moviesData);
+      syncMovieData(moviesData, loadedMoviesRef);
     }
-  }, [moviesData]);
+  }, [moviesData, syncMovieData]);
 
   useEffect(() => {
     if (hasBasicLoaded && !moviesLoading && !isRecommendationLoading) {
@@ -159,49 +158,6 @@ export default function DiscoverPane() {
       setError(
         error instanceof Error ? error.message : 'Failed to load data'
       );
-    }
-  }
-
-  /**
-   * Incrementally merge loaded movies into the movie store state.
-   */
-  async function mergeLoadedMovies(
-    movies: MovieData[]
-  ): Promise<void> {
-    // Get current movie URLs from the latest data
-    const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
-
-    // Find new movies that haven't been loaded yet
-    const newMovies = movies.filter(movie =>
-      !loadedMoviesRef.current.has(movie.tmdbUrl)
-    );
-
-    // Find movies that were loaded before but are no longer in the data (deleted)
-    const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
-      !currentMovieUrls.has(tmdbUrl)
-    );
-
-    // Remove deleted movies from tracking
-    deletedMovieUrls.forEach(tmdbUrl => {
-      loadedMoviesRef.current.delete(tmdbUrl);
-    });
-
-    // Dispatch deleted movies for cleanup
-    if (deletedMovieUrls.length > 0) {
-      deletedMovieUrls.forEach(tmdbUrl => {
-        removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
-      });
-    }
-
-    // Add and dispatch new movies
-    if (newMovies.length > 0) {
-      // Update the ref to track loaded movies
-      newMovies.forEach(movie => {
-        loadedMoviesRef.current.add(movie.tmdbUrl);
-      });
-
-      // Dispatch only the new movies for incremental loading
-      loadMovies(new Set(newMovies));
     }
   }
 

@@ -4,6 +4,7 @@ import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from 
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { MovieData } from './types';
 import { MediaData } from '../../apis/tmdb';
+import { MutableRef } from 'preact/hooks';
 
 /**
  * Coordinated movie actions that manage both external (SOLID) and internal (Zustand) state
@@ -192,12 +193,58 @@ export function useCoordinatedMovieActions(session: any, pod?: string) {
     }
   };
 
+  /**
+   * Synchronize movie data between React Query and Zustand store
+   * Handles incremental updates by adding new movies and removing deleted ones
+   */
+  const syncMovieData = async (
+    movies: MovieData[],
+    loadedMoviesRef: MutableRef<Set<string>>
+  ): Promise<void> => {
+    // Get current movie URLs from the latest data
+    const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
+
+    // Find new movies that haven't been loaded yet
+    const newMovies = movies.filter(movie =>
+      !loadedMoviesRef.current.has(movie.tmdbUrl)
+    );
+
+    // Find movies that were loaded before but are no longer in the data (deleted)
+    const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
+      !currentMovieUrls.has(tmdbUrl)
+    );
+
+    // Remove deleted movies from tracking
+    deletedMovieUrls.forEach(tmdbUrl => {
+      loadedMoviesRef.current.delete(tmdbUrl);
+    });
+
+    // Dispatch deleted movies for cleanup
+    if (deletedMovieUrls.length > 0) {
+      deletedMovieUrls.forEach(tmdbUrl => {
+        movieStore.removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
+      });
+    }
+
+    // Add and dispatch new movies
+    if (newMovies.length > 0) {
+      // Update the ref to track loaded movies
+      newMovies.forEach(movie => {
+        loadedMoviesRef.current.add(movie.tmdbUrl);
+      });
+
+      // Dispatch only the new movies for incremental loading
+      movieStore.loadMovies(new Set(newMovies));
+    }
+  };
+
   return {
     toggleLike,
     toggleWatch,
     removeMovie: removeMovieAction,
     addFriendMovieToMyCollection,
     saveMovie: saveMovieAction,
+    syncMovieData,
     // Expose store selectors
     getUserMovieCollection: movieStore.getUserMovieCollection,
     getFriendMovieCollection: movieStore.getFriendMovieCollection,
