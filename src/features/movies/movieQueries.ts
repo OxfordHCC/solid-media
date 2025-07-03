@@ -14,37 +14,85 @@ export const movieQueryKeys = {
   detail: (url: string) => [...movieQueryKeys.details(), url] as const,
   userMovies: (webID: string) => [...movieQueryKeys.all, 'user', webID] as const,
   friendMovies: (friendIds: string[]) => [...movieQueryKeys.all, 'friends', friendIds.sort().join(',')] as const,
+  allMovies: (webID: string, friends: string[]) => [
+    ...movieQueryKeys.all,
+    'allMovies',
+    webID,
+    friends.sort().join(',')
+  ] as const,
 };
 
-// Hook to fetch movie list for a person
-export function useMovieList(
-  person: PersonInfo,
-  fetch: typeof window.fetch,
-  enabled: boolean = true
-): UseQueryResult<MovieListItem[], Error> {
-  return useQuery({
-    queryKey: movieQueryKeys.list(person.id),
-    queryFn: () => loadMovieList(person, fetch),
-    enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
-  });
+// Hook to fetch movie list on demand
+export function useFetchMovieList(
+  fetch: typeof window.fetch
+) {
+  const queryClient = useQueryClient();
+
+  const fetchMovieList = (person: PersonInfo): Promise<MovieListItem[]> => {
+    return queryClient.fetchQuery({
+      queryKey: movieQueryKeys.list(person.id),
+      queryFn: () => loadMovieList(person, fetch),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+    });
+  };
+
+  return fetchMovieList;
 }
 
-// Hook to fetch movie detail
-export function useMovieDetail(
-  movieItem: MovieListItem,
-  fetch: typeof window.fetch,
-  enabled: boolean = true
-): UseQueryResult<MovieData, Error> {
-  return useQuery({
-    queryKey: movieQueryKeys.detail(movieItem.url),
-    queryFn: () => loadMovieDetail(movieItem, fetch),
-    enabled,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    retry: 2,
-    retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500, // add delay between retries
-  });
+// Hook to fetch movie detail on demand
+export function useFetchMovieDetail(
+  fetch: typeof window.fetch
+) {
+  const queryClient = useQueryClient();
+
+  const fetchMovieDetail = (movieItem: MovieListItem): Promise<MovieData> => {
+    return queryClient.fetchQuery({
+      queryKey: movieQueryKeys.detail(movieItem.url),
+      queryFn: () => loadMovieDetail(movieItem, fetch),
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      retry: 2,
+      retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500, // add delay between retries
+    });
+  };
+
+  return fetchMovieDetail;
+}
+
+// Hook to fetch all movies for a user and their friends on demand
+export function useFetchAllMovies(
+  fetch: typeof window.fetch
+) {
+  const fetchMovieList = useFetchMovieList(fetch);
+  const fetchMovieDetail = useFetchMovieDetail(fetch);
+
+  const fetchAllMovies = async (webID: string, friends: string[]): Promise<MovieData[]> => {
+    const people: PersonInfo[] = [
+      { type: 'me', id: webID },
+      ...friends.map(id => ({ type: 'friend' as const, id }))
+    ];
+
+    try {
+      // Fetch all movie lists in parallel
+      const movieLists = await Promise.all(
+        people.map(person => fetchMovieList(person))
+      );
+
+      // Combine all movie items
+      const allMovieItems = movieLists.flat();
+
+      // Fetch all movie details in parallel
+      const allMovies = await Promise.all(
+        allMovieItems.map((item: MovieListItem) => fetchMovieDetail(item))
+      );
+
+      return allMovies;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  return fetchAllMovies;
 }
 
 // Hook to fetch all movies for a user and their friends
@@ -54,48 +102,16 @@ export function useAllMovies(
   fetch: typeof window.fetch,
   enabled: boolean = true
 ) {
-  const people: PersonInfo[] = [
-    { type: 'me', id: webID },
-    ...friends.map(id => ({ type: 'friend' as const, id }))
-  ];
+  const fetchAllMovies = useFetchAllMovies(fetch);
 
-  // Fetch movie lists for all people
-  const movieListQueries = people.map(person =>
-    useMovieList(person, fetch, enabled)
-  );
-
-  // Combine all movie items from successful queries
-  const allMovieItems = movieListQueries
-    .filter(query => query.isSuccess)
-    .flatMap(query => query.data || []);
-
-  // Fetch details for all movies
-  const movieDetailQueries = allMovieItems.map(item =>
-    useMovieDetail(item, fetch, enabled && allMovieItems.length > 0)
-  );
-
-  const isLoading = movieListQueries.some(q => q.isLoading) ||
-                   movieDetailQueries.some(q => q.isLoading);
-
-  const isError = movieListQueries.some(q => q.isError) ||
-                 movieDetailQueries.some(q => q.isError);
-
-  const allMovies = movieDetailQueries
-    .filter(query => query.isSuccess)
-    .map(query => query.data!)
-    .filter(Boolean);
-
-  return {
-    data: allMovies,
-    isLoading,
-    isError,
-    error: movieListQueries.find(q => q.error)?.error ||
-           movieDetailQueries.find(q => q.error)?.error,
-    refetch: () => {
-      movieListQueries.forEach(q => q.refetch());
-      movieDetailQueries.forEach(q => q.refetch());
-    }
-  };
+  return useQuery({
+    queryKey: movieQueryKeys.allMovies(webID, friends),
+    queryFn: () => fetchAllMovies(webID, friends),
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+    retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500,
+  });
 }
 
 // Mutation to save a movie
