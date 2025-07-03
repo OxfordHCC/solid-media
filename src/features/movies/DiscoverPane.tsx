@@ -86,8 +86,8 @@ export default function DiscoverPane() {
   const retryLoad = () => {
     setHasBasicLoaded(false);
     setError(null);
-    // Clear the loaded movies to force reload
-    movieStore.clearLoadedMovies();
+    // Clear all movie data to force reload
+    movieStore.resetState();
   };
 
   useEffect(() => {

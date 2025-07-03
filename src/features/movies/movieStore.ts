@@ -17,9 +17,6 @@ interface MovieState {
   isLoading: boolean;
   error: string | null;
 
-  // Internal tracking state
-  loadedMovieIds: Set<string>;
-
   // Actions
   loadMovies: (movies: Set<MovieData>) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
@@ -32,7 +29,6 @@ interface MovieState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   syncMovieData: (movies: MovieData[]) => void;
-  clearLoadedMovies: () => void;
 
   // Selectors/computed values
   getUserMovieCollection: () => Set<string>;
@@ -51,7 +47,6 @@ const initialState = {
   movies: new Map<string, MovieData>(),
   isLoading: false,
   error: null,
-  loadedMovieIds: new Set<string>(),
 };
 
 export const useMovieStore = create<MovieState>((set, get) => ({
@@ -276,45 +271,22 @@ export const useMovieStore = create<MovieState>((set, get) => ({
   },
 
   syncMovieData: (movies: MovieData[]) => {
-    set((state) => {
-      // Get current movie URLs from the latest data
-      const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
-
-      // Find new movies that haven't been loaded yet
-      const newMovies = movies.filter(movie =>
-        !state.loadedMovieIds.has(movie.tmdbUrl)
-      );
-
-      // Find movies that were loaded before but are no longer in the data (deleted)
-      const deletedMovieUrls = Array.from(state.loadedMovieIds).filter(tmdbUrl =>
-        !currentMovieUrls.has(tmdbUrl)
-      );
-
-      // Create updated loaded movies set
-      let newLoadedMovieIds = new Set(state.loadedMovieIds);
-
-      // Remove deleted movies from tracking
-      deletedMovieUrls.forEach(tmdbUrl => {
-        newLoadedMovieIds.delete(tmdbUrl);
-      });
-
-      // Add new movies to tracking
-      newMovies.forEach(movie => {
-        newLoadedMovieIds.add(movie.tmdbUrl);
-      });
-
-      return {
-        loadedMovieIds: newLoadedMovieIds
-      };
-    });
-
-    // Handle deletions
     const state = get();
+
+    // Get current movie URLs from the latest data
     const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
-    const deletedMovieUrls = Array.from(state.loadedMovieIds).filter(tmdbUrl =>
+
+    // Find movies that were loaded before but are no longer in the data (deleted)
+    const deletedMovieUrls = Array.from(state.movies.keys()).filter(tmdbUrl =>
       !currentMovieUrls.has(tmdbUrl)
     );
 
+    // Find new movies that haven't been loaded yet
+    const newMovies = movies.filter(movie =>
+      !state.movies.has(movie.tmdbUrl)
+    );
+
+    // Handle deletions
     if (deletedMovieUrls.length > 0) {
       deletedMovieUrls.forEach(tmdbUrl => {
         get().removeMovie(tmdbUrl, true);
@@ -322,20 +294,10 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     }
 
     // Handle new movies
-    const newMovies = movies.filter(movie =>
-      !state.loadedMovieIds.has(movie.tmdbUrl)
-    );
-
     if (newMovies.length > 0) {
       // Dispatch only the new movies for incremental loading
       get().loadMovies(new Set(newMovies));
     }
-  },
-
-  clearLoadedMovies: () => {
-    set((state) => ({
-      loadedMovieIds: new Set<string>()
-    }));
   },
 
   // Computed values
