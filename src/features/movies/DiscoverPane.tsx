@@ -102,7 +102,7 @@ export default function DiscoverPane() {
     if (hasBasicLoaded && !movieStore.isLoading && !isRecommendationLoading) {
       fetchAndSaveMoreRecommendations(movieStore.movies);
     }
-  }, [hasBasicLoaded, movieStore.isLoading, isRecommendationLoading, movieStore.movies]);
+  }, [hasBasicLoaded, movieStore.isLoading, movieStore.movies]);  // Do not include `isRecommendationLoading` here to avoid infinite loop
 
   async function loadApplicationData() {
     try {
