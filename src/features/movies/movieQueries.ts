@@ -106,9 +106,8 @@ export function useSaveMovie(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ media, recommended = false, watch = false }) => {
-      return saveMovie(media, pod, fetch, recommended, watch);
-    },
+    mutationFn: ({ media, recommended = false, watch = false }) =>
+      saveMovie(media, pod, fetch, recommended, watch),
     onSuccess: (movieData) => {
       // Invalidate and refetch relevant queries
       queryClient.invalidateQueries({ queryKey: movieQueryKeys.lists() });
@@ -130,9 +129,8 @@ export function useUpdateMovieDataset(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ datasetUrl, dataset, prefixes }) => {
-      return saveMovieDataset(datasetUrl, dataset, fetch, prefixes);
-    },
+    mutationFn: ({ datasetUrl, dataset, prefixes }) =>
+      saveMovieDataset(datasetUrl, dataset, fetch, prefixes),
     onSuccess: (_, { datasetUrl }) => {
       // Invalidate the specific movie detail query
       queryClient.invalidateQueries({
