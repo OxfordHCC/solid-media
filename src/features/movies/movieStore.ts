@@ -13,6 +13,13 @@ interface MovieState {
   recommended: Set<string>;
   movies: Map<string, MovieData>;
 
+  // Loading states for UI feedback
+  isLoading: boolean;
+  error: string | null;
+
+  // Internal tracking state
+  loadedMovieIds: Set<string>;
+
   // Actions
   loadMovies: (movies: Set<MovieData>) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
@@ -22,6 +29,10 @@ interface MovieState {
   toggleWatch: (tmdbUrl: string, watched: boolean, dataset: SolidDataset) => void;
   addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => void;
   resetState: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  syncMovieData: (movies: MovieData[]) => void;
+  clearLoadedMovies: () => void;
 
   // Selectors/computed values
   getUserMovieCollection: () => Set<string>;
@@ -38,6 +49,9 @@ const initialState = {
   friendLiked: new Set<string>(),
   recommended: new Set<string>(),
   movies: new Map<string, MovieData>(),
+  isLoading: false,
+  error: null,
+  loadedMovieIds: new Set<string>(),
 };
 
 export const useMovieStore = create<MovieState>((set, get) => ({
@@ -251,6 +265,77 @@ export const useMovieStore = create<MovieState>((set, get) => ({
 
   resetState: () => {
     set(initialState);
+  },
+
+  setLoading: (loading: boolean) => {
+    set({ isLoading: loading });
+  },
+
+  setError: (error: string | null) => {
+    set({ error });
+  },
+
+  syncMovieData: (movies: MovieData[]) => {
+    set((state) => {
+      // Get current movie URLs from the latest data
+      const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
+
+      // Find new movies that haven't been loaded yet
+      const newMovies = movies.filter(movie =>
+        !state.loadedMovieIds.has(movie.tmdbUrl)
+      );
+
+      // Find movies that were loaded before but are no longer in the data (deleted)
+      const deletedMovieUrls = Array.from(state.loadedMovieIds).filter(tmdbUrl =>
+        !currentMovieUrls.has(tmdbUrl)
+      );
+
+      // Create updated loaded movies set
+      let newLoadedMovieIds = new Set(state.loadedMovieIds);
+
+      // Remove deleted movies from tracking
+      deletedMovieUrls.forEach(tmdbUrl => {
+        newLoadedMovieIds.delete(tmdbUrl);
+      });
+
+      // Add new movies to tracking
+      newMovies.forEach(movie => {
+        newLoadedMovieIds.add(movie.tmdbUrl);
+      });
+
+      return {
+        loadedMovieIds: newLoadedMovieIds
+      };
+    });
+
+    // Handle deletions
+    const state = get();
+    const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
+    const deletedMovieUrls = Array.from(state.loadedMovieIds).filter(tmdbUrl =>
+      !currentMovieUrls.has(tmdbUrl)
+    );
+
+    if (deletedMovieUrls.length > 0) {
+      deletedMovieUrls.forEach(tmdbUrl => {
+        get().removeMovie(tmdbUrl, true);
+      });
+    }
+
+    // Handle new movies
+    const newMovies = movies.filter(movie =>
+      !state.loadedMovieIds.has(movie.tmdbUrl)
+    );
+
+    if (newMovies.length > 0) {
+      // Dispatch only the new movies for incremental loading
+      get().loadMovies(new Set(newMovies));
+    }
+  },
+
+  clearLoadedMovies: () => {
+    set((state) => ({
+      loadedMovieIds: new Set<string>()
+    }));
   },
 
   // Computed values

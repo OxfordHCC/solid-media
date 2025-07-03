@@ -1,7 +1,7 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
 import { BASE_URL } from '../../env';
-import { useCoordinatedMovieActions } from './useCoordinatedMovieActions';
+import { useMovieActions } from './useMovieActions';
 import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
@@ -21,25 +21,18 @@ export const MovieCarouselElement = ({
 }: MovieCarouselElementProps): VNode => {
   const { solidUrl, watched, liked, title, released, image } = movieData;
 
-  // Use coordinated actions instead of separate hooks
-  const {
-    toggleLike,
-    toggleWatch,
-    removeMovie,
-    addFriendMovieToMyCollection,
-    getUserMovieCollection,
-    getFriendMovieCollection,
-  } = useCoordinatedMovieActions(session, pod);
+  // Use new movie actions instead of deprecated coordination layer
+  const movieActions = useMovieActions(session, pod);
 
-  const userCollection = getUserMovieCollection();
-  const friendsCollection = getFriendMovieCollection();
+  const userCollection = movieActions.getUserMovieCollection();
+  const friendsCollection = movieActions.getFriendMovieCollection();
 
   const buttons = [];
 
   // Simplified like toggle with automatic state coordination
   const myToggleLike = async (like: boolean | null) => {
     try {
-      await toggleLike(movieData, like);
+      await movieActions.toggleLike(movieData, like);
     } catch (error) {
       console.error('Failed to toggle like:', error);
       // Error handling - the coordinated action already rolled back the state
@@ -69,7 +62,7 @@ export const MovieCarouselElement = ({
       selected: watched,
       click: async () => {
         try {
-          await toggleWatch(movieData, !watched);
+          await movieActions.toggleWatch(movieData, !watched);
         } catch (error) {
           console.error('Failed to toggle watch:', error);
         }
@@ -80,7 +73,7 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-remove',
       click: async () => {
         try {
-          await removeMovie(movieData, friendsCollection);
+          await movieActions.removeMovie(movieData, friendsCollection);
         } catch (error) {
           console.error('Failed to remove movie:', error);
         }
@@ -92,7 +85,7 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-save',
       click: async () => {
         try {
-          await addFriendMovieToMyCollection(movieData, userCollection);
+          await movieActions.addFriendMovieToMyCollection(movieData, userCollection);
         } catch (error) {
           console.error('Failed to add movie to collection:', error);
         }

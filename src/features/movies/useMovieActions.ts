@@ -1,15 +1,16 @@
 import { useMovieStore } from './movieStore';
-import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie } from './movieQueries';
+import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, useAllMovies } from './movieQueries';
 import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { MovieData } from './types';
 import { MediaData } from '../../apis/tmdb';
-import { MutableRef } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 
 /**
- * Coordinated movie actions that manage both external (SOLID) and internal (Zustand) state
+ * Enhanced movie actions hook that integrates React Query with Zustand store
+ * This replaces useCoordinatedMovieActions and provides a cleaner interface
  */
-export function useCoordinatedMovieActions(session: any, pod?: string) {
+export function useMovieActions(session: any, pod?: string) {
   const movieStore = useMovieStore();
   const updateMovieDataset = useUpdateMovieDataset(session.fetch);
   const deleteMovie = useDeleteMovie(session.fetch);
@@ -197,45 +198,8 @@ export function useCoordinatedMovieActions(session: any, pod?: string) {
    * Synchronize movie data between React Query and Zustand store
    * Handles incremental updates by adding new movies and removing deleted ones
    */
-  const syncMovieData = async (
-    movies: MovieData[],
-    loadedMoviesRef: MutableRef<Set<string>>
-  ): Promise<void> => {
-    // Get current movie URLs from the latest data
-    const currentMovieUrls = new Set(movies.map(movie => movie.tmdbUrl));
-
-    // Find new movies that haven't been loaded yet
-    const newMovies = movies.filter(movie =>
-      !loadedMoviesRef.current.has(movie.tmdbUrl)
-    );
-
-    // Find movies that were loaded before but are no longer in the data (deleted)
-    const deletedMovieUrls = Array.from(loadedMoviesRef.current).filter(tmdbUrl =>
-      !currentMovieUrls.has(tmdbUrl)
-    );
-
-    // Remove deleted movies from tracking
-    deletedMovieUrls.forEach(tmdbUrl => {
-      loadedMoviesRef.current.delete(tmdbUrl);
-    });
-
-    // Dispatch deleted movies for cleanup
-    if (deletedMovieUrls.length > 0) {
-      deletedMovieUrls.forEach(tmdbUrl => {
-        movieStore.removeMovie(tmdbUrl, true);  // FIXME: Correctly handle 'me' and 'friend', such as by checking both tmdbUrl and solidUrl
-      });
-    }
-
-    // Add and dispatch new movies
-    if (newMovies.length > 0) {
-      // Update the ref to track loaded movies
-      newMovies.forEach(movie => {
-        loadedMoviesRef.current.add(movie.tmdbUrl);
-      });
-
-      // Dispatch only the new movies for incremental loading
-      movieStore.loadMovies(new Set(newMovies));
-    }
+  const syncMovieData = async (movies: MovieData[]): Promise<void> => {
+    movieStore.syncMovieData(movies);
   };
 
   return {
@@ -248,5 +212,43 @@ export function useCoordinatedMovieActions(session: any, pod?: string) {
     // Expose store selectors
     getUserMovieCollection: movieStore.getUserMovieCollection,
     getFriendMovieCollection: movieStore.getFriendMovieCollection,
+  };
+}
+
+/**
+ * Hook that manages React Query data fetching and syncs with Zustand store
+ */
+export function useMovieData(webID: string, friends: string[], fetch: typeof window.fetch, enabled: boolean) {
+  const movieStore = useMovieStore();
+
+  // React Query for movie data
+  const {
+    data: moviesData,
+    isLoading: moviesLoading,
+    error: moviesError,
+    refetch: refetchMovies
+  } = useAllMovies(webID, friends, fetch, enabled);
+
+  // Sync loading and error states to store
+  useEffect(() => {
+    movieStore.setLoading(moviesLoading);
+  }, [moviesLoading, movieStore]);
+
+  useEffect(() => {
+    movieStore.setError(moviesError?.message || null);
+  }, [moviesError, movieStore]);
+
+  // Incrementally sync React Query movie data with store
+  useEffect(() => {
+    if (moviesData && moviesData.length > 0) {
+      movieStore.syncMovieData(moviesData);
+    }
+  }, [moviesData, movieStore]);
+
+  return {
+    moviesData,
+    moviesLoading,
+    moviesError,
+    refetchMovies,
   };
 }

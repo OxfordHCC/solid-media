@@ -11,9 +11,8 @@ import MovieCarouselSection from './MovieCarouselSection';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { useAllMovies } from './movieQueries';
+import { useMovieActions, useMovieData } from './useMovieActions';
 import { useMovieStore } from './movieStore';
-import { useCoordinatedMovieActions } from './useCoordinatedMovieActions';
 import {
   MovieData,
   State
@@ -56,9 +55,6 @@ export default function DiscoverPane() {
 
   const [friends, setFriends] = useState<string[]>([]);
 
-  const loadedMoviesRef = useRef<Set<string>>(new Set());
-  const movieStore = useMovieStore();
-
   const sessionContext = useSessionContext(true);
   if (!sessionContext) return <div />; // Guard against rendering when not logged in
   const { session, logout } = sessionContext;
@@ -69,8 +65,12 @@ export default function DiscoverPane() {
     return parts.slice(0, parts.length - 2).join('/');
   }, [webID]);
 
-  // Use coordinated actions for movie operations
-  const { saveMovie, syncMovieData } = useCoordinatedMovieActions(session, pod);
+  // Use new movie management hooks
+  const movieActions = useMovieActions(session, pod);
+  const movieStore = useMovieStore();
+
+  // React Query for movie data with store integration
+  const { refetchMovies } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
 
   // Privacy profile management
   const {
@@ -79,22 +79,15 @@ export default function DiscoverPane() {
     updatePrivacyProfile: handlePrivacyProfileChange
   } = usePrivacyProfile({ webID, authFetch: session.fetch });
 
-  // React Query for movie data
-  const {
-    data: moviesData,
-    isLoading: moviesLoading,
-    refetch: refetchMovies
-  } = useAllMovies(webID, friends, session.fetch, hasBasicLoaded);
-
   const isLoading = useMemo(() => {
-    return !hasBasicLoaded || moviesLoading || isRecommendationLoading;
-  }, [hasBasicLoaded, moviesLoading]);
+    return !hasBasicLoaded || movieStore.isLoading || isRecommendationLoading;
+  }, [hasBasicLoaded, movieStore.isLoading, isRecommendationLoading]);
 
   const retryLoad = () => {
     setHasBasicLoaded(false);
     setError(null);
-    // Clear the loaded movies ref to force reload
-    loadedMoviesRef.current.clear();
+    // Clear the loaded movies to force reload
+    movieStore.clearLoadedMovies();
   };
 
   useEffect(() => {
@@ -103,18 +96,13 @@ export default function DiscoverPane() {
     }
   }, [hasBasicLoaded, session, pod, webID]);
 
-  // Incrementally sync React Query movie data with reducer state
-  useEffect(() => {
-    if (moviesData && moviesData.length > 0) {
-      syncMovieData(moviesData, loadedMoviesRef);
-    }
-  }, [moviesData, syncMovieData]);
+  // Data is automatically synced by useMovieData hook
 
   useEffect(() => {
-    if (hasBasicLoaded && !moviesLoading && !isRecommendationLoading) {
+    if (hasBasicLoaded && !movieStore.isLoading && !isRecommendationLoading) {
       fetchAndSaveMoreRecommendations(movieStore.movies);
     }
-  }, [hasBasicLoaded, moviesLoading, isRecommendationLoading, movieStore.movies]);
+  }, [hasBasicLoaded, movieStore.isLoading, isRecommendationLoading, movieStore.movies]);
 
   async function loadApplicationData() {
     try {
@@ -161,7 +149,7 @@ export default function DiscoverPane() {
         const movie = movies.find((x: any) => x.title === name);
         if (movie) {
           try {
-            const savedMovie = await saveMovie(movie, true);
+            const savedMovie = await movieActions.saveMovie(movie, true);
           } catch (error) {
             console.error('Failed to save recommendation:', error);
           }
@@ -177,7 +165,7 @@ export default function DiscoverPane() {
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
     if (!Array.from(movieStore.movies.values()).some((x: MovieData) => x.title === media.title)) {
       try {
-        await saveMovie(media, false);
+        await movieActions.saveMovie(media, false);
       } catch (error) {
         console.error('Failed to save movie:', error);
       }
@@ -193,14 +181,14 @@ export default function DiscoverPane() {
 
       if (movieWebIDPod !== pod) {
         try {
-          data = await saveMovie(media, false, true);
+          data = await movieActions.saveMovie(media, false, true);
         } catch (error) {
           console.error('Failed to save movie:', error);
         }
       }
     } else {
       try {
-        data = await saveMovie(media, false, true);
+        data = await movieActions.saveMovie(media, false, true);
       } catch (error) {
         console.error('Failed to save movie:', error);
       }
