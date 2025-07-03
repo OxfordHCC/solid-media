@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import { useCallback } from 'preact/hooks';
 import { MovieData, PersonInfo, MovieListItem } from './types';
 import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from "./remoteMovieDataUtils";
 import { saveMovie } from './remoteMovieDataUtils';
@@ -28,14 +29,14 @@ export function useFetchMovieList(
 ) {
   const queryClient = useQueryClient();
 
-  const fetchMovieList = (person: PersonInfo): Promise<MovieListItem[]> => {
+  const fetchMovieList = useCallback((person: PersonInfo): Promise<MovieListItem[]> => {
     return queryClient.fetchQuery({
       queryKey: movieQueryKeys.list(person.id),
       queryFn: () => loadMovieList(person, fetch),
       staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 2,
     });
-  };
+  }, [queryClient, fetch]);
 
   return fetchMovieList;
 }
@@ -46,7 +47,7 @@ export function useFetchMovieDetail(
 ) {
   const queryClient = useQueryClient();
 
-  const fetchMovieDetail = (movieItem: MovieListItem): Promise<MovieData> => {
+  const fetchMovieDetail = useCallback((movieItem: MovieListItem): Promise<MovieData> => {
     return queryClient.fetchQuery({
       queryKey: movieQueryKeys.detail(movieItem.url),
       queryFn: () => loadMovieDetail(movieItem, fetch),
@@ -54,7 +55,7 @@ export function useFetchMovieDetail(
       retry: 2,
       retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500, // add delay between retries
     });
-  };
+  }, [queryClient, fetch]);
 
   return fetchMovieDetail;
 }
@@ -66,7 +67,7 @@ export function useFetchAllMovies(
   const fetchMovieList = useFetchMovieList(fetch);
   const fetchMovieDetail = useFetchMovieDetail(fetch);
 
-  const fetchAllMovies = async (webID: string, friends: string[]): Promise<MovieData[]> => {
+  const fetchAllMovies = useCallback(async (webID: string, friends: string[]): Promise<MovieData[]> => {
     const people: PersonInfo[] = [
       { type: 'me', id: webID },
       ...friends.map(id => ({ type: 'friend' as const, id }))
@@ -90,7 +91,7 @@ export function useFetchAllMovies(
     } catch (error) {
       throw error;
     }
-  };
+  }, [fetchMovieList, fetchMovieDetail]);
 
   return fetchAllMovies;
 }
