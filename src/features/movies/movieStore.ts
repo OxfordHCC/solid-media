@@ -4,12 +4,13 @@ import { castDraft } from 'immer';
 import { MovieData, State } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
-interface MovieState extends State {
+export interface MovieState extends State {
   // Loading states for UI feedback
   isLoading: boolean;
   error: string | null;
+}
 
-  // Actions
+export interface MovieActions {
   loadMovies: (movies: MovieData[]) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
   // updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => void;  // Not using this yet/anymore. Will reconsider if needed later.
@@ -23,7 +24,7 @@ interface MovieState extends State {
   syncMovieData: (movies: MovieData[]) => void;
 }
 
-const initialState = {
+const initialState: MovieState = {
   myWatched: new Set<string>(),
   myUnwatched: new Set<string>(),
   myLiked: new Set<string>(),
@@ -37,7 +38,7 @@ const initialState = {
   error: null,
 };
 
-export const useMovieStore = create<MovieState>()(
+export const useMovieStore = create<MovieState & MovieActions>()(
   immer((set, get) => ({
     ...initialState,
 
