@@ -1,7 +1,7 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
 import { BASE_URL } from '../../env';
-import { useMovieActions } from './useMovies';
+import { useComputedMovieCollections, useMovieActions } from './useMovies';
 import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
@@ -23,8 +23,7 @@ export const MovieCarouselElement = ({
 
   // Use new movie actions instead of deprecated coordination layer
   const movieActions = useMovieActions(session, pod);
-
-  const userCollection = movieActions.userMovieCollection;
+  const { userMovieCollection: userCollection } = useComputedMovieCollections();
 
   const buttons = [];
 

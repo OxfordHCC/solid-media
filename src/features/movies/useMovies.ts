@@ -9,7 +9,7 @@ import { useEffect, useMemo } from 'preact/hooks';
 /**
  * Memoized computed values for better performance
  */
-function useComputedMovieCollections() {
+export function useComputedMovieCollections() {
   const movieStore = useMovieStore();
 
   const userMovieCollection = useMemo(() => {
@@ -48,7 +48,6 @@ function useComputedMovieCollections() {
  */
 export function useMovieActions(session: any, pod?: string) {
   const movieStore = useMovieStore();
-  const { userMovieCollection, friendMovieCollection, isStoreEmpty } = useComputedMovieCollections();
   const updateMovieDataset = useUpdateMovieDataset(session.fetch);
   const deleteMovie = useDeleteMovie(session.fetch);
   const saveMovie = useSaveMovie(pod || '', session.fetch);
@@ -244,10 +243,6 @@ export function useMovieActions(session: any, pod?: string) {
     addFriendMovieToMyCollection,
     saveMovie: saveMovieAction,
     syncMovieData,
-    // Expose memoized computed values for better performance
-    userMovieCollection,
-    friendMovieCollection,
-    isStoreEmpty
   };
 }
 

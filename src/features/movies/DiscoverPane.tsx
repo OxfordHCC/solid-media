@@ -11,7 +11,7 @@ import MovieCarouselSection from './MovieCarouselSection';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { useMovieActions, useMovieData } from './useMovies';
+import { useComputedMovieCollections, useMovieActions, useMovieData } from './useMovies';
 import { useMovieStore } from './movieStore';
 import {
   MovieData,
@@ -68,6 +68,7 @@ export default function DiscoverPane() {
   // Use new movie management hooks
   const movieActions = useMovieActions(session, pod);
   const movieStore = useMovieStore();
+  const { isStoreEmpty } = useComputedMovieCollections();
 
   // React Query for movie data with store integration
   const { refetchMovies } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
@@ -232,7 +233,7 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!error && movieActions.isStoreEmpty && (
+      {!error && isStoreEmpty && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
