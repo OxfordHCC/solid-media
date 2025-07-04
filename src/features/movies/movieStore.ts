@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+import { castDraft } from 'immer';
 import { MovieData, State } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
@@ -35,246 +37,174 @@ const initialState = {
   error: null,
 };
 
-export const useMovieStore = create<MovieState>((set, get) => ({
-  ...initialState,
+export const useMovieStore = create<MovieState>()(
+  immer((set, get) => ({
+    ...initialState,
 
-  loadMovies: (movies: MovieData[]) => {
-    set((state) => {
-      const newMyMovies = new Map(state.myMovies);
-      const newMyUnwatched = new Set(state.myUnwatched);
-      const newMyWatched = new Set(state.myWatched);
-      const newMyLiked = new Set(state.myLiked);
-      const newFriendMovies = new Map(state.friendMovies);
-      const newFriendUnwatched = new Set(state.friendUnwatched);
-      const newFriendWatched = new Set(state.friendWatched);
-      const newFriendLiked = new Set(state.friendLiked);
-      const newRecommended = new Set(state.recommended);
+    loadMovies: (movies: MovieData[]) => {
+      set((state) => {
+        for (const movie of movies) {
+          const tmdbUrl = movie.tmdbUrl;
 
-      for (const movie of movies) {
-        const tmdbUrl = movie.tmdbUrl;
+          if (movie.type === 'friend') {
+            const existingFriendMovies = state.friendMovies.get(tmdbUrl) || [];
+            existingFriendMovies.push(castDraft(movie));
+            state.friendMovies.set(tmdbUrl, existingFriendMovies);
 
-        if (movie.type === 'friend') {
-          const friendMovies = newFriendMovies.get(tmdbUrl) || [];
-          friendMovies.push(movie);
-          newFriendMovies.set(tmdbUrl, friendMovies);
-
-          if (movie.watched) {
-            newFriendWatched.add(tmdbUrl);
-          } else {
-            newFriendUnwatched.add(tmdbUrl);
-          }
-          if (movie.liked) {
-            newFriendLiked.add(tmdbUrl);
-          }
-        } else { // If it's a 'me' movie
-          newMyMovies.set(tmdbUrl, movie);
-          if (movie.watched) {
-            newMyWatched.add(tmdbUrl);
-          } else {
-            newMyUnwatched.add(tmdbUrl);
-          }
-          if (movie.liked) {
-            newMyLiked.add(tmdbUrl);
-          }
-          if (movie.recommended) {
-            newRecommended.add(tmdbUrl);
+            if (movie.watched) {
+              state.friendWatched.add(tmdbUrl);
+            } else {
+              state.friendUnwatched.add(tmdbUrl);
+            }
+            if (movie.liked) {
+              state.friendLiked.add(tmdbUrl);
+            }
+          } else { // If it's a 'me' movie
+            state.myMovies.set(tmdbUrl, castDraft(movie));
+            if (movie.watched) {
+              state.myWatched.add(tmdbUrl);
+            } else {
+              state.myUnwatched.add(tmdbUrl);
+            }
+            if (movie.liked) {
+              state.myLiked.add(tmdbUrl);
+            }
+            if (movie.recommended) {
+              state.recommended.add(tmdbUrl);
+            }
           }
         }
-      }
-
-      return {
-        myMovies: newMyMovies,
-        myUnwatched: newMyUnwatched,
-        myWatched: newMyWatched,
-        myLiked: newMyLiked,
-        friendMovies: newFriendMovies,
-        friendUnwatched: newFriendUnwatched,
-        friendWatched: newFriendWatched,
-        friendLiked: newFriendLiked,
-        recommended: newRecommended,
-      };
-    });
-  },
-
-  setMovie: (movieData: MovieData, tmdbUrl: string) => {
-    set((state) => {
-      const newMyMovies = new Map(state.myMovies);
-      newMyMovies.set(tmdbUrl, movieData);
-
-      const newMyUnwatched = new Set(state.myUnwatched);
-      const newMyWatched = new Set(state.myWatched);
-      const newRecommended = new Set(state.recommended);
-
-      if (!movieData.recommended) {
-        if (!movieData.watched) {
-          newMyUnwatched.add(tmdbUrl);
-        } else {
-          newMyWatched.add(tmdbUrl);
-        }
-      } else {
-        newRecommended.add(tmdbUrl);
-      }
-
-      return {
-        myMovies: newMyMovies,
-        myUnwatched: newMyUnwatched,
-        myWatched: newMyWatched,
-        recommended: newRecommended,
-      };
-    });
-  },
-
-  removeMovie: (tmdbUrl: string) => {
-    set((state) => {
-      const newMovies = new Map(state.myMovies);
-
-      newMovies.delete(tmdbUrl);
-
-      const newMyUnwatched = new Set(state.myUnwatched);
-      const newMyWatched = new Set(state.myWatched);
-      const newMyLiked = new Set(state.myLiked);
-      const newRecommended = new Set(state.recommended);
-
-      newMyUnwatched.delete(tmdbUrl);
-      newMyWatched.delete(tmdbUrl);
-      newMyLiked.delete(tmdbUrl);
-      newRecommended.delete(tmdbUrl);
-
-      return {
-        myUnwatched: newMyUnwatched,
-        myWatched: newMyWatched,
-        myLiked: newMyLiked,
-        recommended: newRecommended,
-        myMovies: newMovies,
-      };
-    });
-  },
-
-  toggleLike: (tmdbUrl: string, liked: boolean | null) => {
-    set((state) => {
-      const newMovies = new Map(state.myMovies);
-      const currentMovie = newMovies.get(tmdbUrl);
-      if (currentMovie) {
-        newMovies.set(tmdbUrl, {
-          ...currentMovie,
-          liked,
-        });
-      }
-
-      const newMyLiked = new Set(state.myLiked);
-      if (liked === true) {
-        newMyLiked.add(tmdbUrl);
-      } else {
-        newMyLiked.delete(tmdbUrl);
-      }
-
-      return {
-        myMovies: newMovies,
-        myLiked: newMyLiked
-      };
-    });
-  },
-
-  toggleWatch: (tmdbUrl: string, watched: boolean) => {
-    set((state) => {
-      const newMyMovies = new Map(state.myMovies);
-      const currentMovie = newMyMovies.get(tmdbUrl);
-      if (currentMovie) {
-        newMyMovies.set(tmdbUrl, {
-          ...currentMovie,
-          watched,
-        });
-      }
-
-      const newMyUnwatched = new Set(state.myUnwatched);
-      const newMyWatched = new Set(state.myWatched);
-      const newRecommended = new Set(state.recommended);
-
-      if (watched) {
-        newMyUnwatched.delete(tmdbUrl);
-        newRecommended.delete(tmdbUrl);
-        newMyWatched.add(tmdbUrl);
-      } else {
-        newMyWatched.delete(tmdbUrl);
-        newMyUnwatched.add(tmdbUrl);
-      }
-
-      return {
-        myMovies: newMyMovies,
-        myUnwatched: newMyUnwatched,
-        myWatched: newMyWatched,
-        recommended: newRecommended,
-      };
-    });
-  },
-
-  addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => {
-    set((state) => {
-      const newMovies = new Map(state.myMovies);
-      const currentMovie = newMovies.get(tmdbUrl);
-      if (currentMovie) {
-        newMovies.set(tmdbUrl, { ...currentMovie, ...updates });
-      }
-
-      const newMyUnwatched = new Set(state.myUnwatched);
-      newMyUnwatched.add(tmdbUrl);
-
-      return {
-        myUnwatched: newMyUnwatched,
-        myMovies: newMovies,
-      };
-    });
-  },
-
-  resetState: () => {
-    set(initialState);
-  },
-
-  setLoading: (loading: boolean) => {
-    set({ isLoading: loading });
-  },
-
-  setError: (error: string | null) => {
-    set({ error });
-  },
-
-
-  // Not handling friend movie deletion yet. Maybe in the future we will have a way to delete friend movies.
-  syncMovieData: (movies: MovieData[]) => {
-    const state = get();
-
-    // Separate movies by type
-    const myMovies = movies.filter(movie => movie.type === 'me');
-    const friendMovies = movies.filter(movie => movie.type === 'friend');
-
-    // Get current movie URLs from the latest data
-    const currentMyMovieUrls = new Set(myMovies.map(movie => movie.tmdbUrl));
-
-    const deletedMyMovieUrls = Array.from(state.myMovies.keys()).filter(tmdbUrl =>
-      !currentMyMovieUrls.has(tmdbUrl)
-    );
-
-    // Find new movies that haven't been loaded yet
-    const newMyMovies = myMovies.filter(movie =>
-      !state.myMovies.has(movie.tmdbUrl)
-    );
-    const newFriendMovies = friendMovies.filter(movie =>
-      !state.friendMovies.has(movie.tmdbUrl) &&
-      !state.friendMovies.get(movie.tmdbUrl)?.some(existingMovie => existingMovie.solidUrl === movie.solidUrl)
-    );
-
-    // Handle deletions for my movies
-    if (deletedMyMovieUrls.length > 0) {
-      deletedMyMovieUrls.forEach(tmdbUrl => {
-        get().removeMovie(tmdbUrl);
       });
-    }
+    },
 
-    // Handle new movies (both my movies and friend movies)
-    const allNewMovies = [...newMyMovies, ...newFriendMovies];
-    if (allNewMovies.length > 0) {
-      // Dispatch only the new movies for incremental loading
-      get().loadMovies(allNewMovies);
-    }
-  },
-}));
+    setMovie: (movieData: MovieData, tmdbUrl: string) => {
+      set((state) => {
+        state.myMovies.set(tmdbUrl, castDraft(movieData));
+
+        if (!movieData.recommended) {
+          if (!movieData.watched) {
+            state.myUnwatched.add(tmdbUrl);
+          } else {
+            state.myWatched.add(tmdbUrl);
+          }
+        } else {
+          state.recommended.add(tmdbUrl);
+        }
+      });
+    },
+
+    removeMovie: (tmdbUrl: string) => {
+      set((state) => {
+        state.myMovies.delete(tmdbUrl);
+        state.myUnwatched.delete(tmdbUrl);
+        state.myWatched.delete(tmdbUrl);
+        state.myLiked.delete(tmdbUrl);
+        state.recommended.delete(tmdbUrl);
+      });
+    },
+
+    toggleLike: (tmdbUrl: string, liked: boolean | null) => {
+      set((state) => {
+        const currentMovie = state.myMovies.get(tmdbUrl);
+        if (currentMovie) {
+          state.myMovies.set(tmdbUrl, castDraft({
+            ...currentMovie,
+            liked,
+          }));
+        }
+
+        if (liked === true) {
+          state.myLiked.add(tmdbUrl);
+        } else {
+          state.myLiked.delete(tmdbUrl);
+        }
+      });
+    },
+
+    toggleWatch: (tmdbUrl: string, watched: boolean) => {
+      set((state) => {
+        const currentMovie = state.myMovies.get(tmdbUrl);
+        if (currentMovie) {
+          state.myMovies.set(tmdbUrl, castDraft({
+            ...currentMovie,
+            watched,
+          }));
+        }
+
+        if (watched) {
+          state.myUnwatched.delete(tmdbUrl);
+          state.recommended.delete(tmdbUrl);
+          state.myWatched.add(tmdbUrl);
+        } else {
+          state.myWatched.delete(tmdbUrl);
+          state.myUnwatched.add(tmdbUrl);
+        }
+      });
+    },
+
+    addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => {
+      set((state) => {
+        const currentMovie = state.myMovies.get(tmdbUrl);
+        if (currentMovie) {
+          state.myMovies.set(tmdbUrl, castDraft({ ...currentMovie, ...updates }));
+        }
+        state.myUnwatched.add(tmdbUrl);
+      });
+    },
+
+    resetState: () => {
+      set(initialState);
+    },
+
+    setLoading: (loading: boolean) => {
+      set((state) => {
+        state.isLoading = loading;
+      });
+    },
+
+    setError: (error: string | null) => {
+      set((state) => {
+        state.error = error;
+      });
+    },
+
+    // Not handling friend movie deletion yet. Maybe in the future we will have a way to delete friend movies.
+    syncMovieData: (movies: MovieData[]) => {
+      const state = get();
+
+      // Separate movies by type
+      const myMovies = movies.filter(movie => movie.type === 'me');
+      const friendMovies = movies.filter(movie => movie.type === 'friend');
+
+      // Get current movie URLs from the latest data
+      const currentMyMovieUrls = new Set(myMovies.map(movie => movie.tmdbUrl));
+
+      const deletedMyMovieUrls = Array.from(state.myMovies.keys()).filter(tmdbUrl =>
+        !currentMyMovieUrls.has(tmdbUrl)
+      );
+
+      // Find new movies that haven't been loaded yet
+      const newMyMovies = myMovies.filter(movie =>
+        !state.myMovies.has(movie.tmdbUrl)
+      );
+      const newFriendMovies = friendMovies.filter(movie =>
+        !state.friendMovies.has(movie.tmdbUrl) &&
+        !state.friendMovies.get(movie.tmdbUrl)?.some(existingMovie => existingMovie.solidUrl === movie.solidUrl)
+      );
+
+      // Handle deletions for my movies
+      if (deletedMyMovieUrls.length > 0) {
+        deletedMyMovieUrls.forEach(tmdbUrl => {
+          get().removeMovie(tmdbUrl);
+        });
+      }
+
+      // Handle new movies (both my movies and friend movies)
+      const allNewMovies = [...newMyMovies, ...newFriendMovies];
+      if (allNewMovies.length > 0) {
+        // Dispatch only the new movies for incremental loading
+        get().loadMovies(allNewMovies);
+      }
+    },
+  }))
+);
