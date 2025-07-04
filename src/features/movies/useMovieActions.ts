@@ -101,8 +101,7 @@ export function useMovieActions(session: any, pod?: string) {
    * Remove movie - coordinates external deletion with internal state cleanup
    */
   const removeMovieAction = async (
-    movieData: MovieData,
-    friendsCollection: Set<string>
+    movieData: MovieData
   ): Promise<void> => {
     const { solidUrl, tmdbUrl } = movieData;
 

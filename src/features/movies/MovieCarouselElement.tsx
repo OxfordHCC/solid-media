@@ -25,7 +25,6 @@ export const MovieCarouselElement = ({
   const movieActions = useMovieActions(session, pod);
 
   const userCollection = movieActions.getUserMovieCollection();
-  const friendsCollection = movieActions.getFriendMovieCollection();
 
   const buttons = [];
 
@@ -73,7 +72,7 @@ export const MovieCarouselElement = ({
       cssClass: 'carousel-remove',
       click: async () => {
         try {
-          await movieActions.removeMovie(movieData, friendsCollection);
+          await movieActions.removeMovie(movieData);
         } catch (error) {
           console.error('Failed to remove movie:', error);
         }
