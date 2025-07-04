@@ -24,7 +24,7 @@ export const MovieCarouselElement = ({
   // Use new movie actions instead of deprecated coordination layer
   const movieActions = useMovieActions(session, pod);
 
-  const userCollection = movieActions.getUserMovieCollection();
+  const userCollection = movieActions.userMovieCollection;
 
   const buttons = [];
 

@@ -19,11 +19,6 @@ interface MovieState extends State {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   syncMovieData: (movies: MovieData[]) => void;
-
-  // Selectors/computed values
-  getUserMovieCollection: () => Set<string>;
-  getFriendMovieCollection: () => Set<string>;
-  isDataEmpty: () => boolean;
 }
 
 const initialState = {
@@ -281,31 +276,5 @@ export const useMovieStore = create<MovieState>((set, get) => ({
       // Dispatch only the new movies for incremental loading
       get().loadMovies(allNewMovies);
     }
-  },
-
-  // Computed values
-  getUserMovieCollection: () => {
-    const state = get();
-    return new Set<string>([
-      ...Array.from(state.myWatched),
-      ...Array.from(state.myUnwatched),
-      ...Array.from(state.myLiked)
-    ]);
-  },
-
-  getFriendMovieCollection: () => {
-    const state = get();
-    return new Set<string>([
-      ...Array.from(state.friendWatched),
-      ...Array.from(state.friendUnwatched),
-      ...Array.from(state.friendLiked)
-    ]);
-  },
-
-  isDataEmpty: () => {
-    const state = get();
-    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended } = state;
-    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended]
-      .every(set => set && set.size === 0);
   },
 }));

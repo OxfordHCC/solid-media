@@ -232,7 +232,7 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!error && movieStore.isDataEmpty() && (
+      {!error && movieActions.isStoreEmpty && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>

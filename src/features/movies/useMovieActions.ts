@@ -4,7 +4,43 @@ import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from 
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { MovieData } from './types';
 import { MediaData } from '../../apis/tmdb';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useMemo } from 'preact/hooks';
+
+/**
+ * Memoized computed values for better performance
+ */
+function useComputedMovieCollections() {
+  const movieStore = useMovieStore();
+
+  const userMovieCollection = useMemo(() => {
+    return new Set<string>([
+      ...Array.from(movieStore.myWatched),
+      ...Array.from(movieStore.myUnwatched),
+      ...Array.from(movieStore.myLiked)
+    ]);
+  }, [movieStore.myWatched, movieStore.myUnwatched, movieStore.myLiked]);
+
+  const friendMovieCollection = useMemo(() => {
+    return new Set<string>([
+      ...Array.from(movieStore.friendWatched),
+      ...Array.from(movieStore.friendUnwatched),
+      ...Array.from(movieStore.friendLiked)
+    ]);
+  }, [movieStore.friendWatched, movieStore.friendUnwatched, movieStore.friendLiked]);
+
+  const isStoreEmpty = useMemo(() => {
+    const { friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended } = movieStore;
+    return [friendWatched, friendUnwatched, friendLiked, myWatched, myUnwatched, myLiked, recommended]
+      .every(set => set && set.size === 0);
+  }, [movieStore.friendWatched, movieStore.friendUnwatched, movieStore.friendLiked,
+  movieStore.myWatched, movieStore.myUnwatched, movieStore.myLiked, movieStore.recommended]);
+
+  return {
+    userMovieCollection,
+    friendMovieCollection,
+    isStoreEmpty
+  };
+}
 
 /**
  * Enhanced movie actions hook that integrates React Query with Zustand store
@@ -12,6 +48,7 @@ import { useEffect } from 'preact/hooks';
  */
 export function useMovieActions(session: any, pod?: string) {
   const movieStore = useMovieStore();
+  const { userMovieCollection, friendMovieCollection, isStoreEmpty } = useComputedMovieCollections();
   const updateMovieDataset = useUpdateMovieDataset(session.fetch);
   const deleteMovie = useDeleteMovie(session.fetch);
   const saveMovie = useSaveMovie(pod || '', session.fetch);
@@ -207,9 +244,10 @@ export function useMovieActions(session: any, pod?: string) {
     addFriendMovieToMyCollection,
     saveMovie: saveMovieAction,
     syncMovieData,
-    // Expose store selectors
-    getUserMovieCollection: movieStore.getUserMovieCollection,
-    getFriendMovieCollection: movieStore.getFriendMovieCollection,
+    // Expose memoized computed values for better performance
+    userMovieCollection,
+    friendMovieCollection,
+    isStoreEmpty
   };
 }
 
