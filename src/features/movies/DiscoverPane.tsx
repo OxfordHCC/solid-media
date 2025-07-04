@@ -11,7 +11,7 @@ import MovieCarouselSection from './MovieCarouselSection';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { useMovieActions, useMovieData } from './useMovieActions';
+import { useMovieActions, useMovieData } from './useMovies';
 import { useMovieStore } from './movieStore';
 import {
   MovieData,

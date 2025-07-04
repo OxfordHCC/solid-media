@@ -1,7 +1,7 @@
 import { VNode } from 'preact';
 import { CarouselElement } from '../../components/Carousel';
 import { BASE_URL } from '../../env';
-import { useMovieActions } from './useMovieActions';
+import { useMovieActions } from './useMovies';
 import { DATE_FORMAT, MovieData } from './types';
 
 export interface MovieCarouselElementProps {
