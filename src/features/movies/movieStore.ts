@@ -4,12 +4,6 @@ import { castDraft } from 'immer';
 import { MovieData, State } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
-export interface MovieState extends State {
-  // Loading states for UI feedback
-  isLoading: boolean;
-  error: string | null;
-}
-
 export interface MovieActions {
   loadMovies: (movies: MovieData[], reset?: boolean) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
@@ -19,12 +13,10 @@ export interface MovieActions {
   toggleWatch: (tmdbUrl: string, watched: boolean) => void;
   addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => void;
   resetState: () => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
   syncMovieData: (movies: MovieData[]) => void;
 }
 
-const initialState: MovieState = {
+const initialState: State = {
   myWatched: new Set<string>(),
   myUnwatched: new Set<string>(),
   myLiked: new Set<string>(),
@@ -34,11 +26,9 @@ const initialState: MovieState = {
   recommended: new Set<string>(),
   myMovies: new Map<string, MovieData>(),
   friendMovies: new Map<string, MovieData[]>(),
-  isLoading: false,
-  error: null,
 };
 
-export const useMovieStore = create<MovieState & MovieActions>()(
+export const useMovieStore = create<State & MovieActions>()(
   immer((set, get) => ({
     ...initialState,
 
@@ -177,18 +167,6 @@ export const useMovieStore = create<MovieState & MovieActions>()(
 
     resetState: () => {
       set(initialState);
-    },
-
-    setLoading: (loading: boolean) => {
-      set((state) => {
-        state.isLoading = loading;
-      });
-    },
-
-    setError: (error: string | null) => {
-      set((state) => {
-        state.error = error;
-      });
     },
 
     // Not handling friend movie deletion yet. Maybe in the future we will have a way to delete friend movies.

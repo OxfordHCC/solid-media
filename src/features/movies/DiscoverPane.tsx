@@ -71,7 +71,7 @@ export default function DiscoverPane() {
   const { isStoreEmpty } = useComputedMovieCollections();
 
   // React Query for movie data with store integration
-  const { refetchMovies } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
+  const { refetchMovies, isLoading: movieDataLoading, error: movieDataError } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
 
   // Privacy profile management
   const {
@@ -81,8 +81,8 @@ export default function DiscoverPane() {
   } = usePrivacyProfile({ webID, authFetch: session.fetch });
 
   const isLoading = useMemo(() => {
-    return !hasBasicLoaded || movieStore.isLoading || isRecommendationLoading;
-  }, [hasBasicLoaded, movieStore.isLoading, isRecommendationLoading]);
+    return !hasBasicLoaded || movieDataLoading || isRecommendationLoading;
+  }, [hasBasicLoaded, movieDataLoading, isRecommendationLoading]);
 
   const retryLoad = () => {
     setHasBasicLoaded(false);
@@ -90,6 +90,9 @@ export default function DiscoverPane() {
     // Clear all movie data to force reload
     movieStore.resetState();
   };
+
+  // Combine local error and movie data error for unified error handling
+  const combinedError = error || movieDataError;
 
   useEffect(() => {
     if (!hasBasicLoaded) {
@@ -100,10 +103,10 @@ export default function DiscoverPane() {
   // Data is automatically synced by useMovieData hook
 
   useEffect(() => {
-    if (hasBasicLoaded && !movieStore.isLoading && !isRecommendationLoading) {
+    if (hasBasicLoaded && !movieDataLoading && !isRecommendationLoading) {
       fetchAndSaveMoreRecommendations(movieStore.myMovies);
     }
-  }, [hasBasicLoaded, movieStore.isLoading]);
+  }, [hasBasicLoaded, movieDataLoading]);
   // Do not include `isRecommendationLoading` here to avoid infinite loop
   // Do not include `movieStore.myMovies` to avoid unnecessary re-fetching
   // To improve later
@@ -223,9 +226,9 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {error && (
+      {combinedError && (
         <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-          <p>Error loading data: {error}</p>
+          <p>Error loading data: {combinedError}</p>
           <button onClick={() => {
             retryLoad();
             refetchMovies();
@@ -233,13 +236,13 @@ export default function DiscoverPane() {
         </div>
       )}
 
-      {!error && isStoreEmpty && (
+      {!combinedError && isStoreEmpty && (
         <div class="empty-container-data">
           <h3>Add Movies or Friends</h3>
         </div>
       )}
 
-      {!error && (
+      {!combinedError && (
         sectionConfigs
           .filter(({ title, key, type }) => {
             if (type === 'friend') {

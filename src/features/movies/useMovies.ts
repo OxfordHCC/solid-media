@@ -246,19 +246,10 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
   // React Query for movie data
   const {
     data: moviesData,
-    isLoading: moviesLoading,
-    error: moviesError,
+    isLoading,
+    error,
     refetch: refetchMovies
   } = useAllMovies(webID, friends, fetch, enabled);
-
-  // Sync loading and error states to store
-  useEffect(() => {
-    movieStore.setLoading(moviesLoading);
-  }, [moviesLoading, movieStore]);
-
-  useEffect(() => {
-    movieStore.setError(moviesError?.message || null);
-  }, [moviesError, movieStore]);
 
   // Incrementally sync React Query movie data with store
   useEffect(() => {
@@ -269,8 +260,8 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
 
   return {
     moviesData,
-    moviesLoading,
-    moviesError,
+    isLoading,
+    error: error?.message || null,
     refetchMovies,
   };
 }
