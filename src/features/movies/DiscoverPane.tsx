@@ -59,7 +59,7 @@ export default function DiscoverPane() {
   if (!sessionContext) return <div />; // Guard against rendering when not logged in
   const { session, logout } = sessionContext;
 
-  const webID = useMemo(() => session.info.webId!, [session.info.webId]);
+  const webID = session.info.webId!;
   const pod = useMemo(() => {
     const parts = webID.split('/');
     return parts.slice(0, parts.length - 2).join('/');
@@ -80,9 +80,7 @@ export default function DiscoverPane() {
     updatePrivacyProfile: handlePrivacyProfileChange
   } = usePrivacyProfile({ webID, authFetch: session.fetch });
 
-  const isLoading = useMemo(() => {
-    return !hasBasicLoaded || movieDataLoading || isRecommendationLoading;
-  }, [hasBasicLoaded, movieDataLoading, isRecommendationLoading]);
+  const isLoading = !hasBasicLoaded || movieDataLoading || isRecommendationLoading;
 
   const retryLoad = () => {
     setHasBasicLoaded(false);
