@@ -100,9 +100,12 @@ export default function DiscoverPane() {
 
   useEffect(() => {
     if (hasBasicLoaded && !movieStore.isLoading && !isRecommendationLoading) {
-      fetchAndSaveMoreRecommendations(movieStore.movies);
+      fetchAndSaveMoreRecommendations(movieStore.myMovies);
     }
-  }, [hasBasicLoaded, movieStore.isLoading, movieStore.movies]);  // Do not include `isRecommendationLoading` here to avoid infinite loop
+  }, [hasBasicLoaded, movieStore.isLoading]);
+  // Do not include `isRecommendationLoading` here to avoid infinite loop
+  // Do not include `movieStore.myMovies` to avoid unnecessary re-fetching
+  // To improve later
 
   async function loadApplicationData() {
     try {
@@ -163,7 +166,7 @@ export default function DiscoverPane() {
   }
 
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
-    if (!Array.from(movieStore.movies.values()).some((x: MovieData) => x.title === media.title)) {
+    if (!Array.from(movieStore.myMovies.values()).some((x: MovieData) => x.title === media.title)) {
       try {
         await movieActions.saveMovie(media, false);
       } catch (error) {
@@ -173,7 +176,7 @@ export default function DiscoverPane() {
   };
 
   const handleAddPopupWatch = async (media: MediaData): Promise<void> => {
-    let data = Array.from(movieStore.movies.values()).find((x: MovieData) => x.title === media.title);
+    let data = Array.from(movieStore.myMovies.values()).find((x: MovieData) => x.title === media.title);
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
@@ -254,7 +257,8 @@ export default function DiscoverPane() {
               key={key}
               title={title}
               items={movieStore[key] as Set<string>}
-              movies={movieStore.movies}
+              myMovies={movieStore.myMovies}
+              friendMovies={movieStore.friendMovies}
               type={type}
               session={session}
               pod={pod}

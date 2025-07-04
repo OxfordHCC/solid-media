@@ -38,7 +38,7 @@ export function useMovieActions(session: any, pod?: string) {
     }
 
     // Optimistically update internal state with complete dataset
-    movieStore.toggleLike(tmdbUrl, like, dataset);
+    movieStore.toggleLike(tmdbUrl, like);
 
     try {
       // Perform external mutation using the same prepared dataset
@@ -52,7 +52,7 @@ export function useMovieActions(session: any, pod?: string) {
 
     } catch (error) {
       // Rollback to original state on failure
-      movieStore.toggleLike(tmdbUrl, originalMovie.liked, originalMovie.dataset);
+      movieStore.toggleLike(tmdbUrl, originalMovie.liked);
       throw error;
     }
   };
@@ -78,7 +78,7 @@ export function useMovieActions(session: any, pod?: string) {
     }
 
     // Optimistically update internal state with complete dataset
-    movieStore.toggleWatch(tmdbUrl, watched, dataset);
+    movieStore.toggleWatch(tmdbUrl, watched);
 
     try {
       // Perform external mutation using the same prepared dataset
@@ -92,7 +92,7 @@ export function useMovieActions(session: any, pod?: string) {
 
     } catch (error) {
       // Rollback to original state on failure
-      movieStore.toggleWatch(tmdbUrl, originalMovie.watched, originalMovie.dataset);
+      movieStore.toggleWatch(tmdbUrl, originalMovie.watched);
       throw error;
     }
   };
@@ -108,10 +108,9 @@ export function useMovieActions(session: any, pod?: string) {
 
     // Store original state for rollback
     const originalMovie = { ...movieData };
-    const shouldRemoveFromDict = !friendsCollection.has(tmdbUrl);
 
     // Optimistically remove from internal state
-    movieStore.removeMovie(tmdbUrl, shouldRemoveFromDict);
+    movieStore.removeMovie(tmdbUrl);
 
     try {
       await deleteMovie.mutateAsync(solidUrl);

@@ -47,8 +47,8 @@ export type State = {
   friendUnwatched: Set<string>,
   friendLiked: Set<string>,
   recommended: Set<string>,
-  movies: Map<string, MovieData>, // Throughout the code, we assume friends won't update their own movies.
-  // When two versions of the same movie exists, the 'me' version is always preferred.
+  myMovies: Map<string, MovieData>,
+  friendMovies: Map<string, MovieData[]>,
 };
 
 export interface PersonInfo {

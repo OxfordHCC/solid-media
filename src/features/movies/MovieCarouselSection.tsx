@@ -6,7 +6,8 @@ import { MovieData } from './types';
 export interface MovieSectionProps {
   title: string;
   items: Set<string>;
-  movies: Map<string, MovieData>;
+  myMovies: Map<string, MovieData>;
+  friendMovies: Map<string, MovieData[]>;
   type: 'friend' | 'me';
   session: any;
   pod: string;
@@ -15,7 +16,8 @@ export interface MovieSectionProps {
 export default function MovieCarouselSection({
   title,
   items,
-  movies,
+  myMovies,
+  friendMovies,
   type,
   session,
   pod
@@ -28,16 +30,18 @@ export default function MovieCarouselSection({
     <div>
       <h3 style="margin-left: 2%;">{title}</h3>
       <Carousel>
-        {Array.from(items).map(movie => (
-          <MovieCarouselElement
-            key={movie}
-            movieData={movies.get(movie)!}
-            movie={movie}
-            type={type}
-            session={session}
-            pod={pod}
-          />
-        ))}
+        {Array.from(items)
+          .map(movie => (type === 'me') ? myMovies.get(movie)! : friendMovies.get(movie)![0])
+          .map(movieData => (
+            <MovieCarouselElement
+              key={movieData.tmdbUrl}
+              movieData={movieData}
+              movie={movieData.tmdbUrl}
+              type={type}
+              session={session}
+              pod={pod}
+            />
+          ))}
       </Carousel>
     </div>
   );
