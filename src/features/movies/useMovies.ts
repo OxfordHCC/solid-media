@@ -228,21 +228,12 @@ export function useMovieActions(session: any, pod?: string) {
     }
   };
 
-  /**
-   * Synchronize movie data between React Query and Zustand store
-   * Handles incremental updates by adding new movies and removing deleted ones
-   */
-  const syncMovieData = async (movies: MovieData[]): Promise<void> => {
-    movieStore.syncMovieData(movies);
-  };
-
   return {
     toggleLike,
     toggleWatch,
     removeMovie: removeMovieAction,
     addFriendMovieToMyCollection,
     saveMovie: saveMovieAction,
-    syncMovieData,
   };
 }
 
