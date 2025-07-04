@@ -1,10 +1,13 @@
 import { useMovieStore } from './movieStore';
-import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, useAllMovies } from './movieQueries';
+import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, useAllMovies, movieQueryKeys } from './movieQueries';
 import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
-import { MovieData } from './types';
+import { MovieData, PersonInfo, MovieListItem } from './types';
 import { MediaData } from '../../apis/tmdb';
-import { useEffect, useMemo } from 'preact/hooks';
+import { useEffect, useMemo, useCallback, useRef } from 'preact/hooks';
+import { useQueryClient, useQueries, UseQueryResult } from '@tanstack/react-query';
+import { loadMovieList, loadMovieDetail } from './remoteMovieDataUtils';
+import { get } from 'http';
 
 /**
  * Memoized computed values for better performance
@@ -239,24 +242,93 @@ export function useMovieActions(session: any, pod?: string) {
 
 /**
  * Hook that manages React Query data fetching and syncs with Zustand store
+ * Each movie is synced individually as it loads, eliminating dual syncing
  */
 export function useMovieData(webID: string, friends: string[], fetch: typeof window.fetch, enabled: boolean) {
   const movieStore = useMovieStore();
+  const queryClient = useQueryClient();
 
-  // React Query for movie data
-  const {
-    data: moviesData,
-    isLoading,
-    error,
-    refetch: refetchMovies
-  } = useAllMovies(webID, friends, fetch, enabled);
+  // Track individual queries for better cache management
+  const people: PersonInfo[] = useMemo(() => [
+    { type: 'me', id: webID },
+    ...friends.map(id => ({ type: 'friend' as const, id }))
+  ], [webID, friends]);
 
-  // Incrementally sync React Query movie data with store
+  // Use useQueries directly - no need for the hook wrappers since we're using reactive queries
+  const movieListQueries = useQueries({
+    queries: people.map(person => ({
+      queryKey: movieQueryKeys.list(person.id),
+      queryFn: () => loadMovieList(person, fetch),
+      enabled,
+      staleTime: 5 * 60 * 1000,
+      retry: 2,
+    }))
+  });
+
+  // Get all movie items from successful list queries
+  const allMovieItems = useMemo(() => {
+    return movieListQueries
+      .filter(query => query.data)
+      .flatMap(query => query.data || []);
+  }, [movieListQueries]);
+
+  // Fetch movie details individually - each will sync to store automatically
+  const movieDetailQueries = useQueries({
+    queries: allMovieItems.map(item => ({
+      queryKey: movieQueryKeys.detail(item.url),
+      queryFn: () => loadMovieDetail(item, fetch),
+      enabled: enabled && allMovieItems.length > 0,
+      staleTime: 10 * 60 * 1000,
+      retry: 2,
+      retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500,
+    }))
+  });
+
+  // Sync each movie individually as it loads - no bulk processing
   useEffect(() => {
-    if (moviesData && moviesData.length > 0) {
-      movieStore.syncMovieData(moviesData);
-    }
-  }, [moviesData, movieStore]);
+    movieDetailQueries.forEach(query => {
+      if (query.data && query.status === 'success') {
+        const movieData = query.data;
+        movieStore.loadMovies([movieData]);
+      }
+    });
+  }, [movieDetailQueries, movieStore]);
+
+  // // Handle cache updates for real-time sync after mutations
+  // // Maybe not needed if we handle updates in the mutation hooks
+  // useEffect(() => {
+  //   const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+  //     if (event.type === 'updated' && event.query.state.data) {
+  //       const queryKey = event.query.queryKey;
+
+  //       // Handle movie detail updates from mutations
+  //       if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
+  //         const movieData = event.query.state.data as MovieData;
+  //         console.log('Real-time sync after mutation:', movieData.title);
+  //         movieStore.setMovie(movieData, movieData.tmdbUrl);
+  //       }
+  //     }
+  //   });
+
+  //   return unsubscribe;
+  // }, [queryClient, movieStore]);
+
+  const isLoading = movieListQueries.some(q => q.isLoading) || movieDetailQueries.some(q => q.isLoading);
+
+  // If no query succeeded, use the first error found
+  const getErrorPart = (someQueries: UseQueryResult[]) => (someQueries.every(q => q.error) && someQueries[0]?.error) || null;
+  const error = getErrorPart(movieListQueries) || getErrorPart(movieDetailQueries);
+
+  // Combine all movie data for compatibility
+  const moviesData = useMemo(() => {
+    return movieDetailQueries
+      .filter(query => query.data)
+      .map(query => query.data!);
+  }, [movieDetailQueries]);
+
+  const refetchMovies = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: movieQueryKeys.all });
+  }, [queryClient]);
 
   return {
     moviesData,

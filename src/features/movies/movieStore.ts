@@ -5,7 +5,7 @@ import { MovieData, State } from './types';
 import { SolidDataset } from '@inrupt/solid-client';
 
 export interface MovieActions {
-  loadMovies: (movies: MovieData[], reset?: boolean) => void;
+  loadMovies: (movies: MovieData[]) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
   // updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => void;  // Not using this yet/anymore. Will reconsider if needed later.
   removeMovie: (tmdbUrl: string) => void;
@@ -13,7 +13,6 @@ export interface MovieActions {
   toggleWatch: (tmdbUrl: string, watched: boolean) => void;
   addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => void;
   resetState: () => void;
-  syncMovieData: (movies: MovieData[]) => void;
 }
 
 const initialState: State = {
@@ -32,22 +31,8 @@ export const useMovieStore = create<State & MovieActions>()(
   immer((set, get) => ({
     ...initialState,
 
-    loadMovies: (movies: MovieData[], reset?: boolean) => {
+    loadMovies: (movies: MovieData[]) => {
       set((state) => {
-
-        if (reset) {
-          // Reset the state if replacing
-          state.myMovies.clear();
-          state.friendMovies.clear();
-          state.myWatched.clear();
-          state.myUnwatched.clear();
-          state.myLiked.clear();
-          state.friendWatched.clear();
-          state.friendUnwatched.clear();
-          state.friendLiked.clear();
-          state.recommended.clear();
-        }
-
         for (const movie of movies) {
           const tmdbUrl = movie.tmdbUrl;
 
@@ -74,16 +59,21 @@ export const useMovieStore = create<State & MovieActions>()(
             }
           } else { // If it's a 'me' movie
             state.myMovies.set(tmdbUrl, castDraft(movie));
-            if (movie.watched) {
-              state.myWatched.add(tmdbUrl);
-            } else {
-              state.myUnwatched.add(tmdbUrl);
-            }
-            if (movie.liked) {
-              state.myLiked.add(tmdbUrl);
-            }
             if (movie.recommended) {
               state.recommended.add(tmdbUrl);
+            } else {
+              state.recommended.delete(tmdbUrl);
+              state.myWatched.delete(tmdbUrl);
+              state.myUnwatched.delete(tmdbUrl);
+              state.myLiked.delete(tmdbUrl);
+              if (movie.watched) {
+                state.myWatched.add(tmdbUrl);
+              } else {
+                state.myUnwatched.add(tmdbUrl);
+              }
+              if (movie.liked) {
+                state.myLiked.add(tmdbUrl);
+              }
             }
           }
         }
@@ -167,50 +157,6 @@ export const useMovieStore = create<State & MovieActions>()(
 
     resetState: () => {
       set(initialState);
-    },
-
-    // Not handling friend movie deletion yet. Maybe in the future we will have a way to delete friend movies.
-    syncMovieData: (movies: MovieData[]) => {
-      get().loadMovies(movies, false);
-
-      // // The following code is more correct (with caveat of friend movie deletion). But because it's more complex, we do not use it for now.
-      // // It is reserved in case we still need it in the future when redesigning data loading.
-      //
-      // const state = get();
-
-      // // Separate movies by type
-      // const myMovies = movies.filter(movie => movie.type === 'me');
-      // const friendMovies = movies.filter(movie => movie.type === 'friend');
-
-      // // Get current movie URLs from the latest data
-      // const currentMyMovieUrls = new Set(myMovies.map(movie => movie.tmdbUrl));
-
-      // const deletedMyMovieUrls = Array.from(state.myMovies.keys()).filter(tmdbUrl =>
-      //   !currentMyMovieUrls.has(tmdbUrl)
-      // );
-
-      // // Find new movies that haven't been loaded yet
-      // const newMyMovies = myMovies.filter(movie =>
-      //   !state.myMovies.has(movie.tmdbUrl)
-      // );
-      // const newFriendMovies = friendMovies.filter(movie =>
-      //   !state.friendMovies.has(movie.tmdbUrl) &&
-      //   !state.friendMovies.get(movie.tmdbUrl)?.some(existingMovie => existingMovie.solidUrl === movie.solidUrl)
-      // );
-
-      // // Handle deletions for my movies
-      // if (deletedMyMovieUrls.length > 0) {
-      //   deletedMyMovieUrls.forEach(tmdbUrl => {
-      //     get().removeMovie(tmdbUrl);
-      //   });
-      // }
-
-      // // Handle new movies (both my movies and friend movies)
-      // const allNewMovies = [...newMyMovies, ...newFriendMovies];
-      // if (allNewMovies.length > 0) {
-      //   // Dispatch only the new movies for incremental loading
-      //   get().loadMovies(allNewMovies);
-      // }
     },
   }))
 );
