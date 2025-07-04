@@ -40,15 +40,15 @@ export type MovieData = {
 };
 
 export type State = {
-  myWatched: Set<string>,
+  myWatched: Set<string>, // Set of tmdbUrls
   myUnwatched: Set<string>,
   myLiked: Set<string>,
   friendWatched: Set<string>,
   friendUnwatched: Set<string>,
   friendLiked: Set<string>,
   recommended: Set<string>,
-  myMovies: Map<string, MovieData>,
-  friendMovies: Map<string, MovieData[]>,
+  myMovies: Map<string, MovieData>, // Map of tmdbUrl to MovieData
+  friendMovies: Map<string, MovieData[]>, // Map of tmdbUrl to array of MovieData
 };
 
 export interface PersonInfo {
