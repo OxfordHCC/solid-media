@@ -11,7 +11,7 @@ export interface MovieState extends State {
 }
 
 export interface MovieActions {
-  loadMovies: (movies: MovieData[]) => void;
+  loadMovies: (movies: MovieData[], reset?: boolean) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
   // updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => void;  // Not using this yet/anymore. Will reconsider if needed later.
   removeMovie: (tmdbUrl: string) => void;
@@ -42,14 +42,36 @@ export const useMovieStore = create<MovieState & MovieActions>()(
   immer((set, get) => ({
     ...initialState,
 
-    loadMovies: (movies: MovieData[]) => {
+    loadMovies: (movies: MovieData[], reset?: boolean) => {
       set((state) => {
+
+        if (reset) {
+          // Reset the state if replacing
+          state.myMovies.clear();
+          state.friendMovies.clear();
+          state.myWatched.clear();
+          state.myUnwatched.clear();
+          state.myLiked.clear();
+          state.friendWatched.clear();
+          state.friendUnwatched.clear();
+          state.friendLiked.clear();
+          state.recommended.clear();
+        }
+
         for (const movie of movies) {
           const tmdbUrl = movie.tmdbUrl;
 
           if (movie.type === 'friend') {
             const existingFriendMovies = state.friendMovies.get(tmdbUrl) || [];
-            existingFriendMovies.push(castDraft(movie));
+            // Find the index of the movie in the existing array
+            const existingIndex = existingFriendMovies.findIndex(
+              (m) => m.solidUrl === movie.solidUrl
+            );
+            if (existingIndex !== -1) { // If the movie already exists, update it
+              existingFriendMovies[existingIndex] = castDraft(movie);
+            } else { // If it's a new movie, add it to the array
+              existingFriendMovies.push(castDraft(movie));
+            }
             state.friendMovies.set(tmdbUrl, existingFriendMovies);
 
             if (movie.watched) {
@@ -171,41 +193,46 @@ export const useMovieStore = create<MovieState & MovieActions>()(
 
     // Not handling friend movie deletion yet. Maybe in the future we will have a way to delete friend movies.
     syncMovieData: (movies: MovieData[]) => {
-      const state = get();
+      get().loadMovies(movies, false);
 
-      // Separate movies by type
-      const myMovies = movies.filter(movie => movie.type === 'me');
-      const friendMovies = movies.filter(movie => movie.type === 'friend');
+      // // The following code is more correct (with caveat of friend movie deletion). But because it's more complex, we do not use it for now.
+      // // It is reserved in case we still need it in the future when redesigning data loading.
+      //
+      // const state = get();
 
-      // Get current movie URLs from the latest data
-      const currentMyMovieUrls = new Set(myMovies.map(movie => movie.tmdbUrl));
+      // // Separate movies by type
+      // const myMovies = movies.filter(movie => movie.type === 'me');
+      // const friendMovies = movies.filter(movie => movie.type === 'friend');
 
-      const deletedMyMovieUrls = Array.from(state.myMovies.keys()).filter(tmdbUrl =>
-        !currentMyMovieUrls.has(tmdbUrl)
-      );
+      // // Get current movie URLs from the latest data
+      // const currentMyMovieUrls = new Set(myMovies.map(movie => movie.tmdbUrl));
 
-      // Find new movies that haven't been loaded yet
-      const newMyMovies = myMovies.filter(movie =>
-        !state.myMovies.has(movie.tmdbUrl)
-      );
-      const newFriendMovies = friendMovies.filter(movie =>
-        !state.friendMovies.has(movie.tmdbUrl) &&
-        !state.friendMovies.get(movie.tmdbUrl)?.some(existingMovie => existingMovie.solidUrl === movie.solidUrl)
-      );
+      // const deletedMyMovieUrls = Array.from(state.myMovies.keys()).filter(tmdbUrl =>
+      //   !currentMyMovieUrls.has(tmdbUrl)
+      // );
 
-      // Handle deletions for my movies
-      if (deletedMyMovieUrls.length > 0) {
-        deletedMyMovieUrls.forEach(tmdbUrl => {
-          get().removeMovie(tmdbUrl);
-        });
-      }
+      // // Find new movies that haven't been loaded yet
+      // const newMyMovies = myMovies.filter(movie =>
+      //   !state.myMovies.has(movie.tmdbUrl)
+      // );
+      // const newFriendMovies = friendMovies.filter(movie =>
+      //   !state.friendMovies.has(movie.tmdbUrl) &&
+      //   !state.friendMovies.get(movie.tmdbUrl)?.some(existingMovie => existingMovie.solidUrl === movie.solidUrl)
+      // );
 
-      // Handle new movies (both my movies and friend movies)
-      const allNewMovies = [...newMyMovies, ...newFriendMovies];
-      if (allNewMovies.length > 0) {
-        // Dispatch only the new movies for incremental loading
-        get().loadMovies(allNewMovies);
-      }
+      // // Handle deletions for my movies
+      // if (deletedMyMovieUrls.length > 0) {
+      //   deletedMyMovieUrls.forEach(tmdbUrl => {
+      //     get().removeMovie(tmdbUrl);
+      //   });
+      // }
+
+      // // Handle new movies (both my movies and friend movies)
+      // const allNewMovies = [...newMyMovies, ...newFriendMovies];
+      // if (allNewMovies.length > 0) {
+      //   // Dispatch only the new movies for incremental loading
+      //   get().loadMovies(allNewMovies);
+      // }
     },
   }))
 );
