@@ -87,6 +87,7 @@ export default function DiscoverPane() {
     setError(null);
     // Clear all movie data to force reload
     movieStore.resetState();
+    refetchMovies();
   };
 
   // Combine local error and movie data error for unified error handling
@@ -229,7 +230,6 @@ export default function DiscoverPane() {
           <p>Error loading data: {combinedError}</p>
           <button onClick={() => {
             retryLoad();
-            refetchMovies();
           }}>Retry</button>
         </div>
       )}
