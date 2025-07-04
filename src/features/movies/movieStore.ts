@@ -18,7 +18,7 @@ interface MovieState {
   error: string | null;
 
   // Actions
-  loadMovies: (movies: Set<MovieData>) => void;
+  loadMovies: (movies: MovieData[]) => void;
   setMovie: (movieData: MovieData, tmdbUrl: string) => void;
   updateMovie: (tmdbUrl: string, updates: Partial<MovieData>) => void;
   removeMovie: (tmdbUrl: string, removeFromDict: boolean) => void;
@@ -52,7 +52,7 @@ const initialState = {
 export const useMovieStore = create<MovieState>((set, get) => ({
   ...initialState,
 
-  loadMovies: (movies: Set<MovieData>) => {
+  loadMovies: (movies: MovieData[]) => {
     set((state) => {
       const newMovies = new Map(state.movies);
       const newMyUnwatched = new Set(state.myUnwatched);
@@ -296,7 +296,7 @@ export const useMovieStore = create<MovieState>((set, get) => ({
     // Handle new movies
     if (newMovies.length > 0) {
       // Dispatch only the new movies for incremental loading
-      get().loadMovies(new Set(newMovies));
+      get().loadMovies(newMovies);
     }
   },
 
