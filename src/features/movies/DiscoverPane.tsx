@@ -65,12 +65,10 @@ export default function DiscoverPane() {
     return parts.slice(0, parts.length - 2).join('/');
   }, [webID]);
 
-  // Use new movie management hooks
   const movieActions = useMovieActions(session, pod);
   const movieStore = useMovieStore();
   const { isStoreEmpty } = useComputedMovieCollections();
 
-  // React Query for movie data with store integration
   const { refetchMovies, isLoading: movieDataLoading, error: movieDataError } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
 
   // Privacy profile management
@@ -85,12 +83,10 @@ export default function DiscoverPane() {
   const retryLoad = () => {
     setHasBasicLoaded(false);
     setError(null);
-    // Clear all movie data to force reload
     movieStore.resetState();
     refetchMovies();
   };
 
-  // Combine local error and movie data error for unified error handling
   const combinedError = error || movieDataError;
 
   useEffect(() => {
@@ -98,8 +94,6 @@ export default function DiscoverPane() {
       loadApplicationData();
     }
   }, [hasBasicLoaded, session, pod, webID]);
-
-  // Data is automatically synced by useMovieData hook
 
   useEffect(() => {
     if (hasBasicLoaded && !movieDataLoading && !isRecommendationLoading) {
