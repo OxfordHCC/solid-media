@@ -13,6 +13,7 @@ export interface MovieActions {
   toggleWatch: (tmdbUrl: string, watched: boolean) => void;
   addToMyCollection: (tmdbUrl: string, updates: Partial<MovieData>) => void;
   resetState: () => void;
+  findMovieInMyCollection: (title: string) => MovieData | undefined;
 }
 
 const initialState: State = {
@@ -158,5 +159,9 @@ export const useMovieStore = create<State & MovieActions>()(
     resetState: () => {
       set(initialState);
     },
+
+    findMovieInMyCollection: (title: string) => {
+      return Array.from(get().myMovies.values()).find((x: MovieData) => x.title === title)
+    }
   }))
 );

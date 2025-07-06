@@ -125,7 +125,7 @@ export default function DiscoverPane() {
   }
 
   const handleAddPopupSave = async (media: MediaData): Promise<void> => {
-    if (!Array.from(movieStore.myMovies.values()).some((x: MovieData) => x.title === media.title)) {
+    if (movieActions.findMovieInMyCollection(media.title) === undefined) {
       try {
         await movieActions.saveMovie(media, false);
       } catch (error) {
@@ -135,7 +135,7 @@ export default function DiscoverPane() {
   };
 
   const handleAddPopupWatch = async (media: MediaData): Promise<void> => {
-    let data = Array.from(movieStore.myMovies.values()).find((x: MovieData) => x.title === media.title);
+    let data = movieActions.findMovieInMyCollection(media.title);
 
     if (data) {
       const movieWebIDParts = data.solidUrl.split('/');
