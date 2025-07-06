@@ -237,6 +237,7 @@ export function useMovieActions(session: any, pod?: string) {
     removeMovie: removeMovieAction,
     addFriendMovieToMyCollection,
     saveMovie: saveMovieAction,
+    resetMovieStore: movieStore.resetState,
   };
 }
 

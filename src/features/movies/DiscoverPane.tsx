@@ -83,7 +83,7 @@ export default function DiscoverPane() {
   const retryLoad = () => {
     setHasBasicLoaded(false);
     setError(null);
-    movieStore.resetState();
+    movieActions.resetMovieStore();
     refetchMovies();
   };
 
