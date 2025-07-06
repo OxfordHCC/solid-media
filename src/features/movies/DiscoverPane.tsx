@@ -10,17 +10,15 @@ import MovieCarouselSection from './MovieCarouselSection';
 
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
-import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
 import { useComputedMovieCollections, useMovieActions, useMovieData } from './useMovies';
 import { useMovieStore } from './movieStore';
+import { useAutoRecommendations } from './useRecommendations';
 import {
   MovieData,
   State
 } from './types';
 import { UIElement } from '../privacy_profile/privacyProfileDefinitions';
 import { usePrivacyProfile } from '../privacy_profile/usePrivacyProfile';
-
-const MAX_RECOMMENDATIONS = 10;
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
@@ -38,20 +36,10 @@ const sectionConfigs: Array<{
   { title: 'You enjoyed', key: 'myLiked', type: 'me' },
 ];
 
-function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[] {
-  if (userMovies.length <= maxSamples) {
-    return userMovies.map(movie => movie.title);
-  }
-
-  const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
-  return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
-}
-
 export default function DiscoverPane() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [hasBasicLoaded, setHasBasicLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
 
   const [friends, setFriends] = useState<string[]>([]);
 
@@ -71,6 +59,18 @@ export default function DiscoverPane() {
 
   const { refetchMovies, isLoading: movieDataLoading, error: movieDataError } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
 
+  // Use the new recommendations hook
+  const {
+    isLoading: isRecommendationLoading,
+    error: recommendationError
+  } = useAutoRecommendations({
+    session,
+    pod,
+    hasBasicLoaded,
+    movieDataLoading,
+    enabled: true
+  });
+
   // Privacy profile management
   const {
     privacyProfile,
@@ -87,22 +87,13 @@ export default function DiscoverPane() {
     refetchMovies();
   };
 
-  const combinedError = error || movieDataError;
+  const combinedError = error || movieDataError || recommendationError;
 
   useEffect(() => {
     if (!hasBasicLoaded) {
       loadApplicationData();
     }
   }, [hasBasicLoaded, session, pod, webID]);
-
-  useEffect(() => {
-    if (hasBasicLoaded && !movieDataLoading && !isRecommendationLoading) {
-      fetchAndSaveMoreRecommendations(movieStore.myMovies);
-    }
-  }, [hasBasicLoaded, movieDataLoading]);
-  // Do not include `isRecommendationLoading` here to avoid infinite loop
-  // Do not include `movieStore.myMovies` to avoid unnecessary re-fetching
-  // To improve later
 
   async function loadApplicationData() {
     try {
@@ -130,35 +121,6 @@ export default function DiscoverPane() {
       setError(
         error instanceof Error ? error.message : 'Failed to load data'
       );
-    }
-  }
-
-  async function fetchAndSaveMoreRecommendations(movieDict: Map<string, MovieData>): Promise<void> {
-    try {
-      setIsRecommendationLoading(true);
-      if (movieStore.recommended.size >= MAX_RECOMMENDATIONS) {
-        console.log('Enough recommendations already loaded, skipping loading more...');
-        return;
-      }
-      const userMovies = Array.from(movieDict.values()).filter(x => x.type === 'me' && !x.recommended);
-      const sampledTitles = sampleUserMovies(userMovies, 10);
-      const recommendedList = await fetchRecommendations(sampledTitles);
-
-      for (const name of recommendedList) {
-        const movies = await search(name);
-        const movie = movies.find((x: any) => x.title === name);
-        if (movie) {
-          try {
-            const savedMovie = await movieActions.saveMovie(movie, true);
-          } catch (error) {
-            console.error('Failed to save recommendation:', error);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error handling recommendations:', error);
-    } finally {
-      setIsRecommendationLoading(false);
     }
   }
 
