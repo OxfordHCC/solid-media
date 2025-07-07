@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { castDraft } from 'immer';
-import { MovieData, State } from './types';
+import { MovieData, State, areMoviesEqual } from './types';
 
 export interface MovieActions {
   loadMovies: (movies: MovieData[]) => void;
@@ -42,7 +42,11 @@ export const useMovieStore = create<State & MovieActions>()(
             const existingIndex = existingFriendMovies.findIndex(
               (m) => m.solidUrl === movie.solidUrl
             );
-            if (existingIndex !== -1) { // If the movie already exists, update it
+            const existingMovie = existingIndex !== -1 ? existingFriendMovies[existingIndex] : undefined;
+            if (areMoviesEqual(existingMovie, movie)) {
+              continue; // Skip if the movie is unchanged
+            }
+            if (existingMovie !== undefined) { // If the movie already exists (but not equal), update it
               existingFriendMovies[existingIndex] = castDraft(movie);
             } else { // If it's a new movie, add it to the array
               existingFriendMovies.push(castDraft(movie));
@@ -58,6 +62,10 @@ export const useMovieStore = create<State & MovieActions>()(
               state.friendLiked.add(tmdbUrl);
             }
           } else { // If it's a 'me' movie
+            const existingMovie = state.myMovies.get(tmdbUrl);
+            if (existingMovie && areMoviesEqual(existingMovie, movie)) {
+              continue; // Skip if the movie is unchanged
+            }
             state.myMovies.set(tmdbUrl, castDraft(movie));
             if (movie.recommended) {
               state.recommended.add(tmdbUrl);

@@ -59,3 +59,19 @@ export interface PersonInfo {
 export interface MovieListItem extends PersonInfo {
   url: string;
 }
+
+export function areMoviesEqual(a?: MovieData, b?: MovieData): boolean {
+  if (!a || !b) return false; // If either is undefined, they are not equal
+  return (
+    a.tmdbUrl === b.tmdbUrl &&
+    a.watched === b.watched &&
+    a.liked === b.liked &&
+    a.recommended === b.recommended &&
+    a.title === b.title &&
+    a.released.getTime() === b.released.getTime() &&
+    a.image === b.image &&
+    a.solidUrl === b.solidUrl &&
+    a.type === b.type
+    // Note: 'dataset' is not compared. Add custom logic if needed.
+  );
+}
