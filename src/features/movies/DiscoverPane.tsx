@@ -11,7 +11,6 @@ import MovieCarouselSection from './MovieCarouselSection';
 import { synchronizeToFriendsDataset } from '../../apis/solid/friendsUtils';
 import { getOrCreateMoviesContainerWithAcl, setupMoviesAcl } from '../../apis/solid/movies';
 import { useComputedMovieCollections, useMovieActions, useMovieData } from './useMovies';
-import { useMovieStore } from './movieStore';
 import { useAutoRecommendations } from './useRecommendations';
 import {
   MovieData,
@@ -54,7 +53,6 @@ export default function DiscoverPane() {
   }, [webID]);
 
   const movieActions = useMovieActions(session, pod);
-  const movieStore = useMovieStore();
   const { isStoreEmpty } = useComputedMovieCollections();
 
   const { refetchMovies, isLoading: movieDataLoading, error: movieDataError } = useMovieData(webID, friends, session.fetch, hasBasicLoaded);
@@ -214,9 +212,7 @@ export default function DiscoverPane() {
             <MovieCarouselSection
               key={key}
               title={title}
-              items={movieStore[key] as Set<string>}
-              myMovies={movieStore.myMovies}
-              friendMovies={movieStore.friendMovies}
+              sectionKey={key}
               type={type}
               session={session}
               pod={pod}

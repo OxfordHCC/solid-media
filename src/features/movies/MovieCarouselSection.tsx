@@ -1,13 +1,12 @@
 import { VNode } from 'preact';
 import Carousel from '../../components/Carousel';
 import { MovieCarouselElement } from './MovieCarouselElement';
-import { MovieData } from './types';
+import { MovieData, State } from './types';
+import { useMovieStore } from './movieStore';
 
 export interface MovieSectionProps {
   title: string;
-  items: Set<string>;
-  myMovies: Map<string, MovieData>;
-  friendMovies: Map<string, MovieData[]>;
+  sectionKey: keyof State;
   type: 'friend' | 'me';
   session: any;
   pod: string;
@@ -15,13 +14,18 @@ export interface MovieSectionProps {
 
 export default function MovieCarouselSection({
   title,
-  items,
-  myMovies,
-  friendMovies,
+  sectionKey,
   type,
   session,
   pod
 }: MovieSectionProps): VNode | null {
+  const movieStore = useMovieStore(); // TODO: Reconsider whether this should be wrapped, for optimistic updates
+
+  // Get the relevant data from the store
+  const items = movieStore[sectionKey] as Set<string>;
+  const myMovies = movieStore.myMovies;
+  const friendMovies = movieStore.friendMovies;
+
   if (!items || items.size === 0) {
     return null;
   }
