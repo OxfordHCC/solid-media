@@ -1,10 +1,9 @@
-import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
 import { useCallback } from 'preact/hooks';
 import { MovieData, PersonInfo, MovieListItem } from './types';
 import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from "./remoteMovieDataUtils";
 import { saveMovie } from './remoteMovieDataUtils';
 import { MediaData } from '../../apis/tmdb';
-import { SolidDataset } from '@inrupt/solid-client';
 
 // Query keys
 export const movieQueryKeys = {

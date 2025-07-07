@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { castDraft } from 'immer';
 import { MovieData, State } from './types';
-import { SolidDataset } from '@inrupt/solid-client';
 
 export interface MovieActions {
   loadMovies: (movies: MovieData[]) => void;

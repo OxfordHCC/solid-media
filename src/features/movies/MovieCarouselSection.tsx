@@ -1,7 +1,7 @@
 import { VNode } from 'preact';
 import Carousel from '../../components/Carousel';
 import { MovieCarouselElement } from './MovieCarouselElement';
-import { MovieData, State } from './types';
+import { State } from './types';
 import { useMovieStore } from './movieStore';
 
 export interface MovieSectionProps {

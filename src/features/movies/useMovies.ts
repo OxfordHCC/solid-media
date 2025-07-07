@@ -1,13 +1,12 @@
 import { useMovieStore } from './movieStore';
-import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, useAllMovies, movieQueryKeys } from './movieQueries';
+import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, movieQueryKeys } from './movieQueries';
 import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
-import { MovieData, PersonInfo, MovieListItem } from './types';
+import { MovieData, PersonInfo } from './types';
 import { MediaData } from '../../apis/tmdb';
-import { useEffect, useMemo, useCallback, useRef } from 'preact/hooks';
+import { useEffect, useMemo, useCallback } from 'preact/hooks';
 import { useQueryClient, useQueries, UseQueryResult } from '@tanstack/react-query';
 import { loadMovieList, loadMovieDetail } from './remoteMovieDataUtils';
-import { get } from 'http';
 
 /**
  * Memoized computed values for better performance
