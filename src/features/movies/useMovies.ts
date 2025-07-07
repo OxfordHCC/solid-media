@@ -76,7 +76,7 @@ export function useMovieActions(session: any, pod?: string) {
     }
 
     // Optimistically update internal state with complete dataset
-    movieStore.toggleLike(tmdbUrl, like);
+    // movieStore.toggleLike(tmdbUrl, like);
 
     try {
       // Perform external mutation using the same prepared dataset
@@ -116,7 +116,7 @@ export function useMovieActions(session: any, pod?: string) {
     }
 
     // Optimistically update internal state with complete dataset
-    movieStore.toggleWatch(tmdbUrl, watched);
+    // movieStore.toggleWatch(tmdbUrl, watched);
 
     try {
       // Perform external mutation using the same prepared dataset
@@ -150,7 +150,7 @@ export function useMovieActions(session: any, pod?: string) {
       await deleteMovie.mutateAsync(solidUrl);
 
       // Remove from internal state. Must not be done before mutation
-      movieStore.removeMovie(tmdbUrl);
+      // movieStore.removeMovie(tmdbUrl);
 
     } catch (error) {
       // Rollback - re-add the movie with original data
@@ -220,7 +220,7 @@ export function useMovieActions(session: any, pod?: string) {
       });
 
       // Update internal state with the new movie
-      movieStore.setMovie(savedMovie, media.tmdbUrl);
+      // movieStore.setMovie(savedMovie, media.tmdbUrl);
 
       return savedMovie;
     } catch (error) {
@@ -296,22 +296,29 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
 
   // // Handle cache updates for real-time sync after mutations
   // // Maybe not needed if we handle updates in the mutation hooks
-  // useEffect(() => {
-  //   const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-  //     if (event.type === 'updated' && event.query.state.data) {
-  //       const queryKey = event.query.queryKey;
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if ((event.type === 'updated' || event.type === 'added') && event.query.state.data) {
+        const queryKey = event.query.queryKey;
 
-  //       // Handle movie detail updates from mutations
-  //       if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
-  //         const movieData = event.query.state.data as MovieData;
-  //         console.log('Real-time sync after mutation:', movieData.title);
-  //         movieStore.setMovie(movieData, movieData.tmdbUrl);
-  //       }
-  //     }
-  //   });
+        // Handle movie detail updates from mutations
+        if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
+          const movieData = event.query.state.data as MovieData;
+          movieStore.loadMovies([movieData]);
+        }
+      } else if (event.type === 'removed') {
+        const queryKey = event.query.queryKey;
 
-  //   return unsubscribe;
-  // }, [queryClient, movieStore]);
+        // Handle movie removal from store
+        if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
+          const solidUrl = queryKey[2] as string;
+          movieStore.removeMovie(Array.from(movieStore.myMovies.values()).find(m => m.solidUrl === solidUrl)?.tmdbUrl || '');
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [queryClient, movieStore]);
 
   const isLoading = movieListQueries.some(q => q.isLoading) || movieDetailQueries.some(q => q.isLoading);
 
