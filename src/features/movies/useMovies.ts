@@ -146,12 +146,11 @@ export function useMovieActions(session: any, pod?: string) {
     // Store original state for rollback
     const originalMovie = { ...movieData };
 
-    // Optimistically remove from internal state
-    movieStore.removeMovie(tmdbUrl);
-
     try {
       await deleteMovie.mutateAsync(solidUrl);
-      // External deletion succeeded - optimistic update is confirmed
+
+      // Remove from internal state. Must not be done before mutation
+      movieStore.removeMovie(tmdbUrl);
 
     } catch (error) {
       // Rollback - re-add the movie with original data
@@ -293,7 +292,7 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
         movieStore.loadMovies([movieData]);
       }
     });
-  }, [movieDetailQueries, movieStore]);
+  }, [movieDetailQueries]);
 
   // // Handle cache updates for real-time sync after mutations
   // // Maybe not needed if we handle updates in the mutation hooks
