@@ -48,7 +48,10 @@ export function CarouselElement({title, subtitle, image, redirect, buttons = []}
 	return (
 		<div onClick={noDefault(() => redirect && setLocation(redirect))} class='carousel-panel'>
 			<div class='carousel-element'>
-				<img class='carousel-image' src={image} />
+				{image
+					? <img class='carousel-image' src={image} />
+					: <div class='carousel-placeholder' />
+				}
 				<div class='carousel-body'>
 					<p class='carousel-title'>{title}</p>
 					<p class='carousel-subtitle'>{subtitle}</p>

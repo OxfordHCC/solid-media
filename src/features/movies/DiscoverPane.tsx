@@ -18,13 +18,15 @@ import {
 } from './types';
 import { UIElement } from '../privacy_profile/privacyProfileDefinitions';
 import { usePrivacyProfile } from '../privacy_profile/usePrivacyProfile';
+import { useHistory as useCHAITokHistory } from '../chaitok/useHistory';
+import HistoryCarouselSection from '../chaitok/HistoryCarouselSection';
 
 type ModalType = 'add-movies' | 'add-friends' | 'logout' | null;
 
 const sectionConfigs: Array<{
   title: string;
-  key: keyof State;
-  type: 'friend' | 'me';
+  key: keyof State | null;
+  type: 'friend' | 'me' | 'chaitok';
 }> = [
   { title: 'Recommended Movies', key: 'recommended', type: 'me' },
   { title: 'Friends Collection', key: 'friendWatched', type: 'friend' },
@@ -33,6 +35,7 @@ const sectionConfigs: Array<{
   { title: 'Your Collection', key: 'myWatched', type: 'me' },
   { title: 'Your Wishlist', key: 'myUnwatched', type: 'me' },
   { title: 'You enjoyed', key: 'myLiked', type: 'me' },
+  { title: 'From CHAITok', key: null, type: 'chaitok' }
 ];
 
 export default function DiscoverPane() {
@@ -76,7 +79,9 @@ export default function DiscoverPane() {
     updatePrivacyProfile: handlePrivacyProfileChange
   } = usePrivacyProfile({ webID, authFetch: session.fetch });
 
-  const isLoading = !hasBasicLoaded || movieDataLoading || isRecommendationLoading;
+  const { isLoading: isCHAITokHistoryLoading } = useCHAITokHistory(pod, session.fetch, hasBasicLoaded);
+
+  const isLoading = !hasBasicLoaded || movieDataLoading || isRecommendationLoading || isCHAITokHistoryLoading;
 
   const retryLoad = () => {
     setHasBasicLoaded(false);
@@ -208,16 +213,25 @@ export default function DiscoverPane() {
             }
             return true;
           })
-          .map(({ title, key, type }) => (
-            <MovieCarouselSection
-              key={key}
-              title={title}
-              sectionKey={key}
-              type={type}
-              session={session}
-              pod={pod}
-            />
-          ))
+          .map(({ title, key, type }) => {
+            if (key === null) {
+              // Special case for CHAITok history
+              return <HistoryCarouselSection
+                title={title}
+              />
+            } else {
+              // `type` is guaranteed to be 'friend' | 'me' here, according to sectionConfigs
+              return <MovieCarouselSection
+                key={key}
+                title={title}
+                sectionKey={key}
+                type={type as 'friend' | 'me'}
+                session={session}
+                pod={pod}
+              />
+            }
+          }
+          )
       )}
 
       {activeModal === 'add-movies' && (
