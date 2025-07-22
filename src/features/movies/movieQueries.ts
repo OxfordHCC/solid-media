@@ -5,6 +5,22 @@ import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } 
 import { saveMovie } from './remoteMovieDataUtils';
 import { MediaData } from '../../apis/tmdb';
 
+const MOVIE_LIST_QUERY_PARAMS = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  retry: 2,
+}
+const MOVIE_DETAIL_QUERY_PARAMS = {
+  staleTime: 10 * 60 * 1000, // 10 minutes
+  retry: 2,
+  retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500, // add delay between retries
+};
+const MOVIE_ALL_QUERY_PARAMS = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  retry: 2,
+  retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500, // add delay between retries
+};
+
+
 // Query keys
 export const movieQueryKeys = {
   all: ['movies'] as const,
@@ -32,8 +48,7 @@ export function useFetchMovieList(
     return queryClient.fetchQuery({
       queryKey: movieQueryKeys.list(person.id),
       queryFn: () => loadMovieList(person, fetch),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2,
+      ...MOVIE_LIST_QUERY_PARAMS,
     });
   }, [queryClient, fetch]);
 
@@ -50,9 +65,7 @@ export function useFetchMovieDetail(
     return queryClient.fetchQuery({
       queryKey: movieQueryKeys.detail(movieItem.url),
       queryFn: () => loadMovieDetail(movieItem, fetch),
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      retry: 2,
-      retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500, // add delay between retries
+      ...MOVIE_DETAIL_QUERY_PARAMS,
     });
   }, [queryClient, fetch]);
 
@@ -108,9 +121,7 @@ export function useAllMovies(
     queryKey: movieQueryKeys.allMovies(webID, friends),
     queryFn: () => fetchAllMovies(webID, friends),
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
-    retryDelay: (attemptIndex) => (attemptIndex + 1) * 1500,
+    ...MOVIE_ALL_QUERY_PARAMS,
   });
 }
 
