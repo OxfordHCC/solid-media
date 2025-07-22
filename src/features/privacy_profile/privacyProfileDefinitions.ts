@@ -9,6 +9,7 @@ export enum UIElement {
     FRIEND_MOVIE = 'friendMovie',
     FRIEND_LIKED = 'friendLiked',
     RECOMMENDATION = 'recommendation',
+    CHAITOK_HISTORY = 'chaitok',
 }
 
 export function enumFromString<T extends Record<string, string>>(
@@ -31,16 +32,19 @@ export const PrivacyProfileUIElements = {
     null: [
         UIElement.FRIEND_MOVIE,
         UIElement.RECOMMENDATION,
+        UIElement.CHAITOK_HISTORY,
     ],
     [PrivacyProfile.LOCAL]: [],
     [PrivacyProfile.ACCURACY]: [UIElement.RECOMMENDATION],
     [PrivacyProfile.FUNCTION]: [
         UIElement.FRIEND_MOVIE,
         UIElement.RECOMMENDATION,
+        UIElement.CHAITOK_HISTORY,
     ],
     [PrivacyProfile.FULL]: [
         UIElement.FRIEND_MOVIE,
         UIElement.FRIEND_LIKED,
         UIElement.RECOMMENDATION,
+        UIElement.CHAITOK_HISTORY,
     ],
 };

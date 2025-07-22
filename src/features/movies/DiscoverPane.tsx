@@ -215,7 +215,10 @@ export default function DiscoverPane() {
           })
           .map(({ title, key, type }) => {
             if (key === null) {
-              // Special case for CHAITok history
+              // Special case for CHAITok history. Maybe worth refactoring this into a separate section config?
+              if (!enabledUIElements.includes(UIElement.CHAITOK_HISTORY)) {
+                return null; // Skip this section if not enabled
+              }
               return <HistoryCarouselSection
                 title={title}
               />
