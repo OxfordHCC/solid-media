@@ -34,6 +34,33 @@
 	transform: none;
 }
 
+.profile-main-color {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+.profile-main-color:hover {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
+.profile-main-color:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .privacy-profile-dropdown {
 	position: absolute;
 	top: 60px;
@@ -41,8 +68,8 @@
 	background: rgba(0, 0, 0, 0.9);
 	border: 1px solid rgba(255, 255, 255, 0.3);
 	border-radius: 8px;
-	padding: 8px;
-	min-width: 150px;
+	padding: 4px 6px;
+	min-width: 140px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 	animation: fadeIn 0.2s ease-in-out;
 }
@@ -59,22 +86,22 @@
 }
 
 .privacy-profile-heading {
-	font-size: 12px;
+	font-size: 11px;
 	font-weight: 600;
 	color: rgba(255, 255, 255, 0.8);
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
-	padding: 4px 12px 8px 12px;
-	margin-bottom: 4px;
+	padding: 2px 8px 6px 8px;
+	margin-bottom: 2px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .privacy-profile-option {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
 	width: 100%;
-	padding: 8px 12px;
+	padding: 4px 6px;
 	background: none;
 	border: none;
 	color: white;
@@ -83,6 +110,7 @@
 	transition: background-color 0.2s ease-in-out;
 	text-align: left;
 	font-family: inherit;
+	min-height: 36px;
 }
 
 .privacy-profile-option:hover {
@@ -98,13 +126,34 @@
 	cursor: not-allowed;
 }
 
+/* Add color bar and icon background for dropdown options */
+.profile-color-bar {
+  width: 5px;
+  height: 24px;
+  border-radius: 3px;
+  margin-right: 6px;
+  display: inline-block;
+}
+
+.profile-icon-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  margin-right: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+
 .profile-icon {
-	font-size: 16px;
+	font-size: 14px;
+	line-height: 1;
 	flex-shrink: 0;
 }
 
 .profile-label {
-	font-size: 14px;
+	font-size: 13px;
 	font-weight: 500;
 	flex-grow: 1;
 }

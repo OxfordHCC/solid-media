@@ -10,10 +10,10 @@ import './PrivacyProfileIcon.css';
  * and allows users to change it by clicking to open a dropdown menu.
  *
  * Privacy Profiles:
- * - LOCAL (🔒): Only local data, no sharing
+ * - LOCAL (🔒) : Only local data, no sharing
  * - ACCURACY (🎯): Limited sharing for accuracy features
  * - FUNCTION (⚙️): Functional sharing including friend movies and recommendations
- * - FULL (🌐): Full sharing including friend movies, likes, and recommendations
+ * - FULL (🌐) : Full sharing including friend movies, likes, and recommendations
  */
 
 interface PrivacyProfileIconProps {
@@ -21,21 +21,46 @@ interface PrivacyProfileIconProps {
   onProfileChange: (profile: PrivacyProfile) => Promise<void>;
 }
 
-const privacyIcons: Record<PrivacyProfile | 'null', string> = {
-  'null': '❓',
-  [PrivacyProfile.LOCAL]: '🔒',
-  [PrivacyProfile.ACCURACY]: '🎯',
-  [PrivacyProfile.FUNCTION]: '⚙️',
-  [PrivacyProfile.FULL]: '🌐',
+interface PrivacyProfileVisual {
+  icon: string;
+  label: string;
+  color: string;
+}
+
+const VISUAL: Record<PrivacyProfile | 'null', PrivacyProfileVisual> = {
+  'null': {
+    icon: '❓',
+    label: 'Not Set',
+    color: '#CCCCCC', // Light gray
+  },
+  [PrivacyProfile.LOCAL]: {
+    icon: '🔒',
+    label: 'Local',
+    color: '#C9FFE5', // Aero Blue
+  },
+  [PrivacyProfile.ACCURACY]: {
+    icon: '🎯',
+    label: 'Accuracy',
+    color: '#40E0D0', // Turquoise
+  },
+  [PrivacyProfile.FUNCTION]: {
+    icon: '⚙️',
+    label: 'Function',
+    color: '#ADD8E6', // Sky blue
+  },
+  [PrivacyProfile.FULL]: {
+    icon: '🌐',
+    label: 'Full',
+    color: '#CCCCFF', // Periwinkle
+  },
 };
 
-const privacyLabels: Record<PrivacyProfile | 'null', string> = {
-  'null': 'Not Set',
-  [PrivacyProfile.LOCAL]: 'Local',
-  [PrivacyProfile.ACCURACY]: 'Accuracy',
-  [PrivacyProfile.FUNCTION]: 'Function',
-  [PrivacyProfile.FULL]: 'Full',
-};
+const PRIVACY_PROFILE_ORDERED = [
+  PrivacyProfile.LOCAL,
+  PrivacyProfile.FUNCTION,
+  PrivacyProfile.ACCURACY,
+  PrivacyProfile.FULL,
+];
 
 export default function PrivacyProfileIcon({ currentProfile, onProfileChange }: PrivacyProfileIconProps): VNode {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -76,13 +101,14 @@ export default function PrivacyProfileIcon({ currentProfile, onProfileChange }: 
     }
   };
 
-  const currentIcon = privacyIcons[currentProfile ?? 'null'];
-  const currentLabel = privacyLabels[currentProfile ?? 'null'];
+  const currentIcon = VISUAL[currentProfile ?? 'null'].icon;
+  const currentLabel = VISUAL[currentProfile ?? 'null'].label;
 
   return (
     <div class="privacy-profile-icon" ref={dropdownRef}>
       <button
-        class="privacy-profile-button"
+        class="privacy-profile-button profile-main-color"
+        style={`background: ${VISUAL[currentProfile ?? 'null'].color}; opacity: 0.85;`}
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         disabled={isChanging}
         title={`Privacy Profile: ${currentLabel}`}
@@ -93,15 +119,24 @@ export default function PrivacyProfileIcon({ currentProfile, onProfileChange }: 
       {isDropdownOpen && (
         <div class="privacy-profile-dropdown">
           <div class="privacy-profile-heading">Privacy Profile</div>
-          {Object.values(PrivacyProfile).map((profile) => (
+          {Object.values(PRIVACY_PROFILE_ORDERED).map((profile) => (
             <button
               key={profile}
               class={`privacy-profile-option ${profile === currentProfile ? 'selected' : ''}`}
               onClick={() => handleProfileSelect(profile)}
               disabled={isChanging}
             >
-              <span class="profile-icon">{privacyIcons[profile]}</span>
-              <span class="profile-label">{privacyLabels[profile]}</span>
+              <span
+                class="profile-color-bar"
+                style={`background: ${VISUAL[profile].color}`}
+              />
+              <span
+                class="profile-icon-bg"
+                style={`background: ${VISUAL[profile].color}`}
+              >
+                <span class="profile-icon">{VISUAL[profile].icon}</span>
+              </span>
+              <span class="profile-label">{VISUAL[profile].label}</span>
             </button>
           ))}
         </div>
