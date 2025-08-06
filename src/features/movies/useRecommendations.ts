@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'preact/hooks';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { search } from '../../apis/tmdb';
+import { MediaData, search } from '../../apis/tmdb';
 import { MovieData } from './types';
 import { useMovieActions } from './useMovies';
 import { useMovieStore } from './movieStore';
@@ -15,6 +15,15 @@ function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[]
 
   const shuffledMovies = userMovies.sort(() => 0.5 - Math.random());
   return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
+}
+
+function matchedMovie(targetTitle: string, movies: MediaData[]): MediaData | undefined {
+  const directMatch = movies.find(movie => movie.title === targetTitle);
+  if (directMatch) return directMatch;
+  const ignoreCaseMatch = movies.find(movie => movie.title.toLowerCase() === targetTitle.toLowerCase());
+  if (ignoreCaseMatch) return ignoreCaseMatch;
+  // Fuzzy match could be added here if needed
+  return undefined;
 }
 
 interface UseRecommendationsOptions {
@@ -60,7 +69,7 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
       for (const name of recommendedList) {
         try {
           const movies = await search(name);
-          const movie = movies.find((x: any) => x.title === name);
+          const movie = matchedMovie(name, movies);
           if (movie) {
             await movieActions.saveMovie(movie, true);
           }
