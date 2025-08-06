@@ -32,6 +32,8 @@ interface UseRecommendationsOptions {
   enabled?: boolean;
 }
 
+let lastRecommendations: string[] = [];
+
 export function useRecommendations({ session, pod, enabled = true }: UseRecommendationsOptions) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +61,13 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
 
       const sampledTitles = sampleUserMovies(filteredUserMovies, 10);
       const recommendedList = await fetchRecommendations(sampledTitles);
+
+      // If last recommendations are the same, skip fetching
+      if (JSON.stringify(recommendedList.sort()) === JSON.stringify(lastRecommendations.sort())) {
+        console.log('Last recommendations are the same, skipping fetching new ones');
+        return;
+      }
+      lastRecommendations = recommendedList;
 
       if (recommendedList.length === 0) {
         console.log('No recommendations returned from API');
