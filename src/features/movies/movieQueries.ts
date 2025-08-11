@@ -10,12 +10,12 @@ const MOVIE_LIST_QUERY_PARAMS = {
   retry: 2,
 }
 const MOVIE_DETAIL_QUERY_PARAMS = {
-  staleTime: 10 * 60 * 1000, // 10 minutes
+  staleTime: 5 * 60 * 60 * 1000, // 5 hour
   retry: 2,
   retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500, // add delay between retries
 };
 const MOVIE_ALL_QUERY_PARAMS = {
-  staleTime: 5 * 60 * 1000, // 5 minutes
+  staleTime: 5 * 60 * 60 * 1000, // 5 hour
   retry: 2,
   retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500, // add delay between retries
 };
