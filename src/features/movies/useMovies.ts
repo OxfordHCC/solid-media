@@ -273,18 +273,20 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       if ((event.type === 'updated' || event.type === 'added') && event.query.state.data) {
-        const queryKey = event.query.queryKey;
+        const queryKey: readonly string[] = event.query.queryKey;
 
         // Handle movie detail updates from mutations
-        if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
+        const keyForMovieDetail = movieQueryKeys.detail(queryKey[2] as string);
+        if (queryKey.length === keyForMovieDetail.length && queryKey.every((v, i) => v === keyForMovieDetail[i])) {
           const movieData = event.query.state.data as MovieData;
           movieStore.loadMovies([movieData]);
         }
       } else if (event.type === 'removed') {
-        const queryKey = event.query.queryKey;
+        const queryKey: readonly string[] = event.query.queryKey;
 
         // Handle movie removal from store
-        if (queryKey[0] === 'movies' && queryKey[1] === 'detail') {
+        const keyForMovieDetail = movieQueryKeys.detail(queryKey[2] as string);
+        if (queryKey.length === keyForMovieDetail.length && queryKey.every((v, i) => v === keyForMovieDetail[i])) {
           const solidUrl = queryKey[2] as string;
           movieStore.removeMovie(Array.from(movieStore.myMovies.values()).find(m => m.solidUrl === solidUrl)?.tmdbUrl || '');
         }
