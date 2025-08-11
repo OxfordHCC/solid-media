@@ -1,5 +1,5 @@
 import { useMovieStore } from './movieStore';
-import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, movieQueryKeys } from './movieQueries';
+import { useUpdateMovieDataset, useDeleteMovie, useSaveMovie, movieQueryKeys, useMovieListQueriesWithItems, useMovieDetailQueries } from './movieQueries';
 import { addRating, removeFromDataset, setWatched, fromFriendToMeDataset } from './datasetUtils';
 import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { MovieData, PersonInfo } from './types';
@@ -254,35 +254,9 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
     ...friends.map(id => ({ type: 'friend' as const, id }))
   ], [webID, friends]);
 
-  // Use useQueries directly - no need for the hook wrappers since we're using reactive queries
-  const movieListQueries = useQueries({
-    queries: people.map(person => ({
-      queryKey: movieQueryKeys.list(person.id),
-      queryFn: () => loadMovieList(person, fetch),
-      enabled,
-      staleTime: 5 * 60 * 1000,
-      retry: 2,
-    }))
-  });
+  const { queries: movieListQueries, items: allMovieItems, isLoading: isLoadingList } = useMovieListQueriesWithItems(people, enabled, fetch);
 
-  // Get all movie items from successful list queries
-  const allMovieItems = useMemo(() => {
-    return movieListQueries
-      .filter(query => query.data)
-      .flatMap(query => query.data || []);
-  }, [movieListQueries]);
-
-  // Fetch movie details individually - each will sync to store automatically
-  const movieDetailQueries = useQueries({
-    queries: allMovieItems.map(item => ({
-      queryKey: movieQueryKeys.detail(item.url),
-      queryFn: () => loadMovieDetail(item, fetch),
-      enabled: enabled && allMovieItems.length > 0,
-      staleTime: 10 * 60 * 1000,
-      retry: 2,
-      retryDelay: (attemptIndex: number) => (attemptIndex + 1) * 1500,
-    }))
-  });
+  const { queries: movieDetailQueries, items: moviesData, isLoading: isLoadingDetails } = useMovieDetailQueries(allMovieItems, enabled, fetch);
 
   // Sync each movie individually as it loads - no bulk processing
   useEffect(() => {
@@ -320,18 +294,11 @@ export function useMovieData(webID: string, friends: string[], fetch: typeof win
     return unsubscribe;
   }, [queryClient, movieStore]);
 
-  const isLoading = movieListQueries.some(q => q.isLoading) || movieDetailQueries.some(q => q.isLoading);
+  const isLoading = isLoadingList || isLoadingDetails;
 
   // If no query succeeded, use the first error found
   const getErrorPart = (someQueries: UseQueryResult[]) => (someQueries.every(q => q.error) && someQueries[0]?.error) || null;
   const error = getErrorPart(movieListQueries) || getErrorPart(movieDetailQueries);
-
-  // Combine all movie data for compatibility
-  const moviesData = useMemo(() => {
-    return movieDetailQueries
-      .filter(query => query.data)
-      .map(query => query.data!);
-  }, [movieDetailQueries]);
 
   const refetchMovies = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: movieQueryKeys.all });

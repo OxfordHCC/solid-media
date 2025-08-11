@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
-import { useCallback } from 'preact/hooks';
+import { useQuery, useMutation, useQueryClient, UseMutationResult, useQueries, UseQueryResult } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'preact/hooks';
 import { MovieData, PersonInfo, MovieListItem } from './types';
 import { loadMovieList, loadMovieDetail, saveMovieDataset, deleteMovieDataset } from "./remoteMovieDataUtils";
 import { saveMovie } from './remoteMovieDataUtils';
@@ -123,6 +123,58 @@ export function useAllMovies(
     enabled,
     ...MOVIE_ALL_QUERY_PARAMS,
   });
+}
+
+export interface QueriesWithItems<T_result, T_items = T_result[]> {
+  queries: UseQueryResult<T_result>[];
+  items: T_items;
+  isLoading: boolean;
+}
+
+/**
+ * Hook to fetch movie lists for multiple people
+ * Also returns all movie items across those lists
+ * @param people The list of people to fetch movie lists for
+ * @param enabled Whether the query is enabled
+ * @param fetch The fetch function to use
+ * @returns A tuple containing the movie list queries and all movie items
+ */
+export function useMovieListQueriesWithItems(people: PersonInfo[], enabled: boolean, fetch: typeof window.fetch): QueriesWithItems<MovieListItem[], MovieListItem[]> {
+  const movieListQueries = useQueries({
+    queries: people.map(person => ({
+      queryKey: movieQueryKeys.list(person.id),
+      queryFn: () => loadMovieList(person, fetch),
+      enabled,
+      ...MOVIE_LIST_QUERY_PARAMS,
+    }))
+  });
+
+  const allMovieItems = useMemo(() => {
+    return movieListQueries
+      .filter(query => query.data)
+      .flatMap(query => query.data || []);
+  }, [movieListQueries]);
+
+  return {queries: movieListQueries, items: allMovieItems, isLoading: movieListQueries.some(query => query.isLoading)};
+}
+
+export function useMovieDetailQueries(allMovieItems: MovieListItem[], enabled: boolean, fetch: typeof window.fetch): QueriesWithItems<MovieData> {
+  const movieDetailQueries = useQueries({
+    queries: allMovieItems.map(item => ({
+      queryKey: movieQueryKeys.detail(item.url),
+      queryFn: () => loadMovieDetail(item, fetch),
+      enabled: enabled && allMovieItems.length > 0,
+      ...MOVIE_DETAIL_QUERY_PARAMS,
+    }))
+  });
+
+  const moviesData = useMemo(() => {
+    return movieDetailQueries
+      .filter(query => query.data)
+      .map(query => query.data!);
+  }, [movieDetailQueries]);
+
+  return { queries: movieDetailQueries, items: moviesData, isLoading: movieDetailQueries.some(query => query.isLoading) };
 }
 
 // Mutation to save a movie
