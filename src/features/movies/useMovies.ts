@@ -5,8 +5,7 @@ import { PREFIXES_MOVIE } from '../../utils/prefixes';
 import { MovieData, PersonInfo } from './types';
 import { MediaData } from '../../apis/tmdb';
 import { useEffect, useMemo, useCallback } from 'preact/hooks';
-import { useQueryClient, useQueries, UseQueryResult } from '@tanstack/react-query';
-import { loadMovieList, loadMovieDetail } from './remoteMovieDataUtils';
+import { useQueryClient, UseQueryResult } from '@tanstack/react-query';
 
 /**
  * Memoized computed values for better performance
