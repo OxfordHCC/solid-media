@@ -38,6 +38,7 @@ export const movieQueryKeys = {
   ] as const,
 };
 
+// Deprecated: Use `useMovieListQueriesWithItems` and `useMovieDetailQueries` instead
 // Hook to fetch movie list on demand
 export function useFetchMovieList(
   fetch: typeof window.fetch
@@ -55,6 +56,7 @@ export function useFetchMovieList(
   return fetchMovieList;
 }
 
+// Deprecated: Use `useMovieListQueriesWithItems` and `useMovieDetailQueries` instead
 // Hook to fetch movie detail on demand
 export function useFetchMovieDetail(
   fetch: typeof window.fetch
@@ -72,6 +74,7 @@ export function useFetchMovieDetail(
   return fetchMovieDetail;
 }
 
+// Deprecated: Use `useMovieListQueriesWithItems` and `useMovieDetailQueries` instead
 // Hook to fetch all movies for a user and their friends on demand
 export function useFetchAllMovies(
   fetch: typeof window.fetch
@@ -108,6 +111,7 @@ export function useFetchAllMovies(
   return fetchAllMovies;
 }
 
+// Deprecated: Use `useMovieListQueriesWithItems` and `useMovieDetailQueries` instead
 // Hook to fetch all movies for a user and their friends
 export function useAllMovies(
   webID: string,
