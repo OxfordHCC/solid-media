@@ -132,7 +132,7 @@ export function useAutoRecommendations({
       const userMoviesArray = Array.from(movieStore.myMovies.values());
       fetchAndSaveRecommendations(userMoviesArray);
     }
-  }, [hasBasicLoaded, movieDataLoading, isLoading, enabled, hasMaxRecommendations, fetchAndSaveRecommendations, movieStore.myMovies.size]);
+  }, [hasBasicLoaded, movieDataLoading, enabled, hasMaxRecommendations, movieStore.myMovies.size]);
   // Note: Using movieStore.myMovies.size instead of the full map to avoid unnecessary re-renders
   // while still triggering when new movies are added
 
