@@ -42,7 +42,7 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
   const movieStore = useMovieStore();
 
   const fetchAndSaveRecommendations = useCallback(async (userMovies: MovieData[]): Promise<void> => {
-    if (!enabled) return;
+    if (enabled === false) return;
 
     try {
       setIsLoading(true);
@@ -107,18 +107,11 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
   };
 }
 
-interface UseAutoRecommendationsOptions extends UseRecommendationsOptions {
-  hasBasicLoaded: boolean;
-  movieDataLoading: boolean;
-}
-
 export function useAutoRecommendations({
   session,
   pod,
-  hasBasicLoaded,
-  movieDataLoading,
   enabled = true
-}: UseAutoRecommendationsOptions) {
+}: UseRecommendationsOptions) {
   const { isLoading, error, fetchAndSaveRecommendations, hasMaxRecommendations } = useRecommendations({
     session,
     pod,
@@ -128,11 +121,11 @@ export function useAutoRecommendations({
   const movieStore = useMovieStore();
 
   useEffect(() => {
-    if (hasBasicLoaded && !movieDataLoading && !isLoading && enabled && !hasMaxRecommendations) {
+    if (enabled && !isLoading && !hasMaxRecommendations) {
       const userMoviesArray = Array.from(movieStore.myMovies.values());
       fetchAndSaveRecommendations(userMoviesArray);
     }
-  }, [hasBasicLoaded, movieDataLoading, enabled, hasMaxRecommendations, movieStore.myMovies.size]);
+  }, [enabled, hasMaxRecommendations, movieStore.myMovies.size]);
   // Note: Using movieStore.myMovies.size instead of the full map to avoid unnecessary re-renders
   // while still triggering when new movies are added
 

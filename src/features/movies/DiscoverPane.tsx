@@ -67,9 +67,7 @@ export default function DiscoverPane() {
   } = useAutoRecommendations({
     session,
     pod,
-    hasBasicLoaded,
-    movieDataLoading,
-    enabled: true
+    enabled: hasBasicLoaded && !movieDataLoading,
   });
 
   // Privacy profile management
