@@ -8,7 +8,8 @@ import { BASE_URL } from '../env';
 
 const providers = [
 	// {title: "Inrupt Pod Spaces", url: 'https://start.inrupt.com/'},
-	{title: "inrupt.net", url: 'https://inrupt.net/'},
+	// {title: "inrupt.net", url: 'https://inrupt.net/'},
+	{title: "EWADA Pods", url: 'https://pod.ewada.ox.ac.uk/'},
 	{title: "solidcommunity.net", url: 'https://solidcommunity.net/'},
 	{title: "Solid Web", url: 'https://solidweb.org/'},
 	// {title: "Trinpod", url: 'https://trinpod.us/'},
