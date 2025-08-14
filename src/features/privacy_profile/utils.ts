@@ -4,6 +4,8 @@ import { PrivacyProfile, enumFromString } from './privacyProfileDefinitions';
 
 const NS_CHAIMEDIA = Namespace('urn:chaitok:core#');
 
+const SETTER_CHAIFLIX = 'chaiflix';
+
 export async function getPrivacyProfileFromWebIdProfile(webIdProfile: string | null, authFetch: typeof fetch): Promise<PrivacyProfile | null> {
     if (!webIdProfile) return null;
     // Use solid-client to get the webid profile dataset
@@ -22,6 +24,11 @@ export async function getPrivacyProfileFromWebIdProfile(webIdProfile: string | n
     if (!userSettingThing) return null;
     const privacyProfileValue = getStringNoLocale(userSettingThing, NS_CHAIMEDIA('privacyProfile').value);
     if (!privacyProfileValue) return null;
+
+    const privacyProfileSetter = getStringNoLocale(userSettingThing, NS_CHAIMEDIA('privacyProfileSetter').value);
+    if (!privacyProfileSetter || privacyProfileSetter !== SETTER_CHAIFLIX) {
+        return PrivacyProfile.LOCAL;
+    }
 
     return privacyProfileValue as PrivacyProfile;
 }
@@ -62,6 +69,7 @@ export async function savePrivacyProfileToWebIdProfile(webIdProfile: string, pri
 
     // Update the privacy profile value
     userSettingThing = setStringNoLocale(userSettingThing, NS_CHAIMEDIA('privacyProfile').value, privacyProfile);
+    userSettingThing = setStringNoLocale(userSettingThing, NS_CHAIMEDIA('privacyProfileSetter').value, SETTER_CHAIFLIX);
 
     // Save the updated dataset
     userSettingsDataset = setThing(userSettingsDataset, userSettingThing);
