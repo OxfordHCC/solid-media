@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'preact/hooks';
 import { fetchRecommendations } from '../../apis/solidflix-recommendataion';
-import { search } from '../../apis/tmdb';
+import { MediaData, search } from '../../apis/tmdb';
 import { MovieData } from './types';
 import { useMovieActions } from './useMovies';
 import { useMovieStore } from './movieStore';
@@ -17,11 +17,22 @@ function sampleUserMovies(userMovies: MovieData[], maxSamples: number): string[]
   return shuffledMovies.slice(0, maxSamples).map(movie => movie.title);
 }
 
+function matchedMovie(targetTitle: string, movies: MediaData[]): MediaData | undefined {
+  const directMatch = movies.find(movie => movie.title === targetTitle);
+  if (directMatch) return directMatch;
+  const ignoreCaseMatch = movies.find(movie => movie.title.toLowerCase() === targetTitle.toLowerCase());
+  if (ignoreCaseMatch) return ignoreCaseMatch;
+  // Fuzzy match could be added here if needed
+  return undefined;
+}
+
 interface UseRecommendationsOptions {
   session: Session;
   pod: string;
   enabled?: boolean;
 }
+
+let lastRecommendations: string[] = [];
 
 export function useRecommendations({ session, pod, enabled = true }: UseRecommendationsOptions) {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +42,7 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
   const movieStore = useMovieStore();
 
   const fetchAndSaveRecommendations = useCallback(async (userMovies: MovieData[]): Promise<void> => {
-    if (!enabled) return;
+    if (enabled === false) return;
 
     try {
       setIsLoading(true);
@@ -51,6 +62,13 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
       const sampledTitles = sampleUserMovies(filteredUserMovies, 10);
       const recommendedList = await fetchRecommendations(sampledTitles);
 
+      // If last recommendations are the same, skip fetching
+      if (JSON.stringify(recommendedList.sort()) === JSON.stringify(lastRecommendations.sort())) {
+        console.log('Last recommendations are the same, skipping fetching new ones');
+        return;
+      }
+      lastRecommendations = recommendedList;
+
       if (recommendedList.length === 0) {
         console.log('No recommendations returned from API');
         return;
@@ -60,7 +78,7 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
       for (const name of recommendedList) {
         try {
           const movies = await search(name);
-          const movie = movies.find((x: any) => x.title === name);
+          const movie = matchedMovie(name, movies);
           if (movie) {
             await movieActions.saveMovie(movie, true);
           }
@@ -89,18 +107,11 @@ export function useRecommendations({ session, pod, enabled = true }: UseRecommen
   };
 }
 
-interface UseAutoRecommendationsOptions extends UseRecommendationsOptions {
-  hasBasicLoaded: boolean;
-  movieDataLoading: boolean;
-}
-
 export function useAutoRecommendations({
   session,
   pod,
-  hasBasicLoaded,
-  movieDataLoading,
   enabled = true
-}: UseAutoRecommendationsOptions) {
+}: UseRecommendationsOptions) {
   const { isLoading, error, fetchAndSaveRecommendations, hasMaxRecommendations } = useRecommendations({
     session,
     pod,
@@ -110,11 +121,11 @@ export function useAutoRecommendations({
   const movieStore = useMovieStore();
 
   useEffect(() => {
-    if (hasBasicLoaded && !movieDataLoading && !isLoading && enabled && !hasMaxRecommendations) {
+    if (enabled && !isLoading && !hasMaxRecommendations) {
       const userMoviesArray = Array.from(movieStore.myMovies.values());
       fetchAndSaveRecommendations(userMoviesArray);
     }
-  }, [hasBasicLoaded, movieDataLoading, isLoading, enabled, hasMaxRecommendations, fetchAndSaveRecommendations, movieStore.myMovies.size]);
+  }, [enabled, hasMaxRecommendations, movieStore.myMovies.size]);
   // Note: Using movieStore.myMovies.size instead of the full map to avoid unnecessary re-renders
   // while still triggering when new movies are added
 
